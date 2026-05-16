@@ -36,9 +36,12 @@ export function useSyncedValue<T>(path: string, fallback: T): [T, (v: T | null) 
           setHydrated(true);
         });
 
-      // Realtime subscription (filtered to this path)
+      // Realtime subscription (filtered to this path).
+      // Suffix with a random token so React Strict Mode's double-invocation
+      // gets a fresh channel each run — Supabase caches channels by name,
+      // and re-using a subscribed channel throws "cannot add callbacks ... after subscribe()".
       const channel = supabase
-        .channel(`kv:${path}`)
+        .channel(`kv:${path}:${rand()}`)
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: KV_TABLE, filter: `path=eq.${path}` },
@@ -112,8 +115,9 @@ export function useSyncedMap<T>(prefix: string): Record<string, T> {
       // Subscribe to ALL kv changes; filter to our prefix in JS.
       // Supabase realtime filters only support eq/neq/gt/lt — not LIKE —
       // so we have to receive everything and dispatch.
+      // (random suffix avoids the channel-caching footgun under Strict Mode.)
       const channel = supabase
-        .channel(`kv-map:${prefix}`)
+        .channel(`kv-map:${prefix}:${rand()}`)
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: KV_TABLE },
@@ -193,7 +197,7 @@ export function subscribeSynced<T>(path: string, onChange: (v: T | null) => void
       .then(({ data }) => onChange((data?.value ?? null) as T | null));
 
     const channel = supabase
-      .channel(`kv-sub:${path}`)
+      .channel(`kv-sub:${path}:${rand()}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: KV_TABLE, filter: `path=eq.${path}` },
@@ -221,4 +225,9 @@ export function subscribeSynced<T>(path: string, onChange: (v: T | null) => void
 
 function lsKey(path: string): string {
   return `innovatrix26.sync.${path}`;
+}
+
+/** Short random suffix for Supabase channel names — avoids cache collisions. */
+function rand(): string {
+  return Math.random().toString(36).slice(2, 8);
 }
