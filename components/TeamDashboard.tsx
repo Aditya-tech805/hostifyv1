@@ -67,7 +67,7 @@ export function TeamDashboard({ team, onEdit }: TeamDashboardProps) {
           <ActivityCard id="bingo"      icon="🎯" title="Networking Bingo"  description="16 missions across the floor." />
           <ActivityCard id="team-wall"  icon="🌐" title="Team Wall"          description="Browse every team's idea." />
           <ActivityCard id="pitch-lab"  icon="🎤" title="Pitch Lab"          description="Refine your 5-minute pitch." />
-          <ActivityCard id="spotlight"  icon="✨" title="Spotlight"          description="Random teams selected at 1 PM." />
+          <ActivityCard id="spotlight"  icon="✨" title="Spotlight"          description="Auto-launches ~1 PM. Don't tap — wait." />
           <ActivityCard id="vote"       icon="🗳️" title="Audience Vote"     description="Opens during Phase 3." />
         </div>
 

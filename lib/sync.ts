@@ -231,3 +231,58 @@ function lsKey(path: string): string {
 function rand(): string {
   return Math.random().toString(36).slice(2, 8);
 }
+
+// ─── Broadcast (ephemeral pub/sub, no DB write) ──────────────────────────────
+/**
+ * Pub/sub helper for ephemeral events like emoji reactions. Doesn't hit the
+ * database — uses Supabase Realtime broadcast channels, which are fast and
+ * have no storage cost. Falls back to a window-event bus when Supabase
+ * isn't configured so the localhost dev experience still works (single tab).
+ */
+export function useBroadcast<T extends object>(
+  channelName: string,
+  onMessage: (payload: T) => void,
+): (payload: T) => void {
+  const handlerRef = useRef(onMessage);
+  handlerRef.current = onMessage;
+
+  useEffect(() => {
+    if (SUPABASE_ENABLED) {
+      const supabase = getSupabase();
+      if (!supabase) return;
+      const channel = supabase
+        .channel(`bcast:${channelName}:${rand()}`, { config: { broadcast: { self: false } } })
+        .on('broadcast', { event: 'msg' }, ({ payload }) => {
+          handlerRef.current(payload as T);
+        })
+        .subscribe();
+      return () => { void supabase.removeChannel(channel); };
+    }
+    // Fallback: window event
+    const handler = (e: Event) => {
+      const ce = e as CustomEvent<T>;
+      handlerRef.current(ce.detail);
+    };
+    window.addEventListener(`innovatrix26.bcast.${channelName}`, handler);
+    return () => window.removeEventListener(`innovatrix26.bcast.${channelName}`, handler);
+  }, [channelName]);
+
+  return (payload: T) => {
+    if (SUPABASE_ENABLED) {
+      const supabase = getSupabase();
+      if (!supabase) return;
+      // Use a one-shot send channel (separate from the receiver). Cleaner
+      // than reusing the receiver channel because send() and on() lifecycle
+      // can conflict under fast tap rates.
+      const send = supabase.channel(`bcast-send:${channelName}:${rand()}`);
+      send.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          void send.send({ type: 'broadcast', event: 'msg', payload });
+          window.setTimeout(() => { void supabase.removeChannel(send); }, 1000);
+        }
+      });
+    } else {
+      window.dispatchEvent(new CustomEvent(`innovatrix26.bcast.${channelName}`, { detail: payload }));
+    }
+  };
+}

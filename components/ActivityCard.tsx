@@ -22,6 +22,11 @@ const PHASE_LABEL: Record<string, string> = {
   wrap:   'Wrap',
 };
 
+/** Friendly explanations for activities that have no destination page. */
+const PASSIVE_MESSAGES: Partial<Record<ActivityId, string>> = {
+  spotlight: 'Spotlight is triggered by the coordinator — appears on every device automatically when they spin the wheel (~1 PM).',
+};
+
 export function ActivityCard({ id, icon, title, description }: ActivityCardProps) {
   const router = useRouter();
   const { state } = useEventPhase();
@@ -40,7 +45,10 @@ export function ActivityCard({ id, icon, title, description }: ActivityCardProps
       return;
     }
     if (!route) {
-      toast('Coming soon — still being built.');
+      // No destination page → it's a passive moment triggered by the coordinator.
+      // Show a friendlier note rather than the misleading "coming soon".
+      const msg = PASSIVE_MESSAGES[id] ?? 'This one happens automatically — no need to open it.';
+      toast(msg);
       return;
     }
     router.push(route);

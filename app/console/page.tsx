@@ -15,6 +15,9 @@ import {
   useAllScores, revealResultsNow, useResults, clearResults,
   useUpNext, setUpNext, useAllVoteTallies,
   usePreviewMode, resetAllEventData,
+  useTimer, setTimer,
+  usePoll, setPoll,
+  useSprint, setSprint, useSprintSubmissions,
 } from '@/lib/data';
 import { JUDGING_CRITERIA } from '@/lib/activities';
 
@@ -67,6 +70,10 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
   const voteTallies = useAllVoteTallies();
   const [previewMode, setPreviewMode] = usePreviewMode();
   const [resetting, setResetting] = useState(false);
+  const [timer] = useTimer();
+  const [poll] = usePoll();
+  const [sprint] = useSprint();
+  const sprintSubs = useSprintSubmissions();
 
   const setPhaseOverride = (id: PhaseId) => {
     if (!confirm(`Override phase to "${SCHEDULE.find((p) => p.id === id)?.label}"? This stays locked until you clear it.`)) return;
@@ -136,9 +143,12 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
     }
   };
 
-  const inP2 = state.status === 'live' && state.phase?.id === 'phase2';
-  const inP3 = state.status === 'live' && state.phase?.id === 'phase3';
-  const inWrap = state.status === 'live' && state.phase?.id === 'wrap';
+  // Treat override the same as live — the whole point of override is to act
+  // AS IF the phase is happening, so phase-gated actions must unlock there too.
+  const phaseActive = state.status === 'live' || state.status === 'override';
+  const inP2 = phaseActive && state.phase?.id === 'phase2';
+  const inP3 = phaseActive && state.phase?.id === 'phase3';
+  const inWrap = phaseActive && state.phase?.id === 'wrap';
 
   return (
     <div>
@@ -315,6 +325,15 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
           )}
         </Section>
 
+        {/* Presentation Timer */}
+        <TimerControls timer={timer} />
+
+        {/* Live Word Cloud Poll */}
+        <PollControls poll={poll} />
+
+        {/* Speed Idea Sprint */}
+        <SprintControls sprint={sprint} sprintSubs={sprintSubs} teamCount={teams.length} />
+
         <Section title="Final reveal" badge="end-of-event only" badgeClass="text-spark" borderClass="border-spark/30">
           <p className="mb-4 text-[13.5px] leading-relaxed text-ink-2">
             Pressing this aggregates all judge scores, ranks the teams, and triggers the final reveal — confetti + winner announcement on every phone + the projector.
@@ -443,5 +462,233 @@ function Section({
       </div>
       {children}
     </section>
+  );
+}
+
+// ─── Timer controls ─────────────────────────────────────────────────────────
+function TimerControls({ timer }: { timer: ReturnType<typeof useTimer>[0] }) {
+  const [minutes, setMinutes] = useState<number>(5);
+  const [label, setLabel] = useState<string>('Pitch');
+  const isRunning = !!timer && timer.startedAt != null;
+  const isPaused = !!timer && timer.startedAt == null;
+
+  const start = () => {
+    const ms = Math.max(10_000, minutes * 60_000);
+    setTimer({ startedAt: Date.now(), durationMs: ms, remainingMs: ms, label });
+  };
+  const pause = () => {
+    if (!timer || timer.startedAt == null) return;
+    const elapsed = Date.now() - timer.startedAt;
+    const remaining = Math.max(0, timer.remainingMs - elapsed);
+    setTimer({ ...timer, startedAt: null, remainingMs: remaining });
+  };
+  const resume = () => {
+    if (!timer || timer.startedAt != null) return;
+    setTimer({ ...timer, startedAt: Date.now() });
+  };
+  const stop = () => setTimer(null);
+
+  return (
+    <Section title="Presentation Timer" badge="shows on the projector">
+      <p className="mb-4 text-[13.5px] leading-relaxed text-ink-2">
+        Counts down a configurable timer with a beep at <b className="text-spark">30 seconds</b> remaining. Use during Phase 3 pitches to keep teams on schedule.
+      </p>
+      {!timer ? (
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <label className="mb-1.5 block font-mono text-[10px] uppercase tracking-[0.16em] text-mute">Minutes</label>
+              <input
+                type="number" min={1} max={30} value={minutes}
+                onChange={(e) => setMinutes(parseInt(e.target.value, 10) || 1)}
+                className="w-full rounded-xl border border-line bg-surface-2 px-4 py-3 text-[15px] text-ink outline-none focus:border-primary"
+              />
+            </div>
+            <div className="flex-[2]">
+              <label className="mb-1.5 block font-mono text-[10px] uppercase tracking-[0.16em] text-mute">Label</label>
+              <input
+                type="text" value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                placeholder="Pitch / Q&A"
+                className="w-full rounded-xl border border-line bg-surface-2 px-4 py-3 text-[15px] text-ink outline-none focus:border-primary"
+              />
+            </div>
+          </div>
+          <button
+            onClick={start}
+            className="w-full rounded-2xl bg-primary px-5 py-3.5 text-[15px] font-semibold text-ink shadow-[0_6px_24px_-10px_rgba(124,58,237,0.55)] transition-colors hover:bg-primary-2"
+          >
+            Start timer
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-2.5">
+          <div className="font-mono text-[12px] uppercase tracking-[0.16em] text-accent">
+            {isRunning ? 'Running' : 'Paused'} · {timer.label || 'Timer'}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {isRunning ? (
+              <button onClick={pause} className="rounded-xl border border-line-2 bg-surface-2 px-4 py-3 text-[14px] font-medium hover:border-primary">Pause</button>
+            ) : (
+              <button onClick={resume} className="rounded-xl border border-line-2 bg-surface-2 px-4 py-3 text-[14px] font-medium hover:border-primary">Resume</button>
+            )}
+            <button onClick={stop} className="rounded-xl border border-line-2 bg-transparent px-4 py-3 text-[14px] font-medium text-ink-2 hover:border-danger hover:text-danger">Stop & hide</button>
+          </div>
+        </div>
+      )}
+    </Section>
+  );
+}
+
+// ─── Poll controls ──────────────────────────────────────────────────────────
+function PollControls({ poll }: { poll: ReturnType<typeof usePoll>[0] }) {
+  const [question, setQuestion] = useState<string>('In one word: what does innovation mean to you?');
+  const start = () => {
+    const q = question.trim();
+    if (q.length < 4) return;
+    setPoll({ id: 'poll-' + Date.now().toString(36), question: q, startedAt: Date.now() });
+  };
+  const stop = () => setPoll(null);
+
+  return (
+    <Section title="Live Word Cloud Poll" badge="instant cloud on the projector">
+      <p className="mb-4 text-[13.5px] leading-relaxed text-ink-2">
+        Pushes a question to every device. Participants submit one word each, and the projector grows a word cloud in real time. Great for warm-ups, transitions, or post-keynote moments.
+      </p>
+      {!poll ? (
+        <div className="space-y-3">
+          <textarea
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            maxLength={120}
+            className="min-h-[64px] w-full resize-none rounded-xl border border-line bg-surface-2 px-4 py-3 text-[15px] text-ink outline-none focus:border-accent"
+          />
+          <button
+            onClick={start}
+            disabled={question.trim().length < 4}
+            className="w-full rounded-2xl bg-accent px-5 py-3.5 text-[15px] font-semibold text-bg transition-colors hover:bg-accent-2 disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute"
+          >
+            Start poll
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-2.5">
+          <div className="rounded-xl border border-accent/40 bg-accent/[0.06] px-4 py-3">
+            <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-accent">Live</div>
+            <div className="mt-1 font-display text-[15px] font-medium">{poll.question}</div>
+          </div>
+          <button onClick={stop} className="w-full rounded-2xl border border-line-2 bg-transparent px-4 py-3 text-[14px] font-medium text-ink-2 hover:border-danger hover:text-danger">
+            End poll
+          </button>
+        </div>
+      )}
+    </Section>
+  );
+}
+
+// ─── Sprint controls ────────────────────────────────────────────────────────
+function SprintControls({
+  sprint, sprintSubs, teamCount,
+}: {
+  sprint: ReturnType<typeof useSprint>[0];
+  sprintSubs: ReturnType<typeof useSprintSubmissions>;
+  teamCount: number;
+}) {
+  const [prompt, setPrompt] = useState<string>('Pitch a startup that uses your hostel mess in some way.');
+  const [minutes, setMinutes] = useState<number>(4);
+  const isActive = !!sprint;
+  const remaining = sprint ? Math.max(0, sprint.endsAt - Date.now()) : 0;
+
+  const start = () => {
+    const p = prompt.trim();
+    if (p.length < 6) return;
+    const now = Date.now();
+    const durationMs = Math.max(60_000, minutes * 60_000);
+    setSprint({
+      id: 'sprint-' + Date.now().toString(36),
+      prompt: p,
+      durationMs,
+      startedAt: now,
+      endsAt: now + durationMs,
+    });
+  };
+  const stop = () => setSprint(null);
+  const pickWinner = (teamId: string) => {
+    if (!sprint) return;
+    const next = sprint.winners ?? [];
+    const updated = next.includes(teamId) ? next.filter((id) => id !== teamId) : [...next, teamId];
+    setSprint({ ...sprint, winners: updated });
+  };
+
+  return (
+    <Section title="Speed Idea Sprint" badge="all-teams competition · ~4 min">
+      <p className="mb-4 text-[13.5px] leading-relaxed text-ink-2">
+        Drops a prompt to every team. Each team has the timer to submit a one-line idea. After time, the projector shows every submission gridded out — tap a team here to mark them as a winner (their card glows lime).
+      </p>
+      {!isActive ? (
+        <div className="space-y-3">
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            maxLength={200}
+            placeholder="The prompt every team will see…"
+            className="min-h-[80px] w-full resize-none rounded-xl border border-line bg-surface-2 px-4 py-3 text-[15px] text-ink outline-none focus:border-spark"
+          />
+          <div>
+            <label className="mb-1.5 block font-mono text-[10px] uppercase tracking-[0.16em] text-mute">Duration (minutes)</label>
+            <input
+              type="number" min={1} max={15} value={minutes}
+              onChange={(e) => setMinutes(parseInt(e.target.value, 10) || 4)}
+              className="w-32 rounded-xl border border-line bg-surface-2 px-4 py-3 text-[15px] text-ink outline-none focus:border-spark"
+            />
+          </div>
+          <button
+            onClick={start}
+            disabled={prompt.trim().length < 6}
+            className="w-full rounded-2xl bg-spark px-5 py-3.5 text-[15px] font-semibold text-ink shadow-[0_6px_24px_-10px_rgba(249,115,22,0.55)] transition-colors hover:bg-[#fb923c] disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute"
+          >
+            Start sprint
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <div className="rounded-xl border border-spark/40 bg-spark/[0.06] px-4 py-3">
+            <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.16em] text-spark">
+              <span>{remaining > 0 ? 'Composing' : 'Closed · pick winners'}</span>
+              <span>{sprintSubs.length} / {teamCount || 16} submitted</span>
+            </div>
+            <div className="mt-1 font-display text-[15px] font-medium">{sprint.prompt}</div>
+          </div>
+
+          {sprintSubs.length > 0 && (
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {sprintSubs.map((s) => {
+                const isWinner = sprint.winners?.includes(s.teamId);
+                return (
+                  <button
+                    key={s.teamId}
+                    onClick={() => pickWinner(s.teamId)}
+                    className={`rounded-xl border p-3 text-left transition-all ${
+                      isWinner ? 'border-accent bg-accent/[0.10]' : 'border-line bg-surface-2 hover:border-line-2'
+                    }`}
+                    style={{ borderLeftColor: s.teamColor, borderLeftWidth: 4 }}
+                  >
+                    <div className="mb-1 flex items-center justify-between font-mono text-[9.5px] uppercase tracking-[0.16em] text-mute">
+                      <span style={{ color: s.teamColor }}>{s.teamName}</span>
+                      {isWinner && <span className="text-accent">★</span>}
+                    </div>
+                    <div className="text-[13px] leading-snug text-ink">{s.text}</div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          <button onClick={stop} className="w-full rounded-2xl border border-line-2 bg-transparent px-4 py-3 text-[14px] font-medium text-ink-2 hover:border-danger hover:text-danger">
+            End sprint &amp; hide
+          </button>
+        </div>
+      )}
+    </Section>
   );
 }

@@ -9,6 +9,8 @@ import { ToastProvider } from '@/components/Toast';
 import { SpotlightOverlay } from '@/components/SpotlightOverlay';
 import { ResultsOverlay } from '@/components/ResultsOverlay';
 import { MentorPingsBanner } from '@/components/MentorPingsBanner';
+import { PollResponder } from '@/components/PollResponder';
+import { SprintResponder } from '@/components/SprintResponder';
 import { readOwnTeam, writeOwnTeam, type Team } from '@/lib/teams';
 import { writeTeam } from '@/lib/data';
 
@@ -43,6 +45,10 @@ export default function ParticipantPage() {
       <TopBar />
       <MentorPingsBanner teamId={team?.id ?? null} />
       <main className="mx-auto max-w-[720px] px-5 pb-20 pt-6">
+        {/* Sprint + Poll responders only appear when coordinator triggers them */}
+        <SprintResponder />
+        <PollResponder />
+
 
         {hydrated && !team && (
           <section className="py-8 text-center">

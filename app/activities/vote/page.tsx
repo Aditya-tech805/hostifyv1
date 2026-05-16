@@ -6,6 +6,7 @@ import { ActivityHeader } from '@/components/ActivityHeader';
 import { ToastProvider, useToast } from '@/components/Toast';
 import { useAllTeams, useUpNext, useVoteTally, castAudienceVote, type AudienceVoteChoice } from '@/lib/data';
 import { readJSON, writeJSON } from '@/lib/storage';
+import { ReactionsBar } from '@/components/ReactionsBar';
 
 const VOTED_KEY = 'innovatrix26.audience-voted';
 
@@ -111,6 +112,9 @@ function VoteBody() {
         <TallyBar label="🙂 Cool" count={tally.cool} total={totalVotes} colorClass="bg-accent" />
         <TallyBar label="😐 Fine" count={tally.fine} total={totalVotes} colorClass="bg-mute" />
       </div>
+
+      {/* Audience reactions — taps fire emoji onto the big screen */}
+      <ReactionsBar />
     </>
   );
 }

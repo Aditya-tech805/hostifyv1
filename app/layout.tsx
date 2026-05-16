@@ -20,10 +20,26 @@ const mono = JetBrains_Mono({
   display: 'swap',
 });
 
+// Resolve the public base URL for OG images / canonical links. Vercel injects
+// these env vars on every deploy. Falls back to localhost in plain dev.
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000');
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "INNOVATRIX '26 · Innovation Showcase",
   description:
     'A live innovation experience for sixteen teams. 18 May 2026 · 10 AM – 4 PM IST.',
+  openGraph: {
+    title: "INNOVATRIX '26",
+    description: 'Sixteen teams. Six hours. Innovation, creativity, and the future you can build.',
+    type: 'website',
+  },
 };
 
 export const viewport: Viewport = {

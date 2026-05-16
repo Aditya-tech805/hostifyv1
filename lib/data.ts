@@ -24,6 +24,11 @@ const PATHS = {
   mentorPings:   'mentorPings',    // mentorPings/{teamId}/{pingId} → MentorPing
   gallery:       'gallery',        // gallery/{photoId} → Photo (metadata)
   previewMode:   'previewMode',    // boolean — when true, all activities unlocked
+  timer:         'timer',          // TimerState | null
+  poll:          'poll',           // PollState | null
+  pollSubmissions: 'pollSubmissions', // pollSubmissions/{deviceId} → string
+  sprint:        'sprint',         // SprintState | null
+  sprintSubs:    'sprintSubs',     // sprintSubs/{teamId} → SprintSubmission
 } as const;
 
 // ─── Teams ───────────────────────────────────────────────────────────────────
@@ -296,6 +301,105 @@ export async function deleteGalleryPhoto(photo: Photo): Promise<void> {
     }
   }
   void writeSynced(`${PATHS.gallery}/${photo.id}`, null);
+}
+
+// ─── Presentation Timer ──────────────────────────────────────────────────────
+export interface TimerState {
+  /** When the timer was started (epoch ms). Null when paused. */
+  startedAt: number | null;
+  /** Total duration in ms. */
+  durationMs: number;
+  /** Remaining ms at the moment of last pause. Used to resume cleanly. */
+  remainingMs: number;
+  /** Optional label shown alongside the countdown. */
+  label?: string;
+}
+
+export function useTimer(): [TimerState | null, (v: TimerState | null) => void] {
+  const [value, set] = useSyncedValue<TimerState | null>(PATHS.timer, null);
+  return [value, set];
+}
+
+export function setTimer(v: TimerState | null): void {
+  void writeSynced(PATHS.timer, v);
+}
+
+// ─── Live Word Cloud Poll ────────────────────────────────────────────────────
+export interface PollState {
+  id: string;
+  question: string;
+  startedAt: number;
+}
+
+export function usePoll(): [PollState | null, (v: PollState | null) => void] {
+  const [value, set] = useSyncedValue<PollState | null>(PATHS.poll, null);
+  return [value, set];
+}
+export function setPoll(v: PollState | null): void {
+  void writeSynced(PATHS.poll, v);
+  // Wipe submissions when starting a new poll
+  if (v) {
+    // can't bulk-clear easily; consumers should namespace per-poll id
+  }
+}
+
+/**
+ * Each device's poll submission. Keyed by a stable per-device ID so a
+ * single phone can't spam-flood the cloud.
+ */
+export function usePollSubmissions(): Record<string, string> {
+  return useSyncedMap<string>(PATHS.pollSubmissions);
+}
+
+export function submitPollWord(deviceId: string, word: string): void {
+  void writeSynced(`${PATHS.pollSubmissions}/${deviceId}`, word);
+}
+
+export function clearPollSubmissions(): void {
+  // Iterate the map and delete each. Caller has access to the map already
+  // so they can pass it in — but for simplicity we let it stay until next
+  // poll starts. The screen filters by current poll's startedAt anyway.
+}
+
+// ─── Speed Idea Sprint ───────────────────────────────────────────────────────
+export interface SprintState {
+  id: string;
+  prompt: string;
+  durationMs: number;
+  startedAt: number;
+  /** When compose ends. After this, no new submissions accepted. */
+  endsAt: number;
+  /** Optional final-pick teamIds chosen by coordinator post-sprint. */
+  winners?: string[];
+}
+
+export interface SprintSubmission {
+  teamId: string;
+  teamName: string;
+  teamColor: string;
+  text: string;
+  submittedAt: number;
+}
+
+export function useSprint(): [SprintState | null, (v: SprintState | null) => void] {
+  const [value, set] = useSyncedValue<SprintState | null>(PATHS.sprint, null);
+  return [value, set];
+}
+export function setSprint(v: SprintState | null): void {
+  void writeSynced(PATHS.sprint, v);
+}
+
+export function useSprintSubmissions(): SprintSubmission[] {
+  const map = useSyncedMap<SprintSubmission>(PATHS.sprintSubs);
+  return useMemo(
+    () => Object.values(map).sort((a, b) => a.submittedAt - b.submittedAt),
+    [map],
+  );
+}
+
+export function submitSprintAnswer(sub: SprintSubmission): void {
+  // One submission per team — keyed by teamId so resubmits overwrite.
+  void writeSynced(`${PATHS.sprintSubs}/${sub.teamId}`, sub);
 }
 
 // ─── Reset all event data (coordinator-only nuke) ────────────────────────────

@@ -5,6 +5,10 @@ import { BrandMark } from '@/components/BrandMark';
 import { ClientOnly } from '@/components/ClientOnly';
 import { SpotlightOverlay } from '@/components/SpotlightOverlay';
 import { ResultsOverlay } from '@/components/ResultsOverlay';
+import { PresentationTimerOverlay } from '@/components/PresentationTimerOverlay';
+import { ReactionsLayer } from '@/components/ReactionsLayer';
+import { SprintOverlay } from '@/components/SprintOverlay';
+import { PollOverlay } from '@/components/PollOverlay';
 import { useEventPhase } from '@/lib/hooks';
 import { formatCountdown, formatHHMMSS, pad } from '@/lib/schedule';
 import { useAllTeams, useUpNext, useVoteTally } from '@/lib/data';
@@ -225,6 +229,10 @@ function ScreenLive() {
       {/* Synced moments — overlay everything when triggered from coordinator */}
       <SpotlightOverlay />
       <ResultsOverlay />
+      <SprintOverlay />
+      <PollOverlay />
+      <PresentationTimerOverlay />
+      <ReactionsLayer />
     </div>
   );
 }
