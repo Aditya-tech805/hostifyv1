@@ -14,6 +14,7 @@ import {
   useAllTeams, usePhaseOverride, setSpotlight, useSpotlight,
   useAllScores, revealResultsNow, useResults, clearResults,
   useUpNext, setUpNext, useAllVoteTallies,
+  usePreviewMode, resetAllEventData,
 } from '@/lib/data';
 import { JUDGING_CRITERIA } from '@/lib/activities';
 
@@ -64,6 +65,8 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
   const [results] = useResults();
   const [upNext] = useUpNext();
   const voteTallies = useAllVoteTallies();
+  const [previewMode, setPreviewMode] = usePreviewMode();
+  const [resetting, setResetting] = useState(false);
 
   const setPhaseOverride = (id: PhaseId) => {
     if (!confirm(`Override phase to "${SCHEDULE.find((p) => p.id === id)?.label}"? This stays locked until you clear it.`)) return;
@@ -111,6 +114,27 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
   const spotlightTeams: Team[] = spotlight
     ? spotlight.teamIds.map((id) => teams.find((t) => t.id === id)).filter((t): t is Team => !!t)
     : [];
+
+  const handleReset = async () => {
+    const first = confirm(
+      'Reset ALL event data?\n\nThis deletes:\n• Every registered team\n• Every judge score\n• Every audience vote\n• Every mentor ping\n• Every photo (file + metadata)\n• Spotlight, Up Next, Results, Phase override\n\nCannot be undone. Type-style confirm follows.',
+    );
+    if (!first) return;
+    const second = prompt('Type "RESET" (all caps) to confirm:');
+    if (second !== 'RESET') {
+      toast('Reset cancelled.');
+      return;
+    }
+    setResetting(true);
+    try {
+      const { kvRows, photos } = await resetAllEventData();
+      toast(`Cleared ${kvRows} rows · ${photos} photos.`);
+    } catch (e) {
+      toast('Reset failed: ' + (e instanceof Error ? e.message : 'unknown'));
+    } finally {
+      setResetting(false);
+    }
+  };
 
   const inP2 = state.status === 'live' && state.phase?.id === 'phase2';
   const inP3 = state.status === 'live' && state.phase?.id === 'phase3';
@@ -325,6 +349,39 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
               </div>
             );
           })()}
+        </Section>
+
+        {/* Preview mode — testing helper */}
+        <Section title="Preview mode" badge="for testing — turn OFF before event">
+          <p className="mb-4 text-[13.5px] leading-relaxed text-ink-2">
+            When <b>ON</b>, every activity unlocks on every device — Idea Cards, Bingo, Pitch Lab, Photo Booth, Audience Vote, all of it — regardless of the current phase. Use this to play through every activity with your co-coordinators before event day.
+            <br /><br />
+            <b className="text-spark">Turn OFF an hour before the event starts</b> so participants only see what's appropriate for the current phase.
+          </p>
+          <button
+            onClick={() => setPreviewMode(!previewMode)}
+            className={`w-full rounded-2xl px-5 py-4 text-[15px] font-semibold transition-all ${
+              previewMode
+                ? 'border border-accent bg-accent text-bg hover:bg-accent-2'
+                : 'border border-line-2 bg-transparent text-ink-2 hover:border-accent hover:bg-surface-2 hover:text-ink'
+            }`}
+          >
+            {previewMode ? '✓ Preview mode is ON · tap to turn OFF' : 'Turn ON preview mode'}
+          </button>
+        </Section>
+
+        {/* Reset all event data */}
+        <Section title="Reset event data" badge="for the morning of 18 May" badgeClass="text-danger" borderClass="border-danger/30">
+          <p className="mb-4 text-[13.5px] leading-relaxed text-ink-2">
+            Wipes <b className="text-danger">everything</b>: all teams, scores, votes, pings, photos, spotlight, results, phase override. <b>Cannot be undone.</b> Run this once before the real event so you start fresh.
+          </p>
+          <button
+            onClick={handleReset}
+            disabled={resetting}
+            className="w-full rounded-2xl bg-danger px-5 py-4 text-[15px] font-semibold text-ink transition-colors hover:bg-[#dc2626] disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute"
+          >
+            {resetting ? 'Resetting…' : 'Reset all event data'}
+          </button>
         </Section>
 
         {/* Team list */}

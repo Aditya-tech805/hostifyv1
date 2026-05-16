@@ -23,6 +23,7 @@ const PATHS = {
   audienceVotes: 'audienceVotes',  // audienceVotes/{teamId} → VoteTally
   mentorPings:   'mentorPings',    // mentorPings/{teamId}/{pingId} → MentorPing
   gallery:       'gallery',        // gallery/{photoId} → Photo (metadata)
+  previewMode:   'previewMode',    // boolean — when true, all activities unlocked
 } as const;
 
 // ─── Teams ───────────────────────────────────────────────────────────────────
@@ -45,6 +46,17 @@ export function removeTeam(teamId: string): void {
 // ─── Phase override ──────────────────────────────────────────────────────────
 export function usePhaseOverride(): [PhaseId | null, (v: PhaseId | null) => void] {
   const [value, set] = useSyncedValue<PhaseId | null>(PATHS.phaseOverride, null);
+  return [value, set];
+}
+
+// ─── Preview mode (testing) ──────────────────────────────────────────────────
+/**
+ * When true, the participant view unlocks every activity regardless of the
+ * current phase or the override. Used by you + co-coordinators to play
+ * through everything before event day. Turn OFF an hour before the event.
+ */
+export function usePreviewMode(): [boolean, (v: boolean) => void] {
+  const [value, set] = useSyncedValue<boolean>(PATHS.previewMode, false);
   return [value, set];
 }
 
@@ -284,4 +296,46 @@ export async function deleteGalleryPhoto(photo: Photo): Promise<void> {
     }
   }
   void writeSynced(`${PATHS.gallery}/${photo.id}`, null);
+}
+
+// ─── Reset all event data (coordinator-only nuke) ────────────────────────────
+/**
+ * Wipes every team, score, vote, ping, photo, and event-state value.
+ * Used between test runs and on the morning of event day for a clean start.
+ *
+ * Returns counts so the UI can show what was deleted.
+ */
+export async function resetAllEventData(): Promise<{ kvRows: number; photos: number }> {
+  let kvRows = 0;
+  let photos = 0;
+
+  if (SUPABASE_ENABLED) {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error('Supabase client unavailable.');
+
+    // Wipe Storage bucket first (photos)
+    const { data: files } = await supabase.storage.from(GALLERY_BUCKET).list('', { limit: 1000 });
+    if (files && files.length > 0) {
+      const names = files.map((f) => f.name);
+      await supabase.storage.from(GALLERY_BUCKET).remove(names);
+      photos = names.length;
+    }
+
+    // Then wipe the kv table — neq filter is required by Supabase delete API
+    const { count } = await supabase.from('kv').delete({ count: 'exact' }).neq('path', '__never__');
+    kvRows = count ?? 0;
+  } else {
+    // localStorage fallback — remove every key under innovatrix26.sync.*
+    if (typeof window !== 'undefined') {
+      const toRemove: string[] = [];
+      for (let i = 0; i < window.localStorage.length; i++) {
+        const k = window.localStorage.key(i);
+        if (k?.startsWith('innovatrix26.sync.')) toRemove.push(k);
+      }
+      toRemove.forEach((k) => window.localStorage.removeItem(k));
+      kvRows = toRemove.length;
+    }
+  }
+
+  return { kvRows, photos };
 }

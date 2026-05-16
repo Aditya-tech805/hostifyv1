@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ACTIVITY_PHASES, ACTIVITY_ROUTES, type ActivityId } from '@/lib/activities';
 import { useEventPhase } from '@/lib/hooks';
+import { usePreviewMode } from '@/lib/data';
 import { useToast } from './Toast';
 
 interface ActivityCardProps {
@@ -24,11 +25,12 @@ const PHASE_LABEL: Record<string, string> = {
 export function ActivityCard({ id, icon, title, description }: ActivityCardProps) {
   const router = useRouter();
   const { state } = useEventPhase();
+  const [previewMode] = usePreviewMode();
   const { push: toast } = useToast();
 
   const allowed = ACTIVITY_PHASES[id] ?? [];
   const livePhaseId = state.status === 'live' || state.status === 'override' ? state.phase?.id : null;
-  const unlocked = !!livePhaseId && allowed.includes(livePhaseId);
+  const unlocked = previewMode || (!!livePhaseId && allowed.includes(livePhaseId));
   const route = ACTIVITY_ROUTES[id];
 
   const onClick = () => {
