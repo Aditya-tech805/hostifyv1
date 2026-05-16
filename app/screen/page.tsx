@@ -33,15 +33,15 @@ function ScreenShell() {
         <div className="flex items-center gap-3.5 font-display text-[22px] font-semibold tracking-tight text-ink">
           <BrandMark filled size={36} />
           <span>INNOVATRIX</span>
-          <span className="rounded-full border border-line bg-white px-2.5 py-1 font-mono text-[13px] tracking-[0.18em] text-mute shadow-soft">&apos;26</span>
+          <span className="rounded-full border border-line bg-surface px-2.5 py-1 font-mono text-[13px] tracking-[0.18em] text-mute shadow-soft">&apos;26</span>
         </div>
       </div>
       <div className="flex items-center justify-center text-center text-mute">···</div>
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <div className="rounded-2xl border border-line bg-white px-6 py-5 shadow-soft" />
-        <div className="rounded-2xl border border-line bg-white px-6 py-5 shadow-soft" />
-        <div className="rounded-2xl border border-line bg-white px-6 py-5 shadow-soft" />
-        <div className="rounded-2xl border border-line bg-white px-6 py-5 shadow-soft" />
+        <div className="rounded-2xl border border-line bg-surface px-6 py-5 shadow-soft" />
+        <div className="rounded-2xl border border-line bg-surface px-6 py-5 shadow-soft" />
+        <div className="rounded-2xl border border-line bg-surface px-6 py-5 shadow-soft" />
+        <div className="rounded-2xl border border-line bg-surface px-6 py-5 shadow-soft" />
       </div>
     </div>
   );
@@ -190,7 +190,7 @@ function ScreenLive() {
         <div className="flex items-center gap-3.5 font-display text-[22px] font-semibold tracking-tight text-ink">
           <BrandMark filled size={36} />
           <span>INNOVATRIX</span>
-          <span className="rounded-full border border-line bg-white px-2.5 py-1 font-mono text-[13px] tracking-[0.18em] text-mute shadow-soft">
+          <span className="rounded-full border border-line bg-surface px-2.5 py-1 font-mono text-[13px] tracking-[0.18em] text-mute shadow-soft">
             &apos;26
           </span>
         </div>
@@ -290,7 +290,7 @@ function Countdown({ label, children }: { label: string; children: React.ReactNo
 
 function Kpi({ label, figure, sub, figureClass = '' }: { label: string; figure: string; sub?: string; figureClass?: string }) {
   return (
-    <div className="rounded-2xl border border-line bg-white px-6 py-5 shadow-soft">
+    <div className="rounded-2xl border border-line bg-surface px-6 py-5 shadow-soft">
       <div className="mb-2.5 font-mono text-[11px] uppercase tracking-[0.22em] text-mute">{label}</div>
       <div className={`font-display text-[clamp(28px,3vw,44px)] font-extrabold leading-none tracking-tight text-ink ${figureClass}`}>
         {figure}

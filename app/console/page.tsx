@@ -211,7 +211,7 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
                   key={p.id}
                   onClick={() => setPhaseOverride(p.id)}
                   className={`rounded-xl border px-2.5 py-3.5 text-center transition-all ${
-                    active ? 'border-primary bg-primary/[0.10] text-primary' : 'border-line bg-surface-2 text-ink-2 hover:border-line-2 hover:bg-white'
+                    active ? 'border-primary bg-primary/[0.10] text-primary' : 'border-line bg-surface-2 text-ink-2 hover:border-line-2 hover:bg-surface-2'
                   }`}
                 >
                   <div className="font-display text-sm font-semibold">{p.label.split('·')[0].trim()}</div>

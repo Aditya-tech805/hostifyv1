@@ -50,7 +50,7 @@ export function RegisterForm({ initial, onSubmit }: RegisterFormProps) {
   };
 
   return (
-    <form onSubmit={submit} autoComplete="off" className="rounded-3xl border border-line bg-white p-6 shadow-soft">
+    <form onSubmit={submit} autoComplete="off" className="rounded-3xl border border-line bg-surface p-6 shadow-soft">
 
       <Field label="Team name" hint="make it memorable">
         <input
@@ -60,7 +60,7 @@ export function RegisterForm({ initial, onSubmit }: RegisterFormProps) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. Phoenix"
-          className="w-full rounded-xl border border-line bg-surface-2 px-4 py-3.5 text-[15px] text-ink outline-none transition-all placeholder:text-mute focus:border-primary focus:bg-white focus:shadow-glow"
+          className="w-full rounded-xl border border-line bg-surface-2 px-4 py-3.5 text-[15px] text-ink outline-none transition-all placeholder:text-mute focus:border-primary focus:bg-surface-3 focus:shadow-glow"
         />
       </Field>
 
@@ -97,14 +97,14 @@ export function RegisterForm({ initial, onSubmit }: RegisterFormProps) {
                 value={m}
                 onChange={(e) => updateMember(idx, e.target.value)}
                 placeholder={idx === 0 ? 'Member 1 (you)' : `Member ${idx + 1}`}
-                className="flex-1 rounded-[10px] border border-line bg-surface-2 px-3.5 py-2.5 text-sm text-ink outline-none transition-colors focus:border-primary focus:bg-white"
+                className="flex-1 rounded-[10px] border border-line bg-surface-2 px-3.5 py-2.5 text-sm text-ink outline-none transition-colors focus:border-primary focus:bg-surface-3"
               />
               {idx > 0 && (
                 <button
                   type="button"
                   onClick={() => removeMember(idx)}
                   aria-label="Remove member"
-                  className="h-[38px] w-[38px] rounded-[10px] border border-line bg-white text-mute transition-colors hover:border-danger/40 hover:bg-danger/[0.06] hover:text-danger"
+                  className="h-[38px] w-[38px] rounded-[10px] border border-line bg-surface text-mute transition-colors hover:border-danger/40 hover:bg-danger/[0.06] hover:text-danger"
                 >
                   ×
                 </button>
@@ -131,7 +131,7 @@ export function RegisterForm({ initial, onSubmit }: RegisterFormProps) {
           value={idea}
           onChange={(e) => setIdea(e.target.value)}
           placeholder="An AI that translates restaurant menus into 23 languages in real time…"
-          className="min-h-[88px] w-full resize-none rounded-xl border border-line bg-surface-2 px-4 py-3.5 text-[15px] leading-relaxed text-ink outline-none transition-all placeholder:text-mute focus:border-primary focus:bg-white focus:shadow-glow"
+          className="min-h-[88px] w-full resize-none rounded-xl border border-line bg-surface-2 px-4 py-3.5 text-[15px] leading-relaxed text-ink outline-none transition-all placeholder:text-mute focus:border-primary focus:bg-surface-3 focus:shadow-glow"
         />
         <div
           className={`mt-1.5 text-right font-mono text-[11px] ${

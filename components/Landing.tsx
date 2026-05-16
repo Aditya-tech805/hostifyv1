@@ -42,164 +42,93 @@ export function Landing({ initial, onSubmit }: LandingProps) {
 function Hero() {
   return (
     <section className="relative overflow-hidden">
-      {/* A single accent sweep line that animates across on mount — the
-         signature motion. Subtle but consistent across the rest of the site. */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-[44%] h-px overflow-hidden">
+      {/* Signature one-shot sweep — a hairline crossing the viewport on mount. */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-[48%] h-px overflow-hidden">
         <div className="h-px w-full origin-left bg-gradient-to-r from-transparent via-primary/40 to-transparent animate-sweep-x" />
       </div>
 
-      <div className="mx-auto max-w-[1320px] px-6 pt-10 md:pt-14">
-        {/* Eyebrow strip */}
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 font-mono text-[10px] uppercase tracking-[0.28em] text-mute">
-          <span className="flex items-center gap-2 text-ink">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-dot-pulse" />
-            Edition 02
-          </span>
-          <span className="text-line-2">/</span>
-          <span>Sixteen teams</span>
-          <span className="text-line-2">/</span>
-          <span>One live day</span>
-          <span className="ml-auto flex items-center gap-2">
-            <ClientOnly fallback={<span className="text-mute">···</span>}>
-              <LiveStatusInline />
-            </ClientOnly>
-          </span>
+      <div className="mx-auto flex min-h-[88vh] max-w-[1320px] flex-col px-6 pb-16 pt-10 md:min-h-[92vh] md:pb-20 md:pt-14">
+        {/* Eyebrow — just two beats, lots of air around them */}
+        <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.3em] text-mute">
+          <ClientOnly fallback={<span className="opacity-60">···</span>}>
+            <HeroStatusInline />
+          </ClientOnly>
+          <span>Edition &apos;26</span>
         </div>
 
-        {/* The mark — full bleed within the container, no centering. */}
-        <h1 className="mt-10 md:mt-14 font-display font-extrabold leading-[0.82] tracking-[-0.045em] text-ink text-[clamp(72px,17vw,240px)] animate-reveal-up">
-          INNOVATR<span className="inline-block animate-x-cycle bg-gradient-brand bg-clip-text text-transparent">X</span>
-        </h1>
+        {/* The mark — sits in the visual centre of the viewport */}
+        <div className="flex flex-1 items-center">
+          <h1 className="w-full animate-reveal-up font-display font-extrabold leading-[0.82] tracking-[-0.045em] text-ink text-[clamp(80px,19vw,260px)]">
+            INNOVATR<span className="inline-block animate-x-cycle bg-gradient-brand bg-clip-text text-transparent">X</span>
+          </h1>
+        </div>
 
-        {/* Date band — rule-flanked grid, the most poster-ish moment */}
-        <div className="mt-6 border-y border-ink/15">
-          <div className="grid grid-cols-2 gap-y-3 py-5 md:grid-cols-4 md:gap-x-6">
-            <DateCell label="Day"   value="Monday" />
-            <DateCell label="Date"  value="May 18, 2026" />
-            <DateCell label="Hours" value="10 AM → 4 PM" />
-            <DateCell label="Zone"  value="IST · UTC+5:30" />
+        {/* Bottom block — single time line, single tagline, single CTA */}
+        <div className="animate-reveal-up" style={{ animationDelay: '160ms' }}>
+          {/* Hairline-flanked time strip */}
+          <div className="flex items-center gap-5">
+            <span className="h-px flex-1 bg-line-2" />
+            <span className="font-mono text-[clamp(11px,1.1vw,13px)] uppercase tracking-[0.3em] text-ink-2 tabular-nums">
+              May 18 · 10:00 → 16:00 · IST
+            </span>
+            <span className="h-px w-16 bg-line-2 md:flex-1" />
           </div>
-        </div>
 
-        {/* Tagline + live status pill + CTAs — two-column asymmetric */}
-        <div className="mt-12 grid items-start gap-x-12 gap-y-10 md:mt-16 md:grid-cols-[1.45fr_1fr]">
-          <div className="animate-reveal-up" style={{ animationDelay: '120ms' }}>
-            <p className="font-display text-[clamp(26px,3.5vw,44px)] leading-[1.15] tracking-[-0.01em] text-ink">
-              Not a hackathon. Not a pitch competition.{' '}
-              <span className="font-serif italic font-light text-primary">A six-hour experiment</span>{' '}
-              in what sixteen student teams can prove about the future they&apos;re already building.
+          <div className="mt-10 grid items-end gap-8 md:mt-14 md:grid-cols-[1fr_auto]">
+            <p className="font-display text-[clamp(30px,4.4vw,52px)] font-medium leading-[1.05] tracking-[-0.02em] text-ink">
+              Sixteen teams. Six hours.{' '}
+              <span className="font-serif italic font-light text-primary">One day.</span>
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="flex flex-col items-start gap-3 md:items-end">
               <a
                 href="#register"
-                className="group inline-flex items-center gap-3 rounded-full bg-ink px-6 py-3.5 font-display text-[15px] font-semibold text-white shadow-soft-lg transition-all hover:-translate-y-0.5 hover:bg-primary hover:shadow-glow-lg"
+                className="group inline-flex items-center gap-3 rounded-full bg-ink px-7 py-4 font-display text-[15px] font-semibold text-bg shadow-soft-lg transition-all hover:-translate-y-0.5 hover:bg-primary hover:text-white hover:shadow-glow-lg"
               >
                 Register your team
                 <span className="transition-transform group-hover:translate-x-1">→</span>
               </a>
               <a
                 href="#the-day"
-                className="group inline-flex items-center gap-2 rounded-full border border-line-2 bg-white/70 px-6 py-3.5 font-display text-[15px] font-semibold text-ink-2 backdrop-blur-sm transition-colors hover:border-ink hover:text-ink"
+                className="group inline-flex items-center gap-1.5 px-2 font-mono text-[10px] uppercase tracking-[0.24em] text-mute transition-colors hover:text-ink"
               >
-                Explore the day
+                or explore the day
                 <span className="transition-transform group-hover:translate-y-0.5">↓</span>
               </a>
             </div>
           </div>
-
-          <div className="animate-reveal-up" style={{ animationDelay: '220ms' }}>
-            <ClientOnly fallback={<LivePillFallback />}>
-              <LiveStatusPill />
-            </ClientOnly>
-          </div>
-        </div>
-
-        {/* Bottom rail — a measured-tape feel beneath the hero */}
-        <div className="mt-14 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.24em] text-mute md:mt-20">
-          <span className="h-px flex-1 bg-line-2" />
-          <span>Scroll for the day</span>
-          <span className="h-px w-12 bg-line-2" />
         </div>
       </div>
     </section>
   );
 }
 
-function DateCell({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.24em] text-mute">{label}</div>
-      <div className="font-display text-[clamp(18px,2.4vw,26px)] font-semibold tracking-tight text-ink">{value}</div>
-    </div>
-  );
-}
-
-function LiveStatusInline() {
-  const { now, state } = useEventPhase();
-  if (state.status === 'pre' && state.next) {
-    return <>T–{formatCountdown(state.next.start - now.getTime()).replace(/\s+\d+s$/, '')}</>;
-  }
-  if ((state.status === 'live' || state.status === 'override') && state.phase) {
-    return <span className="text-primary">Live: {state.phase.short}</span>;
-  }
-  return <>Complete</>;
-}
-
-function LivePillFallback() {
-  return <div className="h-[148px] rounded-3xl border border-line-2 bg-white/60" />;
-}
-
-function LiveStatusPill() {
+function HeroStatusInline() {
   const { now, state } = useEventPhase();
 
   if (state.status === 'pre' && state.next) {
     const ms = state.next.start - now.getTime();
+    const cd = formatCountdown(ms).replace(/\s+\d+s$/, '');
     return (
-      <div className="rounded-3xl border-2 border-primary/25 bg-white p-6 shadow-soft">
-        <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.24em] text-primary">
-          Countdown to live
-        </div>
-        <div className="font-display text-[clamp(34px,5vw,52px)] font-bold leading-none tabular-nums tracking-tight text-ink">
-          {formatCountdown(ms)}
-        </div>
-        <div className="mt-3 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-ink-2">
-          <span className="h-px w-6 bg-line-2" />
-          Until {state.next.short} · {fmtTime(state.next.start)}
-        </div>
-      </div>
+      <span className="flex items-center gap-2 text-ink">
+        <span className="h-1.5 w-1.5 rounded-full bg-primary animate-dot-pulse" />
+        Live in {cd}
+      </span>
     );
   }
-
   if ((state.status === 'live' || state.status === 'override') && state.phase) {
-    const ms = state.phase.end - now.getTime();
     return (
-      <div className="rounded-3xl border-2 border-accent/40 bg-accent/[0.05] p-6 shadow-soft">
-        <div className="mb-3 flex items-center gap-2">
-          <span className="h-2 w-2 animate-dot-pulse rounded-full bg-accent" />
-          <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.24em] text-accent">
-            Live · right now
-          </span>
-        </div>
-        <div className="font-display text-[clamp(22px,3vw,28px)] font-semibold leading-tight tracking-tight text-ink">
-          {state.phase.label}
-        </div>
-        <div className="mt-3 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-ink-2 tabular-nums">
-          <span className="h-px w-6 bg-line-2" />
-          Ends in {formatCountdown(ms)}
-        </div>
-      </div>
+      <span className="flex items-center gap-2 font-semibold text-accent">
+        <span className="h-1.5 w-1.5 rounded-full bg-accent animate-dot-pulse" />
+        Live now · {state.phase.short}
+      </span>
     );
   }
-
   return (
-    <div className="rounded-3xl border border-line-2 bg-surface-2 p-6">
-      <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.24em] text-mute">Status</div>
-      <div className="font-display text-[22px] font-semibold leading-tight text-ink">
-        Event complete.<br />
-        <span className="font-serif italic font-light text-ink-2">See you in &apos;27.</span>
-      </div>
-    </div>
+    <span className="flex items-center gap-2 text-mute">
+      <span className="h-1.5 w-1.5 rounded-full bg-mute" />
+      Event complete
+    </span>
   );
 }
 
@@ -240,11 +169,11 @@ function TeamsMarquee() {
   return (
     <section
       aria-label="Registered teams"
-      className="relative border-y border-ink/15 bg-ink py-6 text-white"
+      className="relative border-y border-line bg-surface-2 py-6 text-ink"
     >
       {/* Side fade masks */}
-      <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-ink to-transparent" />
-      <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-ink to-transparent" />
+      <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-surface-2 to-transparent" />
+      <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-surface-2 to-transparent" />
 
       <div className="flex w-max animate-marquee whitespace-nowrap">
         {row}
@@ -252,7 +181,7 @@ function TeamsMarquee() {
       </div>
 
       <div className="pointer-events-none absolute inset-x-0 -top-3 flex justify-center">
-        <span className="rounded-full bg-ink px-3 py-1 font-mono text-[9.5px] uppercase tracking-[0.28em] text-white/70 ring-1 ring-white/15">
+        <span className="rounded-full bg-surface-2 px-3 py-1 font-mono text-[9.5px] uppercase tracking-[0.28em] text-ink-2 ring-1 ring-line-2">
           {teams.length > 0
             ? `${teams.length} of ${SLOTS} teams locked in`
             : 'Be team 01 · seats open'}
@@ -389,7 +318,7 @@ function PhaseRow({ phase, idx, isLive }: { phase: Phase; idx: number; isLive: b
           {meta.activities.map((a) => (
             <span
               key={a}
-              className="rounded-full border border-line-2 bg-white px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-2"
+              className="rounded-full border border-line-2 bg-surface px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-2"
             >
               {a}
             </span>
@@ -465,7 +394,7 @@ function ShowcaseCard({
   preview: React.ReactNode; description: string;
 }) {
   return (
-    <article className="group rounded-3xl border border-line-2 bg-white p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-soft-lg md:p-6">
+    <article className="group rounded-3xl border border-line-2 bg-surface p-5 transition-all duration-300 hover:-translate-y-1 hover:border-line-2 hover:shadow-soft-lg md:p-6">
       <div className="mb-5 overflow-hidden rounded-2xl">{preview}</div>
       <div className="mb-3 flex items-center justify-between">
         <h3 className="font-display text-[22px] font-semibold leading-tight tracking-tight text-ink md:text-[26px]">
@@ -485,16 +414,16 @@ function ShowcaseCard({
 
 function IdeaSample() {
   return (
-    <div className="flex aspect-[16/9] flex-col justify-between rounded-2xl bg-ink p-6 text-white">
-      <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/40">
+    <div className="flex aspect-[16/9] flex-col justify-between rounded-2xl bg-surface-2 p-6 text-ink ring-1 ring-line">
+      <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-mute">
         Prompt 17 of 30
       </div>
-      <p className="font-display text-[clamp(15px,1.8vw,20px)] font-medium leading-[1.3] text-white">
+      <p className="font-display text-[clamp(15px,1.8vw,20px)] font-medium leading-[1.3] text-ink">
         &ldquo;{IDEA_PROMPTS[16]}&rdquo;
       </p>
       <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.18em]">
-        <span className="text-white/40">← Prev</span>
-        <span className="rounded-full bg-accent px-3 py-1 font-bold text-white">Next ↻</span>
+        <span className="text-mute">← Prev</span>
+        <span className="rounded-full bg-accent px-3 py-1 font-bold text-bg">Next ↻</span>
       </div>
     </div>
   );
@@ -504,14 +433,14 @@ function BingoSample() {
   const items = BINGO_MISSIONS.slice(0, 16);
   const checked = new Set([0, 5, 6, 10, 14]);
   return (
-    <div className="grid aspect-[16/9] grid-cols-4 gap-1.5 rounded-2xl bg-surface-2 p-3">
+    <div className="grid aspect-[16/9] grid-cols-4 gap-1.5 rounded-2xl bg-bg p-3 ring-1 ring-line">
       {items.map((m, i) => (
         <div
           key={i}
           className={`relative flex items-end overflow-hidden rounded-md p-1.5 text-[8px] leading-[1.15] ${
             checked.has(i)
-              ? 'bg-secondary text-white font-semibold'
-              : 'bg-white text-ink-2'
+              ? 'bg-secondary text-bg font-semibold'
+              : 'bg-surface text-ink-2'
           }`}
         >
           {checked.has(i) && (
@@ -552,18 +481,18 @@ function PitchSample() {
 
 function BoothSample() {
   return (
-    <div className="flex aspect-[16/9] items-center justify-center rounded-2xl bg-gradient-to-br from-danger/15 via-primary/10 to-accent/15 p-5">
-      <div className="relative aspect-[4/5] h-full rounded-xl border-[6px] border-ink/80 bg-gradient-to-br from-surface-2 to-white">
+    <div className="flex aspect-[16/9] items-center justify-center rounded-2xl bg-gradient-to-br from-danger/20 via-primary/15 to-accent/20 p-5">
+      <div className="relative aspect-[4/5] h-full rounded-xl border-[6px] border-ink/85 bg-gradient-to-br from-surface-2 to-surface-3">
         <div className="absolute inset-2 grid grid-cols-3 gap-1">
           {Array.from({ length: 9 }).map((_, i) => (
-            <span key={i} className="rounded-sm bg-ink/5" />
+            <span key={i} className="rounded-sm bg-ink/10" />
           ))}
         </div>
-        <div className="absolute inset-x-2 bottom-2 rounded bg-ink/90 p-1.5 backdrop-blur-sm">
-          <div className="font-display text-[10px] font-extrabold leading-none tracking-tight text-white">
+        <div className="absolute inset-x-2 bottom-2 rounded bg-bg/90 p-1.5 backdrop-blur-sm ring-1 ring-line">
+          <div className="font-display text-[10px] font-extrabold leading-none tracking-tight text-ink">
             INNOVATRIX
           </div>
-          <div className="mt-0.5 font-mono text-[7px] tracking-[0.22em] text-white/70">
+          <div className="mt-0.5 font-mono text-[7px] tracking-[0.22em] text-mute">
             TEAM 03 · 18.05.26
           </div>
         </div>
@@ -578,7 +507,7 @@ function RegisterSection({ initial, onSubmit }: LandingProps) {
   return (
     <section
       id="register"
-      className="relative border-t border-line bg-gradient-to-b from-white to-surface-2"
+      className="relative border-t border-line bg-gradient-to-b from-bg to-surface"
     >
       <div className="mx-auto max-w-[1320px] px-6 py-24 md:py-36">
         <div className="grid items-start gap-12 md:grid-cols-[1fr_1.2fr] md:gap-20">
@@ -621,23 +550,23 @@ function RegisterSection({ initial, onSubmit }: LandingProps) {
 
 function StakeholderStrip() {
   return (
-    <section className="bg-ink py-20 text-white md:py-28">
+    <section className="border-t border-line bg-bg py-20 text-ink md:py-28">
       <div className="mx-auto max-w-[1320px] px-6">
         <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
           <div>
-            <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.28em] text-white/40">
+            <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.28em] text-mute">
               Section 04 · The crew
             </div>
-            <h2 className="font-display text-[clamp(36px,5vw,60px)] font-bold leading-[0.98] tracking-[-0.025em] text-white">
+            <h2 className="font-display text-[clamp(36px,5vw,60px)] font-bold leading-[0.98] tracking-[-0.025em] text-ink">
               For the people <span className="font-serif italic font-light text-accent">running the day.</span>
             </h2>
           </div>
-          <p className="max-w-[420px] text-[15px] leading-relaxed text-white/60">
+          <p className="max-w-[420px] text-[15px] leading-relaxed text-ink-2">
             Same URL, different doors. Each surface is built for one job — phone-first for coordinators, slider-first for judges, projector-first for the big screen.
           </p>
         </div>
 
-        <div className="grid gap-px overflow-hidden rounded-3xl bg-white/10 md:grid-cols-3">
+        <div className="grid gap-px overflow-hidden rounded-3xl bg-line-2 md:grid-cols-3">
           <StakeholderTile
             href="/console"
             tag="Coordinator"
@@ -670,16 +599,16 @@ function StakeholderTile({
   return (
     <a
       href={href}
-      className="group flex flex-col bg-ink p-8 transition-colors hover:bg-[#13131c] md:p-10"
+      className="group flex flex-col bg-surface p-8 transition-colors hover:bg-surface-2 md:p-10"
     >
-      <div className="mb-5 font-mono text-[10px] uppercase tracking-[0.26em] text-white/40">
+      <div className="mb-5 font-mono text-[10px] uppercase tracking-[0.26em] text-mute">
         {tag}
       </div>
-      <h3 className="font-display text-[clamp(24px,2.6vw,30px)] font-semibold leading-tight tracking-tight text-white">
+      <h3 className="font-display text-[clamp(24px,2.6vw,30px)] font-semibold leading-tight tracking-tight text-ink">
         {title}
       </h3>
-      <p className="mt-3 text-[14.5px] leading-relaxed text-white/60">{description}</p>
-      <span className="mt-8 inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.22em] text-white/80 transition-colors group-hover:text-accent">
+      <p className="mt-3 text-[14.5px] leading-relaxed text-ink-2">{description}</p>
+      <span className="mt-8 inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.22em] text-ink-2 transition-colors group-hover:text-accent">
         Open
         <span className="transition-transform group-hover:translate-x-1">→</span>
       </span>
@@ -691,7 +620,7 @@ function StakeholderTile({
 
 function LandingFooter() {
   return (
-    <footer className="border-t border-line bg-white">
+    <footer className="border-t border-line bg-bg">
       <div className="mx-auto flex max-w-[1320px] flex-wrap items-center justify-between gap-6 px-6 py-12 font-mono text-[11px] uppercase tracking-[0.18em] text-mute">
         <div className="flex items-center gap-3 text-ink">
           <BrandMark filled size={26} />

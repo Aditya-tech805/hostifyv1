@@ -13,7 +13,7 @@ export function ActivityHeader({ step, title, description }: ActivityHeaderProps
     <>
       <Link
         href="/"
-        className="mb-[18px] inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3.5 py-2 text-[13px] text-ink-2 shadow-soft transition-colors hover:border-primary hover:text-primary"
+        className="mb-[18px] inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3.5 py-2 text-[13px] text-ink-2 shadow-soft transition-colors hover:border-primary hover:text-primary"
       >
         ← Back to activities
       </Link>

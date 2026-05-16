@@ -73,7 +73,7 @@ export function TeamDashboard({ team, onEdit }: TeamDashboardProps) {
 
         <button
           onClick={onEdit}
-          className="mt-8 w-full rounded-2xl border border-line bg-white px-5 py-4 text-[15px] font-medium text-ink-2 shadow-soft transition-all hover:border-primary hover:text-ink hover:shadow-glow"
+          className="mt-8 w-full rounded-2xl border border-line bg-surface px-5 py-4 text-[15px] font-medium text-ink-2 shadow-soft transition-all hover:border-primary hover:text-ink hover:shadow-glow"
         >
           Edit team details
         </button>

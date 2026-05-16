@@ -56,8 +56,8 @@ export function ActivityCard({ id, icon, title, description }: ActivityCardProps
       aria-disabled={!unlocked}
       className={`group relative flex min-h-[124px] flex-col justify-between overflow-hidden rounded-2xl border p-[18px] text-left transition-all duration-200 ${
         unlocked
-          ? 'border-line bg-white shadow-soft hover:-translate-y-1 hover:border-primary/30 hover:shadow-glow'
-          : 'cursor-not-allowed border-line bg-white/60 opacity-60'
+          ? 'border-line bg-surface shadow-soft hover:-translate-y-1 hover:border-primary/30 hover:shadow-glow'
+          : 'cursor-not-allowed border-line bg-surface/60 opacity-60'
       }`}
     >
       {/* Subtle gradient blob in the corner of unlocked cards */}

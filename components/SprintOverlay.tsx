@@ -30,7 +30,7 @@ export function SprintOverlay() {
   const inComposeWindow = remaining > 0;
 
   return (
-    <div className="fixed inset-0 z-[280] flex flex-col items-center justify-center overflow-y-auto bg-white/85 px-6 py-10 backdrop-blur-2xl animate-fade-in" style={{ backgroundImage: 'radial-gradient(ellipse 50% 40% at 20% 20%, rgba(245,158,11,0.18), transparent 70%), radial-gradient(ellipse 50% 40% at 80% 80%, rgba(79,70,229,0.16), transparent 70%)' }}>
+    <div className="fixed inset-0 z-[280] flex flex-col items-center justify-center overflow-y-auto bg-bg/85 px-6 py-10 backdrop-blur-2xl animate-fade-in" style={{ backgroundImage: 'radial-gradient(ellipse 50% 40% at 20% 20%, rgba(245,158,11,0.18), transparent 70%), radial-gradient(ellipse 50% 40% at 80% 80%, rgba(79,70,229,0.16), transparent 70%)' }}>
       {/* Eyebrow + prompt */}
       <div className="mb-5 inline-flex items-center rounded-full border border-spark/40 bg-spark/[0.10] px-5 py-2 font-mono text-[clamp(12px,1.3vw,16px)] uppercase tracking-[0.32em] text-spark">
         <span className="mr-3 inline-block h-2 w-2 animate-pulse-soft rounded-full bg-spark" />
@@ -57,7 +57,7 @@ export function SprintOverlay() {
             return (
               <div
                 key={s.teamId}
-                className={`animate-pop-in overflow-hidden rounded-2xl border bg-white p-5 ${
+                className={`animate-pop-in overflow-hidden rounded-2xl border bg-surface p-5 ${
                   isWinner ? 'border-accent shadow-glow-cyan' : 'border-line shadow-soft'
                 }`}
                 style={{

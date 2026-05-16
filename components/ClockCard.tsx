@@ -11,7 +11,7 @@ interface ClockCardProps {
 
 export function ClockCard({ compact = false }: ClockCardProps) {
   return (
-    <div className="grid grid-cols-[1fr_auto] items-center gap-4 rounded-2xl border border-line bg-white p-5 shadow-soft">
+    <div className="grid grid-cols-[1fr_auto] items-center gap-4 rounded-2xl border border-line bg-surface p-5 shadow-soft">
       <div>
         <ClientOnly
           fallback={

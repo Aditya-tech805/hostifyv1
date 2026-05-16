@@ -5,31 +5,32 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // ─── Light-mode bright palette (Path B) ──────────────────────────────
-        // Background surfaces — slate-50 / white / slate-100 lift
-        bg:          '#F8FAFC',
-        surface:     '#FFFFFF',
-        'surface-2': '#F1F5F9',
-        'surface-3': '#E2E8F0',
-        // Brand
-        primary:     '#4F46E5',  // indigo
-        'primary-2': '#6366F1',
-        secondary:   '#7C3AED',  // violet (kept for the brand mark + gradients)
-        'secondary-2': '#A78BFA',
-        accent:      '#06B6D4',  // cyan
-        'accent-2':  '#22D3EE',
-        spark:       '#F59E0B',  // amber (warm highlights, warnings)
-        // Text on light
-        ink:         '#0F172A',  // slate-900
-        'ink-2':     '#334155',  // slate-700
-        mute:        '#64748B',  // slate-500
-        // Lines
-        line:        'rgba(15, 23, 42, 0.08)',
-        'line-2':    'rgba(15, 23, 42, 0.14)',
-        // Semantic
-        success:     '#22C55E',
-        warning:     '#F59E0B',
-        danger:      '#EF4444',
+        // ─── Dark-mode editorial palette ─────────────────────────────────────
+        // The page is dark; surfaces step up via elevation (bg → surface → -2 → -3).
+        // Brand accents are tuned a touch brighter for contrast on the dark bg.
+        bg:          '#0A0B14',  // page — near-black with a hint of blue
+        surface:     '#14151F',  // raised: cards, sticky bars
+        'surface-2': '#1C1D2A',  // more raised: dramatic sections, inputs
+        'surface-3': '#28293A',  // most raised: hover, popovers
+        // Brand — unchanged hues so the identity carries, tuned for dark contrast
+        primary:     '#6366F1',  // indigo-500 (a step lighter than 600 for dark legibility)
+        'primary-2': '#818CF8',
+        secondary:   '#A78BFA',  // violet-400
+        'secondary-2': '#C4B5FD',
+        accent:      '#22D3EE',  // cyan-400
+        'accent-2':  '#67E8F9',
+        spark:       '#FBBF24',  // amber-400
+        // Text on dark — cream off-white primary, slate ramp for hierarchy
+        ink:         '#F5F3EE',  // warm cream (vs pure white — softer on the eye)
+        'ink-2':     '#CBD5E1',  // slate-300
+        mute:        '#94A3B8',  // slate-400
+        // Lines — light alpha over the dark bg
+        line:        'rgba(245, 243, 238, 0.08)',
+        'line-2':    'rgba(245, 243, 238, 0.16)',
+        // Semantic — slightly brighter for dark
+        success:     '#34D399',
+        warning:     '#FBBF24',
+        danger:      '#F87171',
       },
       fontFamily: {
         display: ['var(--font-display)', 'sans-serif'],
@@ -38,12 +39,14 @@ const config: Config = {
         serif:   ['var(--font-serif)', 'Georgia', 'serif'],
       },
       boxShadow: {
-        glow:        '0 10px 30px -8px rgba(79, 70, 229, 0.25)',
-        'glow-lg':   '0 20px 60px -12px rgba(79, 70, 229, 0.35)',
-        'glow-cyan': '0 10px 30px -8px rgba(6, 182, 212, 0.3)',
-        'glow-violet': '0 10px 30px -8px rgba(124, 58, 237, 0.3)',
-        soft:        '0 10px 30px rgba(15, 23, 42, 0.06)',
-        'soft-lg':   '0 20px 60px rgba(15, 23, 42, 0.10)',
+        // Brand-tinted glows — read well against the dark canvas
+        glow:          '0 10px 30px -8px rgba(99, 102, 241, 0.45)',
+        'glow-lg':     '0 20px 60px -12px rgba(99, 102, 241, 0.55)',
+        'glow-cyan':   '0 10px 30px -8px rgba(34, 211, 238, 0.45)',
+        'glow-violet': '0 10px 30px -8px rgba(167, 139, 250, 0.45)',
+        // Soft = pure black falloff — adds depth on dark surfaces
+        soft:          '0 10px 30px rgba(0, 0, 0, 0.35)',
+        'soft-lg':     '0 24px 60px rgba(0, 0, 0, 0.55)',
       },
       keyframes: {
         'spin-slow':       { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } },
@@ -53,9 +56,9 @@ const config: Config = {
         'pop-in':          { from: { opacity: '0', transform: 'scale(0.85)' }, to: { opacity: '1', transform: 'scale(1)' } },
         'fade-in':         { from: { opacity: '0' }, to: { opacity: '1' } },
         'x-cycle':         {
-          '0%, 100%': { transform: 'rotate(0deg)',  color: '#4F46E5' },
-          '33%':      { transform: 'rotate(8deg)',  color: '#06B6D4' },
-          '66%':      { transform: 'rotate(-8deg)', color: '#7C3AED' },
+          '0%, 100%': { transform: 'rotate(0deg)',  color: '#6366F1' },
+          '33%':      { transform: 'rotate(8deg)',  color: '#22D3EE' },
+          '66%':      { transform: 'rotate(-8deg)', color: '#A78BFA' },
         },
         'pulse-soft':      { '0%, 100%': { opacity: '1', transform: 'scale(1)' }, '50%': { opacity: '0.5', transform: 'scale(0.8)' } },
         bounce:            { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-8px)' } },
@@ -82,15 +85,15 @@ const config: Config = {
         'sweep-x':        'sweep-x 1.4s cubic-bezier(0.7, 0, 0.3, 1) forwards',
       },
       backgroundImage: {
-        'gradient-brand':    'linear-gradient(135deg, #4F46E5, #7C3AED, #06B6D4)',
-        'gradient-indigo':   'linear-gradient(135deg, #4F46E5, #6366F1)',
-        'gradient-violet':   'linear-gradient(135deg, #7C3AED, #A78BFA)',
-        'gradient-cyan':     'linear-gradient(135deg, #06B6D4, #22D3EE)',
-        // Mesh gradient — overlapping radials. Tile size matters less for these.
+        'gradient-brand':    'linear-gradient(135deg, #6366F1, #A78BFA, #22D3EE)',
+        'gradient-indigo':   'linear-gradient(135deg, #6366F1, #818CF8)',
+        'gradient-violet':   'linear-gradient(135deg, #A78BFA, #C4B5FD)',
+        'gradient-cyan':     'linear-gradient(135deg, #22D3EE, #67E8F9)',
+        // Mesh gradient — soft brand glows behind the dark canvas
         mesh: `
-          radial-gradient(at 15% 20%, rgba(79, 70, 229, 0.14) 0px, transparent 50%),
-          radial-gradient(at 85% 15%, rgba(6, 182, 212, 0.12) 0px, transparent 50%),
-          radial-gradient(at 50% 90%, rgba(124, 58, 237, 0.10) 0px, transparent 50%)
+          radial-gradient(at 15% 20%, rgba(99, 102, 241, 0.22) 0px, transparent 50%),
+          radial-gradient(at 85% 15%, rgba(34, 211, 238, 0.18) 0px, transparent 50%),
+          radial-gradient(at 50% 90%, rgba(167, 139, 250, 0.16) 0px, transparent 50%)
         `,
       },
     },

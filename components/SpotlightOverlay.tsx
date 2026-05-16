@@ -88,7 +88,7 @@ export function SpotlightOverlay() {
       : '';
 
   return (
-    <div className="fixed inset-0 z-[300] flex flex-col items-center justify-center overflow-hidden bg-white/85 px-5 backdrop-blur-2xl animate-fade-in" style={{ backgroundImage: 'radial-gradient(ellipse 50% 60% at 25% 30%, rgba(245,158,11,0.18), transparent 70%), radial-gradient(ellipse 50% 60% at 75% 70%, rgba(124,58,237,0.16), transparent 70%)' }}>
+    <div className="fixed inset-0 z-[300] flex flex-col items-center justify-center overflow-hidden bg-bg/85 px-5 backdrop-blur-2xl animate-fade-in" style={{ backgroundImage: 'radial-gradient(ellipse 50% 60% at 25% 30%, rgba(245,158,11,0.18), transparent 70%), radial-gradient(ellipse 50% 60% at 75% 70%, rgba(124,58,237,0.16), transparent 70%)' }}>
       <div className="mb-8 inline-flex items-center rounded-full border border-spark/40 bg-spark/[0.10] px-5 py-2 font-mono text-[14px] uppercase tracking-[0.32em] text-spark">
         <span className="mr-3 inline-block h-2 w-2 animate-pulse-soft rounded-full bg-spark" />
         Spotlight · Phase 2

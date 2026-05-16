@@ -18,12 +18,12 @@ interface TopBarProps {
  */
 export function TopBar({ roleTag, right }: TopBarProps) {
   return (
-    <header className="sticky top-0 z-50 border-b border-line bg-white/70 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-line bg-bg/80 backdrop-blur-xl">
       <div className="mx-auto flex max-w-[720px] items-center justify-between gap-3 px-5 py-3.5">
         <div className="flex items-center gap-2.5 font-display font-semibold tracking-tight text-ink">
           <BrandMark filled />
           <span>INNOVATRIX</span>
-          <span className="rounded-full border border-line bg-white px-2 py-[2px] font-mono text-[10.5px] tracking-[0.18em] text-mute">
+          <span className="rounded-full border border-line bg-surface px-2 py-[2px] font-mono text-[10.5px] tracking-[0.18em] text-mute">
             &apos;26
           </span>
           {roleTag && (

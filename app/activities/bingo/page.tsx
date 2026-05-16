@@ -121,8 +121,8 @@ function BingoBody() {
                     ? 'border-accent bg-gradient-cyan text-white shadow-glow-cyan'
                     : 'border-primary bg-gradient-indigo text-white shadow-glow'
                   : inLineHere
-                    ? 'border-line bg-white text-ink-2 [box-shadow:inset_0_0_0_2px_#06B6D4]'
-                    : 'border-line bg-white text-ink-2 shadow-soft hover:border-line-2'
+                    ? 'border-line bg-surface text-ink-2 [box-shadow:inset_0_0_0_2px_#06B6D4]'
+                    : 'border-line bg-surface text-ink-2 shadow-soft hover:border-line-2'
               }`}
             >
               <span className={`font-mono text-[9.5px] tracking-[0.16em] ${done ? 'text-white/70' : 'text-mute'}`}>

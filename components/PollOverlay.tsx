@@ -30,7 +30,7 @@ export function PollOverlay() {
   const colors = ['#7c3aed', '#84cc16', '#f97316', '#0ea5e9', '#f43f5e', '#fbbf24', '#a78bfa'];
 
   return (
-    <div className="fixed inset-0 z-[290] flex flex-col items-center justify-center overflow-hidden bg-white/85 px-6 backdrop-blur-2xl animate-fade-in" style={{ backgroundImage: 'radial-gradient(ellipse 60% 50% at 50% 0%, rgba(6,182,212,0.18), transparent 70%), radial-gradient(ellipse 50% 50% at 50% 100%, rgba(79,70,229,0.16), transparent 70%)' }}>
+    <div className="fixed inset-0 z-[290] flex flex-col items-center justify-center overflow-hidden bg-bg/85 px-6 backdrop-blur-2xl animate-fade-in" style={{ backgroundImage: 'radial-gradient(ellipse 60% 50% at 50% 0%, rgba(6,182,212,0.18), transparent 70%), radial-gradient(ellipse 50% 50% at 50% 100%, rgba(79,70,229,0.16), transparent 70%)' }}>
       <div className="mb-6 inline-flex items-center rounded-full border border-accent/40 bg-accent/[0.08] px-5 py-2 font-mono text-[clamp(12px,1.3vw,16px)] uppercase tracking-[0.32em] text-accent">
         <span className="mr-3 inline-block h-2 w-2 animate-pulse-soft rounded-full bg-accent" />
         Live poll

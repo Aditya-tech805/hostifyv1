@@ -5,24 +5,24 @@
 :root {
   /* CSS custom properties — mirror tailwind.config.ts for color-mix(),
      gradients, and inline-style usage. */
-  --bg:          #F8FAFC;
-  --surface:     #FFFFFF;
-  --surface-2:   #F1F5F9;
-  --surface-3:   #E2E8F0;
-  --primary:     #4F46E5;
-  --primary-2:   #6366F1;
-  --secondary:   #7C3AED;
-  --secondary-2: #A78BFA;
-  --accent:      #06B6D4;
-  --accent-2:    #22D3EE;
-  --spark:       #F59E0B;
-  --ink:         #0F172A;
-  --ink-2:       #334155;
-  --mute:        #64748B;
-  --line:        rgba(15, 23, 42, 0.08);
-  --line-2:      rgba(15, 23, 42, 0.14);
-  --success:     #22C55E;
-  --danger:      #EF4444;
+  --bg:          #0A0B14;
+  --surface:     #14151F;
+  --surface-2:   #1C1D2A;
+  --surface-3:   #28293A;
+  --primary:     #6366F1;
+  --primary-2:   #818CF8;
+  --secondary:   #A78BFA;
+  --secondary-2: #C4B5FD;
+  --accent:      #22D3EE;
+  --accent-2:    #67E8F9;
+  --spark:       #FBBF24;
+  --ink:         #F5F3EE;
+  --ink-2:       #CBD5E1;
+  --mute:        #94A3B8;
+  --line:        rgba(245, 243, 238, 0.08);
+  --line-2:      rgba(245, 243, 238, 0.16);
+  --success:     #34D399;
+  --danger:      #F87171;
 }
 
 html, body {
@@ -33,12 +33,12 @@ html, body {
 }
 
 body {
-  /* Mesh gradient backdrop — overlapping soft radial blobs.
-     Subtle enough to read as "designed" not "decorated". */
+  /* Dark canvas with very subtle brand glows seeping in from the corners.
+     Sized large so they read as ambient lighting, not blobs. */
   background:
-    radial-gradient(at 15% 0%,   rgba(79, 70, 229, 0.14) 0px, transparent 50%),
-    radial-gradient(at 85% 15%,  rgba(6, 182, 212, 0.12) 0px, transparent 50%),
-    radial-gradient(at 50% 100%, rgba(124, 58, 237, 0.10) 0px, transparent 50%),
+    radial-gradient(60% 50% at 12% 0%,   rgba(99, 102, 241, 0.18) 0px, transparent 70%),
+    radial-gradient(50% 40% at 92% 12%,  rgba(34, 211, 238, 0.12) 0px, transparent 70%),
+    radial-gradient(70% 50% at 50% 110%, rgba(167, 139, 250, 0.12) 0px, transparent 70%),
     var(--bg);
   background-attachment: fixed;
   min-height: 100vh;
@@ -46,29 +46,33 @@ body {
 
 ::selection { background: var(--primary); color: #FFFFFF; }
 
-/* Native scrollbar — make it visible against the light surfaces */
+/* Native scrollbar — keep it dim against the dark surfaces */
 ::-webkit-scrollbar { width: 12px; height: 12px; }
-::-webkit-scrollbar-track { background: var(--surface-2); }
-::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 6px; border: 3px solid var(--surface-2); }
-::-webkit-scrollbar-thumb:hover { background: var(--mute); }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb {
+  background: var(--surface-2);
+  border-radius: 6px;
+  border: 3px solid var(--bg);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--surface-3); }
 
 /* ─── Custom utilities ───────────────────────────────────────────────────── */
 @layer utilities {
 
-  /* Glass card — translucent white with backdrop blur. Use on top of
-     mesh-gradient body or coloured surfaces for a premium frosted look. */
+  /* Glass card — translucent surface with backdrop blur. Reads as a "lifted"
+     panel over the dark mesh background. */
   .glass {
-    background: rgba(255, 255, 255, 0.7);
+    background: rgba(20, 21, 31, 0.6);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(245, 243, 238, 0.08);
   }
   .glass-dark {
-    /* Used on darker overlay surfaces (e.g. inside a coloured spotlight) */
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    /* Used on overlay surfaces (e.g. inside a coloured spotlight) */
+    background: rgba(10, 11, 20, 0.7);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(245, 243, 238, 0.06);
   }
 
   /* Animated gradient — useful on primary CTAs. Pair with bg-gradient-brand */
@@ -79,14 +83,14 @@ body {
 
   /* Neon glow text shadow */
   .glow-text {
-    text-shadow: 0 0 24px rgba(79, 70, 229, 0.35);
+    text-shadow: 0 0 24px rgba(99, 102, 241, 0.55);
   }
 
   /* Grid pattern overlay — use as ::before in a relative container */
   .grid-pattern {
     background-image:
-      linear-gradient(rgba(15, 23, 42, 0.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(15, 23, 42, 0.05) 1px, transparent 1px);
+      linear-gradient(rgba(245, 243, 238, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(245, 243, 238, 0.05) 1px, transparent 1px);
     background-size: 48px 48px;
   }
 }
@@ -108,7 +112,7 @@ input[type='range']::-webkit-slider-thumb {
   border-radius: 50%;
   background: var(--primary);
   cursor: pointer;
-  box-shadow: 0 4px 12px -2px rgba(79, 70, 229, 0.45);
+  box-shadow: 0 4px 12px -2px rgba(99, 102, 241, 0.65);
   transition: transform 0.15s;
 }
 input[type='range']::-webkit-slider-thumb:hover { transform: scale(1.15); }

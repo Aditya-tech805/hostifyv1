@@ -136,7 +136,7 @@ export function PinKeypad({
                 className={`flex h-20 w-20 select-none items-center justify-center rounded-full font-display text-[26px] font-semibold transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-30 ${
                   isFn
                     ? 'border border-transparent bg-transparent text-[18px] text-mute hover:text-ink-2'
-                    : 'border border-line bg-white text-ink shadow-soft hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-glow active:scale-95 ' +
+                    : 'border border-line bg-surface text-ink shadow-soft hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-glow active:scale-95 ' +
                       (roleTone === 'accent' ? 'active:bg-accent active:border-accent active:text-white' : 'active:bg-primary active:border-primary active:text-white')
                 }`}
               >

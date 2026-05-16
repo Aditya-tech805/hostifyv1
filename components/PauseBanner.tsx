@@ -12,7 +12,7 @@ export function PauseBanner() {
   if (!paused) return null;
 
   return (
-    <div className="fixed inset-0 z-[400] flex flex-col items-center justify-center bg-white/85 px-6 backdrop-blur-2xl animate-fade-in">
+    <div className="fixed inset-0 z-[400] flex flex-col items-center justify-center bg-bg/85 px-6 backdrop-blur-2xl animate-fade-in">
       {/* Floating colour wash for visual interest */}
       <div className="pointer-events-none absolute left-1/2 top-1/3 h-96 w-96 -translate-x-1/2 rounded-full bg-spark/20 blur-3xl animate-float-slow" />
 
