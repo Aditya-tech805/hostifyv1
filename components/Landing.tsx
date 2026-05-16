@@ -63,15 +63,16 @@ function Hero() {
           </h1>
         </div>
 
-        {/* Bottom block — single time line, single tagline, single CTA */}
+        {/* Bottom block — concert-poster time band, tagline, CTA */}
         <div className="animate-reveal-up" style={{ animationDelay: '160ms' }}>
-          {/* Hairline-flanked time strip */}
-          <div className="flex items-center gap-5">
-            <span className="h-px flex-1 bg-line-2" />
-            <span className="font-mono text-[clamp(11px,1.1vw,13px)] uppercase tracking-[0.3em] text-ink-2 tabular-nums">
-              May 18 · 10:00 → 16:00 · IST
-            </span>
-            <span className="h-px w-16 bg-line-2 md:flex-1" />
+          {/* Doors / Stage / Wrap — the most event-coded gesture we have */}
+          <div className="grid grid-cols-3 items-end border-y border-line-2 py-4">
+            <TimeStamp label="Doors" value="09:45" />
+            <TimeStamp label="Stage" value="10:00" highlight />
+            <TimeStamp label="Wrap"  value="16:00" alignRight />
+          </div>
+          <div className="mt-2 text-center font-mono text-[clamp(10px,1vw,12px)] uppercase tracking-[0.32em] text-mute tabular-nums">
+            Monday · 18 May 2026 · IST
           </div>
 
           <div className="mt-10 grid items-end gap-8 md:mt-14 md:grid-cols-[1fr_auto]">
@@ -85,14 +86,14 @@ function Hero() {
                 href="#register"
                 className="group inline-flex items-center gap-3 rounded-full bg-ink px-7 py-4 font-display text-[15px] font-semibold text-bg shadow-soft-lg transition-all hover:-translate-y-0.5 hover:bg-primary hover:text-white hover:shadow-glow-lg"
               >
-                Register your team
+                Get on the bill
                 <span className="transition-transform group-hover:translate-x-1">→</span>
               </a>
               <a
                 href="#the-day"
                 className="group inline-flex items-center gap-1.5 px-2 font-mono text-[10px] uppercase tracking-[0.24em] text-mute transition-colors hover:text-ink"
               >
-                or explore the day
+                see the lineup
                 <span className="transition-transform group-hover:translate-y-0.5">↓</span>
               </a>
             </div>
@@ -100,6 +101,23 @@ function Hero() {
         </div>
       </div>
     </section>
+  );
+}
+
+function TimeStamp({
+  label, value, highlight, alignRight,
+}: { label: string; value: string; highlight?: boolean; alignRight?: boolean }) {
+  return (
+    <div className={alignRight ? 'text-right' : highlight ? 'text-center' : ''}>
+      <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.32em] text-mute">{label}</div>
+      <div className={`font-display tabular-nums leading-none tracking-[-0.02em] ${
+        highlight
+          ? 'text-[clamp(40px,6vw,72px)] font-extrabold text-ink'
+          : 'text-[clamp(24px,3.5vw,40px)] font-semibold text-ink-2'
+      }`}>
+        {value}
+      </div>
+    </div>
   );
 }
 
@@ -236,8 +254,9 @@ function PhaseSpine() {
     <section id="the-day" className="mx-auto max-w-[1320px] px-6 py-24 md:py-36">
       <header className="mb-12 grid gap-10 md:mb-20 md:grid-cols-[1fr_2fr] md:gap-16">
         <div>
-          <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.28em] text-mute">
-            Section 01 · The day
+          <div className="mb-3 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.32em] text-mute">
+            <span className="h-px w-8 bg-line-2" />
+            The program
           </div>
           <h2 className="font-display text-[clamp(40px,5.5vw,72px)] font-bold leading-[0.98] tracking-[-0.025em] text-ink">
             Five phases.<br />
@@ -245,7 +264,7 @@ function PhaseSpine() {
           </h2>
         </div>
         <p className="font-display text-[clamp(18px,2vw,22px)] leading-[1.55] text-ink-2 md:pt-8">
-          Every minute is scripted; almost nothing is staged. The schedule below is the same one your phone, the projector, and the coordinator&apos;s console all read from — when a phase goes live, the whole room shifts at once.
+          Every minute is scripted; almost nothing is staged. Same schedule on every phone, every projector, every console — when a phase goes live, the whole room shifts at once.
         </p>
       </header>
 
@@ -352,16 +371,17 @@ function ActivityShowcase() {
     <section id="activities" className="mx-auto max-w-[1320px] px-6 py-24 md:py-36">
       <header className="mb-12 grid gap-10 md:mb-20 md:grid-cols-[1fr_2fr] md:gap-16">
         <div>
-          <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.28em] text-mute">
-            Section 02 · Activities
+          <div className="mb-3 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.32em] text-mute">
+            <span className="h-px w-8 bg-line-2" />
+            On the floor
           </div>
           <h2 className="font-display text-[clamp(40px,5.5vw,72px)] font-bold leading-[0.98] tracking-[-0.025em] text-ink">
-            Built for<br />
-            <span className="font-serif italic font-light text-accent">restless rooms.</span>
+            Things to do<br />
+            <span className="font-serif italic font-light text-accent">between phases.</span>
           </h2>
         </div>
         <p className="font-display text-[clamp(18px,2vw,22px)] leading-[1.55] text-ink-2 md:pt-8">
-          Mini-experiences engineered for the moments when energy dips. Tap-friendly on a phone, projector-ready when the spotlight hits.
+          Stuff that happens when the room needs a kick. On your phone, on the projector, on a wall. Pick one when the energy dips.
         </p>
       </header>
 
@@ -512,27 +532,28 @@ function RegisterSection({ initial, onSubmit }: LandingProps) {
       <div className="mx-auto max-w-[1320px] px-6 py-24 md:py-36">
         <div className="grid items-start gap-12 md:grid-cols-[1fr_1.2fr] md:gap-20">
           <div className="md:sticky md:top-24">
-            <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.28em] text-mute">
-              Section 03 · Lock in
+            <div className="mb-3 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.32em] text-mute">
+              <span className="h-px w-8 bg-line-2" />
+              The RSVP
             </div>
             <h2 className="font-display text-[clamp(48px,7vw,96px)] font-extrabold leading-[0.92] tracking-[-0.035em] text-ink">
               Be <span className="text-primary">team 01.</span>
             </h2>
             <p className="mt-6 max-w-[440px] font-display text-[clamp(17px,1.8vw,20px)] leading-[1.5] text-ink-2">
-              One person registers. Pick a name, a colour, list your members, and tell us your idea in one line. The rest of the day rebuilds around what you submit here.
+              One person fills this in for the team. Name, colour, members, the idea in one line. From there, the day rebuilds around what you submit.
             </p>
             <ul className="mt-8 space-y-3 font-mono text-[11.5px] uppercase tracking-[0.18em] text-mute">
               <li className="flex items-center gap-3">
                 <span className="h-px w-6 bg-line-2" />
-                <span>Takes under a minute</span>
+                <span>Under a minute</span>
               </li>
               <li className="flex items-center gap-3">
                 <span className="h-px w-6 bg-line-2" />
-                <span>Synced live to every device</span>
+                <span>Live on every device</span>
               </li>
               <li className="flex items-center gap-3">
                 <span className="h-px w-6 bg-line-2" />
-                <span>Editable until 10:45 AM</span>
+                <span>Locked at 10:45 sharp</span>
               </li>
             </ul>
           </div>
@@ -554,15 +575,16 @@ function StakeholderStrip() {
       <div className="mx-auto max-w-[1320px] px-6">
         <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
           <div>
-            <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.28em] text-mute">
-              Section 04 · The crew
+            <div className="mb-3 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.32em] text-mute">
+              <span className="h-px w-8 bg-line-2" />
+              Backstage
             </div>
             <h2 className="font-display text-[clamp(36px,5vw,60px)] font-bold leading-[0.98] tracking-[-0.025em] text-ink">
-              For the people <span className="font-serif italic font-light text-accent">running the day.</span>
+              Crew and judges, <span className="font-serif italic font-light text-accent">your doors are here.</span>
             </h2>
           </div>
           <p className="max-w-[420px] text-[15px] leading-relaxed text-ink-2">
-            Same URL, different doors. Each surface is built for one job — phone-first for coordinators, slider-first for judges, projector-first for the big screen.
+            Same URL, different doors. Phone-first for coordinators, slider-first for judges, projector-first for the big screen.
           </p>
         </div>
 
@@ -621,16 +643,18 @@ function StakeholderTile({
 function LandingFooter() {
   return (
     <footer className="border-t border-line bg-bg">
-      <div className="mx-auto flex max-w-[1320px] flex-wrap items-center justify-between gap-6 px-6 py-12 font-mono text-[11px] uppercase tracking-[0.18em] text-mute">
-        <div className="flex items-center gap-3 text-ink">
+      <div className="mx-auto flex max-w-[1320px] flex-wrap items-center justify-between gap-6 px-6 py-12 font-mono text-[11px] uppercase tracking-[0.22em] text-mute">
+        <div className="flex items-center gap-3">
           <BrandMark filled size={26} />
           <span className="font-display font-semibold tracking-tight text-ink">Innovatrix &apos;26</span>
-          <span className="text-mute">/ A student-coordinator production</span>
+          <span className="text-mute">· a student-coordinator production</span>
         </div>
-        <div className="flex items-center gap-6">
-          <span>One day · Sixteen teams</span>
-          <span className="text-line-2">/</span>
-          <span>© 2026</span>
+        <div className="flex items-center gap-4 text-ink-2">
+          <span>Doors at 10</span>
+          <span className="text-line-2">·</span>
+          <span>Wrap at 4</span>
+          <span className="text-line-2">·</span>
+          <span className="font-serif italic font-light text-ink normal-case tracking-normal text-[13px]">see you on the 18th.</span>
         </div>
       </div>
     </footer>
