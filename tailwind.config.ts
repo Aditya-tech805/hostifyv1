@@ -35,6 +35,7 @@ const config: Config = {
         display: ['var(--font-display)', 'sans-serif'],
         sans:    ['var(--font-sans)', 'system-ui', 'sans-serif'],
         mono:    ['var(--font-mono)', 'monospace'],
+        serif:   ['var(--font-serif)', 'Georgia', 'serif'],
       },
       boxShadow: {
         glow:        '0 10px 30px -8px rgba(79, 70, 229, 0.25)',
@@ -60,6 +61,9 @@ const config: Config = {
         bounce:            { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-8px)' } },
         'float-slow':      { '0%, 100%': { transform: 'translate(0, 0)' }, '50%': { transform: 'translate(20px, -30px)' } },
         'gradient-shift':  { '0%, 100%': { backgroundPosition: '0% 50%' }, '50%': { backgroundPosition: '100% 50%' } },
+        marquee:           { from: { transform: 'translateX(0)' }, to: { transform: 'translateX(-50%)' } },
+        'reveal-up':       { from: { opacity: '0', transform: 'translateY(24px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
+        'sweep-x':         { from: { transform: 'translateX(-105%)' }, to: { transform: 'translateX(105%)' } },
       },
       animation: {
         'spin-slow':      'spin-slow 16s linear infinite',
@@ -73,6 +77,9 @@ const config: Config = {
         bounce:           'bounce 1.2s ease infinite',
         'float-slow':     'float-slow 14s ease-in-out infinite',
         'gradient-shift': 'gradient-shift 6s ease infinite',
+        marquee:          'marquee 50s linear infinite',
+        'reveal-up':      'reveal-up 0.7s cubic-bezier(0.2, 0.7, 0.1, 1) both',
+        'sweep-x':        'sweep-x 1.4s cubic-bezier(0.7, 0, 0.3, 1) forwards',
       },
       backgroundImage: {
         'gradient-brand':    'linear-gradient(135deg, #4F46E5, #7C3AED, #06B6D4)',

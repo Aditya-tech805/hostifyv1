@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Space_Grotesk, JetBrains_Mono } from 'next/font/google';
+import { Inter, Space_Grotesk, JetBrains_Mono, Fraunces } from 'next/font/google';
 import './globals.css';
 
 const sans = Inter({
@@ -18,6 +18,17 @@ const mono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-mono',
   display: 'swap',
+});
+
+// Editorial serif — used sparingly for italic accent words against the bold
+// display sans. The single character of contrast is what makes the page feel
+// hand-set instead of template-generated.
+const serif = Fraunces({
+  subsets: ['latin'],
+  variable: '--font-serif',
+  display: 'swap',
+  style: ['italic', 'normal'],
+  weight: ['300', '400', '500'],
 });
 
 // Resolve the public base URL for OG images / canonical links. Vercel injects
@@ -50,7 +61,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${sans.variable} ${display.variable} ${mono.variable}`}>
+    <html lang="en" className={`${sans.variable} ${display.variable} ${mono.variable} ${serif.variable}`}>
       <body className="font-sans">{children}</body>
     </html>
   );
