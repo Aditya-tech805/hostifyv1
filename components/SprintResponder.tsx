@@ -53,8 +53,9 @@ export function SprintResponder() {
   };
 
   return (
-    <section className="-mx-5 my-4 border-y border-spark/30 bg-spark/[0.06] px-5 py-5">
-      <div className="mb-2 flex items-center justify-between gap-2 font-mono text-[10.5px] uppercase tracking-[0.18em] text-spark">
+    <section className="my-4 border-y border-spark/30 bg-spark/[0.06]">
+      <div className="mx-auto max-w-[720px] px-5 py-5">
+        <div className="mb-2 flex items-center justify-between gap-2 font-mono text-[10.5px] uppercase tracking-[0.18em] text-spark">
         <span className="inline-flex items-center gap-2">
           <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-spark" />
           Speed Idea Sprint
@@ -100,6 +101,7 @@ export function SprintResponder() {
           )}
         </div>
       )}
+      </div>
     </section>
   );
 }

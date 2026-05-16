@@ -45,10 +45,10 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: "INNOVATRIX '26 · Innovation Showcase",
   description:
-    'A live innovation experience for sixteen teams. 18 May 2026 · 10 AM – 4 PM IST.',
+    'A live innovation experience for twenty-four teams. 18 May 2026 · 10 AM – 4 PM IST.',
   openGraph: {
     title: "INNOVATRIX '26",
-    description: 'Sixteen teams. Six hours. Innovation, creativity, and the future you can build.',
+    description: 'Twenty-four teams. Six hours. Innovation, creativity, and the future you can build.',
     type: 'website',
   },
 };

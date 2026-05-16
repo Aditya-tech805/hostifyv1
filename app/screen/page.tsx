@@ -77,7 +77,7 @@ function ScreenLive() {
           <Eyebrow tone="primary">Coming up</Eyebrow>
           <Title>INNOVATRI<XLetter /></Title>
           <Subtitle>
-            Sixteen teams. Six hours. <b>Innovation, creativity, and the future you can build.</b>
+            Twenty-four teams. Six hours. <b>Innovation, creativity, and the future you can build.</b>
           </Subtitle>
           <Countdown label="Starts in">{formatCountdown(ms)}</Countdown>
         </>
@@ -209,7 +209,7 @@ function ScreenLive() {
 
       {/* Bottom strip — KPIs */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Kpi label="Teams registered" figure={String(teamCount)} sub="OF 16 EXPECTED" figureClass="text-accent" />
+        <Kpi label="Teams registered" figure={String(teamCount)} sub="OF 24 EXPECTED" figureClass="text-accent" />
         <Kpi
           label="Current phase"
           figure={state.status === 'pre' ? 'PRE' : state.status === 'post' ? 'DONE' : state.phase?.label.toUpperCase() ?? '—'}

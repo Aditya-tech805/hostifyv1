@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { TopBar } from '@/components/TopBar';
+import { ParticipantSync } from '@/components/ParticipantSync';
 import { ActivityHeader } from '@/components/ActivityHeader';
 import { ToastProvider, useToast } from '@/components/Toast';
 import { PITCH_STEPS } from '@/lib/activities';
@@ -13,6 +14,7 @@ export default function PitchLabPage() {
   return (
     <ToastProvider>
       <TopBar />
+      <ParticipantSync />
       <main className="mx-auto max-w-[720px] px-5 pb-20 pt-6">
         <ActivityHeader
           step="Activity · Phase 2"

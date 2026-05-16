@@ -19,6 +19,7 @@ import {
   useTimer, setTimer,
   usePoll, setPoll,
   useSprint, setSprint, useSprintSubmissions,
+  usePanel, writePanelMember, removePanelMember, type PanelMember,
 } from '@/lib/data';
 import { JUDGING_CRITERIA } from '@/lib/activities';
 
@@ -189,7 +190,7 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
               }
             />
           </ClientOnly>
-          <Stat label="Teams registered" figure={String(teams.length)} figureClass="text-accent" sub="OF 16 EXPECTED" />
+          <Stat label="Teams registered" figure={String(teams.length)} figureClass="text-accent" sub="OF 24 EXPECTED" />
           <ClientOnly fallback={<Stat label="Current time" figure="--:--" sub="···" />}>
             <Stat
               label="Current time"
@@ -276,7 +277,7 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
         {/* Up Next — Phase 3 queue control */}
         <Section title="Phase 3 · Up Next" badge="live queue control">
           <p className="mb-4 text-[13.5px] leading-relaxed text-ink-2">
-            Tap a team to mark them as currently presenting. Updates every participant phone + the projector + auto-focuses judges. 16 teams × 7 min ≈ 112 minutes for the full round.
+            Tap a team to mark them as currently presenting. Updates every participant phone + the projector + auto-focuses judges. 24 teams × 5 min ≈ 120 minutes for the full round.
           </p>
           {teams.length === 0 ? (
             <div className="rounded-xl border border-dashed border-line bg-surface-2 p-6 text-center text-[13px] text-mute">
@@ -335,6 +336,8 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
 
         {/* Speed Idea Sprint */}
         <SprintControls sprint={sprint} sprintSubs={sprintSubs} teamCount={teams.length} />
+
+        <PanelManager />
 
         <Section title="Final reveal" badge="end-of-event only" badgeClass="text-spark" borderClass="border-spark/30">
           <p className="mb-4 text-[13.5px] leading-relaxed text-ink-2">
@@ -425,7 +428,7 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
         </Section>
 
         {/* Team list */}
-        <Section title="Registered teams" badge={`${teams.length} / 16`}>
+        <Section title="Registered teams" badge={`${teams.length} / 24`}>
           {teams.length === 0 ? (
             <div className="py-10 text-center font-mono text-[13px] leading-relaxed tracking-wide text-mute">
               No teams yet. Once participants register from <code className="font-mono text-[11px] text-accent">/</code> they&apos;ll appear here in real time.
@@ -483,6 +486,118 @@ function Section({
       </div>
       {children}
     </section>
+  );
+}
+
+// ─── Judges panel manager ──────────────────────────────────────────────────
+// Curates the jury list shown on the participant landing. Coordinator-only.
+const PANEL_COLORS = ['#6366F1', '#A78BFA', '#22D3EE', '#FBBF24', '#F87171', '#84CC16', '#F97316', '#0EA5E9'];
+
+function panelInitials(name: string): string {
+  const cleaned = name.replace(/[\[\]().]/g, '').trim();
+  const parts = cleaned.split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function PanelManager() {
+  const panel = usePanel();
+  const [name, setName] = useState('');
+  const [role, setRole] = useState('');
+
+  const canAdd = name.trim().length >= 2 && role.trim().length >= 2;
+
+  const add = () => {
+    if (!canAdd) return;
+    const color = PANEL_COLORS[panel.length % PANEL_COLORS.length];
+    const member: PanelMember = {
+      id: 'judge-' + (typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID().slice(0, 8)
+        : Math.random().toString(36).slice(2, 10)),
+      name: name.trim(),
+      role: role.trim(),
+      color,
+      addedAt: Date.now(),
+    };
+    writePanelMember(member);
+    setName('');
+    setRole('');
+  };
+
+  return (
+    <Section title="Judges panel" badge="shown on the landing — all teams see this">
+      <p className="mb-4 text-[13.5px] leading-relaxed text-ink-2">
+        Add the panel members here. Each card appears on the participant landing under
+        <b className="text-accent"> &ldquo;Who&apos;s keeping score.&rdquo;</b> Order is by add-time.
+        Names can be added or removed anytime — changes sync live to every device.
+      </p>
+
+      {panel.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-line-2 bg-surface-2 p-5 text-center text-[13px] text-mute">
+          No panel members yet — the landing shows a &ldquo;finalising&rdquo; placeholder.
+        </div>
+      ) : (
+        <div className="space-y-1.5">
+          {panel.map((j) => (
+            <div key={j.id} className="flex items-center gap-3 rounded-xl border border-line bg-surface-2 p-2.5">
+              <div
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-display text-[12px] font-bold text-bg"
+                style={{ background: j.color }}
+              >
+                {panelInitials(j.name)}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-display text-[14px] font-semibold leading-tight tracking-tight text-ink">
+                  {j.name}
+                </div>
+                <div className="truncate font-mono text-[10px] uppercase tracking-[0.16em] text-mute">
+                  {j.role}
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  if (!confirm(`Remove ${j.name} from the panel?`)) return;
+                  removePanelMember(j.id);
+                }}
+                aria-label="Remove"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-line bg-bg text-mute transition-colors hover:border-danger/40 hover:text-danger"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_auto]">
+        <input
+          type="text"
+          maxLength={48}
+          placeholder="Name (e.g. Rajat Singh)"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && canAdd) add(); }}
+          className="rounded-xl border border-line bg-surface-2 px-3.5 py-2.5 text-sm text-ink outline-none transition-colors focus:border-primary focus:bg-surface-3"
+        />
+        <input
+          type="text"
+          maxLength={48}
+          placeholder="Role (e.g. Senior PM · Industry)"
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && canAdd) add(); }}
+          className="rounded-xl border border-line bg-surface-2 px-3.5 py-2.5 text-sm text-ink outline-none transition-colors focus:border-primary focus:bg-surface-3"
+        />
+        <button
+          onClick={add}
+          disabled={!canAdd}
+          className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-glow transition-all hover:-translate-y-px hover:bg-primary-2 hover:shadow-glow-lg disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute disabled:shadow-none"
+        >
+          Add judge
+        </button>
+      </div>
+    </Section>
   );
 }
 

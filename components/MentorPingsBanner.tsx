@@ -39,8 +39,8 @@ export function MentorPingsBanner({ teamId }: MentorPingsBannerProps) {
 
 function PingCard({ teamId, ping }: { teamId: string; ping: MentorPing }) {
   return (
-    <div className="sticky top-[58px] z-40 -mx-5 mb-4 animate-fade-in border-b border-accent/20 bg-accent/[0.10] px-5 py-3 backdrop-blur-md">
-      <div className="mx-auto max-w-[720px]">
+    <div className="sticky top-[58px] z-40 mb-4 animate-fade-in border-b border-accent/20 bg-accent/[0.10] backdrop-blur-md">
+      <div className="mx-auto max-w-[720px] px-5 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.18em] text-accent">
             <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-accent" />

@@ -46,8 +46,9 @@ export function PollResponder() {
   };
 
   return (
-    <section className="my-6 rounded-2xl border border-accent/40 bg-accent/[0.06] p-5">
-      <div className="mb-2 flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.18em] text-accent">
+    <section className="my-6 px-5">
+      <div className="mx-auto max-w-[720px] rounded-2xl border border-accent/40 bg-accent/[0.06] p-5">
+        <div className="mb-2 flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.18em] text-accent">
         <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-accent" />
         Live poll
       </div>
@@ -79,6 +80,7 @@ export function PollResponder() {
           You already added: <span className="normal-case tracking-normal text-accent">{subs[deviceId]}</span>
         </div>
       )}
+      </div>
     </section>
   );
 }

@@ -1,6 +1,6 @@
 # INNOVATRIX '26
 
-A live innovation experience for sixteen teams · **18 May 2026 · 10 AM – 4 PM IST** · one URL on every phone.
+A live innovation experience for twenty-four teams · **18 May 2026 · 10 AM – 4 PM IST** · one URL on every phone.
 
 Built with **Next.js 14 · TypeScript · Tailwind CSS**. Deploys static to Vercel.
 
@@ -13,7 +13,7 @@ Built with **Next.js 14 · TypeScript · Tailwind CSS**. Deploys static to Verce
 | `/activities/bingo` | Participants (Phase 2) | 4x4 networking missions |
 | `/activities/pitch-lab` | Participants (Phase 2) | 5-step pitch coaching |
 | `/console` | Coordinator (PIN `260518`) | Phase override, spotlight, team list |
-| `/judges` | Judges (PIN `180526`) | Score 16 teams on 5 criteria |
+| `/judges` | Judges (PIN `180526`) | Score 24 teams on 5 criteria |
 | `/screen` | Projector | Full-viewport phase-aware display (press F for fullscreen) |
 
 ## Stack

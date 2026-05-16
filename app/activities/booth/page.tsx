@@ -13,6 +13,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { TopBar } from '@/components/TopBar';
+import { ParticipantSync } from '@/components/ParticipantSync';
 import { ActivityHeader } from '@/components/ActivityHeader';
 import { ToastProvider, useToast } from '@/components/Toast';
 import { useGallery, uploadGalleryPhoto, deleteGalleryPhoto, type Photo } from '@/lib/data';
@@ -27,6 +28,7 @@ export default function BoothPage() {
   return (
     <ToastProvider>
       <TopBar />
+      <ParticipantSync />
       <main className="mx-auto max-w-[960px] px-5 pb-20 pt-6">
         <ActivityHeader
           step="Activity · All day"
@@ -1033,10 +1035,9 @@ function TemplatePicker({
         </div>
       </div>
       <div
-        className="-mx-5 flex gap-2.5 overflow-x-auto px-5 pb-2"
+        className="-mx-5 flex gap-2.5 overflow-x-auto px-5 pb-2 [&::-webkit-scrollbar]:hidden"
         style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
       >
-        <style>{`.template-strip::-webkit-scrollbar{display:none}`}</style>
         {TEMPLATES.map((t) => {
           const active = t.id === value;
           return (

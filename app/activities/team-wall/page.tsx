@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { TopBar } from '@/components/TopBar';
+import { ParticipantSync } from '@/components/ParticipantSync';
 import { ActivityHeader } from '@/components/ActivityHeader';
 import { ToastProvider } from '@/components/Toast';
 import { useAllTeams } from '@/lib/data';
@@ -13,6 +14,7 @@ export default function TeamWallPage() {
   return (
     <ToastProvider>
       <TopBar />
+      <ParticipantSync />
       <main className="mx-auto max-w-[920px] px-5 pb-20 pt-6">
         <ActivityHeader
           step="Activity · Phase 2 & 3"

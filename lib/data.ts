@@ -30,6 +30,7 @@ const PATHS = {
   pollSubmissions: 'pollSubmissions', // pollSubmissions/{deviceId} → string
   sprint:        'sprint',         // SprintState | null
   sprintSubs:    'sprintSubs',     // sprintSubs/{teamId} → SprintSubmission
+  panel:         'panel',          // panel/{id} → PanelMember (jury list shown on the landing)
 } as const;
 
 // ─── Teams ───────────────────────────────────────────────────────────────────
@@ -412,6 +413,36 @@ export function useSprintSubmissions(): SprintSubmission[] {
 export function submitSprintAnswer(sub: SprintSubmission): void {
   // One submission per team — keyed by teamId so resubmits overwrite.
   void writeSynced(`${PATHS.sprintSubs}/${sub.teamId}`, sub);
+}
+
+// ─── Jury panel (curated judge list shown on the landing) ───────────────────
+/**
+ * NOTE: this is *separate* from the `scores` table. `scores` is keyed by
+ * the judge's typed name at sign-in; `panel` is the public-facing roster
+ * the coordinator curates from /console for display on the landing page.
+ */
+export interface PanelMember {
+  id: string;
+  name: string;
+  role: string;
+  color: string;
+  addedAt: number;
+}
+
+export function usePanel(): PanelMember[] {
+  const map = useSyncedMap<PanelMember>(PATHS.panel);
+  return useMemo(
+    () => Object.values(map).sort((a, b) => a.addedAt - b.addedAt),
+    [map],
+  );
+}
+
+export function writePanelMember(member: PanelMember): void {
+  void writeSynced(`${PATHS.panel}/${member.id}`, member);
+}
+
+export function removePanelMember(memberId: string): void {
+  void writeSynced(`${PATHS.panel}/${memberId}`, null);
 }
 
 // ─── Reset all event data (coordinator-only nuke) ────────────────────────────

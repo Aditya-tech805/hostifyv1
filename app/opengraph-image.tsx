@@ -76,7 +76,7 @@ export default async function OG() {
             maxWidth: 920,
             lineHeight: 1.3,
           }}>
-          Sixteen teams. Six hours. Powerful ideas and the future you can build.
+          Twenty-four teams. Six hours. Powerful ideas and the future you can build.
         </div>
 
         {/* Event details strip */}

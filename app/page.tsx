@@ -5,12 +5,7 @@ import { TopBar } from '@/components/TopBar';
 import { Landing } from '@/components/Landing';
 import { TeamDashboard } from '@/components/TeamDashboard';
 import { ToastProvider } from '@/components/Toast';
-import { SpotlightOverlay } from '@/components/SpotlightOverlay';
-import { ResultsOverlay } from '@/components/ResultsOverlay';
-import { MentorPingsBanner } from '@/components/MentorPingsBanner';
-import { PollResponder } from '@/components/PollResponder';
-import { SprintResponder } from '@/components/SprintResponder';
-import { PauseBanner } from '@/components/PauseBanner';
+import { ParticipantSync } from '@/components/ParticipantSync';
 import { readOwnTeam, writeOwnTeam, type Team } from '@/lib/teams';
 import { writeTeam } from '@/lib/data';
 
@@ -48,11 +43,7 @@ export default function ParticipantPage() {
   return (
     <ToastProvider>
       <TopBar />
-      <MentorPingsBanner teamId={team?.id ?? null} />
-
-      {/* Sprint + Poll responders only appear when coordinator triggers them */}
-      <SprintResponder />
-      <PollResponder />
+      <ParticipantSync />
 
       {showLanding && (
         <Landing
@@ -68,11 +59,6 @@ export default function ParticipantPage() {
           </div>
         </main>
       )}
-
-      {/* Synced moments — appear on every device when triggered from coordinator */}
-      <SpotlightOverlay />
-      <ResultsOverlay />
-      <PauseBanner />
     </ToastProvider>
   );
 }

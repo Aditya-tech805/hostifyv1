@@ -13,7 +13,7 @@ import { BrandMark } from './BrandMark';
 import { ClientOnly } from './ClientOnly';
 import { RegisterForm } from './RegisterForm';
 import { useEventPhase } from '@/lib/hooks';
-import { useAllTeams } from '@/lib/data';
+import { useAllTeams, usePanel, type PanelMember } from '@/lib/data';
 import { SCHEDULE, formatCountdown, pad, type PhaseId, type Phase } from '@/lib/schedule';
 import { IDEA_PROMPTS, BINGO_MISSIONS, PITCH_STEPS } from '@/lib/activities';
 import type { Team } from '@/lib/teams';
@@ -30,8 +30,9 @@ export function Landing({ initial, onSubmit }: LandingProps) {
       <TeamsMarquee />
       <PhaseSpine />
       <ActivityShowcase />
+      <Voices />
+      <JuryPanel />
       <RegisterSection initial={initial} onSubmit={onSubmit} />
-      <StakeholderStrip />
       <LandingFooter />
     </>
   );
@@ -58,7 +59,7 @@ function Hero() {
 
         {/* The mark — sits in the visual centre of the viewport */}
         <div className="flex flex-1 items-center">
-          <h1 className="w-full animate-reveal-up font-display font-extrabold leading-[0.82] tracking-[-0.045em] text-ink text-[clamp(80px,19vw,260px)]">
+          <h1 className="w-full animate-reveal-up font-display font-extrabold leading-[0.82] tracking-[-0.05em] text-ink text-[clamp(44px,15.5vw,240px)]">
             INNOVATR<span className="inline-block animate-x-cycle bg-gradient-brand bg-clip-text text-transparent">X</span>
           </h1>
         </div>
@@ -77,7 +78,7 @@ function Hero() {
 
           <div className="mt-10 grid items-end gap-8 md:mt-14 md:grid-cols-[1fr_auto]">
             <p className="font-display text-[clamp(30px,4.4vw,52px)] font-medium leading-[1.05] tracking-[-0.02em] text-ink">
-              Sixteen teams. Six hours.{' '}
+              Twenty-four teams. Six hours.{' '}
               <span className="font-serif italic font-light text-primary">One day.</span>
             </p>
 
@@ -112,8 +113,8 @@ function TimeStamp({
       <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.32em] text-mute">{label}</div>
       <div className={`font-display tabular-nums leading-none tracking-[-0.02em] ${
         highlight
-          ? 'text-[clamp(40px,6vw,72px)] font-extrabold text-ink'
-          : 'text-[clamp(24px,3.5vw,40px)] font-semibold text-ink-2'
+          ? 'text-[clamp(26px,6vw,72px)] font-extrabold text-ink'
+          : 'text-[clamp(18px,3.5vw,40px)] font-semibold text-ink-2'
       }`}>
         {value}
       </div>
@@ -154,7 +155,7 @@ function HeroStatusInline() {
 
 function TeamsMarquee() {
   const teams = useAllTeams();
-  const SLOTS = 16;
+  const SLOTS = 24;
   const placeholderCount = Math.max(0, SLOTS - teams.length);
 
   // Render the row twice for a seamless wrap with `translateX(-50%)`.
@@ -217,7 +218,7 @@ const PHASES_META: Record<PhaseId, { sub: string; tint: string; tintBg: string; 
     tint: '#4F46E5',
     tintBg: 'rgba(79, 70, 229, 0.05)',
     activities: ['Registration', 'Welcome', 'Brand reveal'],
-    line: 'Sixteen teams arrive. The day belongs to whoever shows up the most awake.',
+    line: 'Twenty-four teams arrive. The day belongs to whoever shows up the most awake.',
   },
   phase2: {
     sub: 'Make stuff. Bump into people. Talk loud.',
@@ -521,6 +522,202 @@ function BoothSample() {
   );
 }
 
+// ─── Voices (messages from HOD, faculty coord, student coords) ─────────────
+
+interface Voice {
+  name: string;
+  role: string;
+  quote: string;
+  accent: string;
+}
+
+const MESSAGES: Voice[] = [
+  {
+    name: 'Dev Baloni',
+    role: 'Head of Department · Computer Science',
+    quote: "Innovation begins where curiosity refuses to settle. Today, twenty-four teams will prove that the future of computer science doesn’t wait for permission — it builds, it questions, it ships. I’m proud of every team here.",
+    accent: '#6366F1',
+  },
+  {
+    name: 'Mukesh Pandey',
+    role: 'Faculty Coordinator',
+    quote: "What you build today won’t be remembered for being perfect. It’ll be remembered for being yours. Take the prompts seriously; take yourselves a little less so. Have a brilliant day.",
+    accent: '#A78BFA',
+  },
+  {
+    name: 'Aditya Pathak',
+    role: 'Lead Student Coordinator',
+    quote: "This day started as a sketch in a notebook months ago. To see twenty-four teams walk in with ideas of their own is the only metric that matters. Go make something nobody’s seen before.",
+    accent: '#22D3EE',
+  },
+  {
+    name: 'Mayur Singh',
+    role: 'Lead Student Coordinator',
+    quote: "The hardest part of any event is the moment before doors open. The second hardest is watching everyone leave with their hands full. Here’s to the easy bit in between — have at it.",
+    accent: '#FBBF24',
+  },
+];
+
+function Voices() {
+  return (
+    <section className="border-t border-line bg-bg py-24 md:py-32">
+      <div className="mx-auto max-w-[1320px] px-6">
+        <header className="mb-12 grid gap-10 md:mb-16 md:grid-cols-[1fr_2fr] md:gap-16">
+          <div>
+            <div className="mb-3 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.32em] text-mute">
+              <span className="h-px w-8 bg-line-2" />
+              Before doors open
+            </div>
+            <h2 className="font-display text-[clamp(36px,5vw,60px)] font-bold leading-[0.98] tracking-[-0.025em] text-ink">
+              A few <span className="font-serif italic font-light text-primary">words.</span>
+            </h2>
+          </div>
+          <p className="font-display text-[clamp(17px,1.8vw,20px)] leading-[1.55] text-ink-2 md:pt-6">
+            From the people who built today — the department, the faculty, and the two students who carried it across the line.
+          </p>
+        </header>
+
+        <div className="grid gap-5 md:grid-cols-2 md:gap-6">
+          {MESSAGES.map((m) => <MessageCard key={m.name} {...m} />)}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MessageCard({ name, role, quote, accent }: Voice) {
+  const initials = makeInitials(name);
+  return (
+    <article
+      className="group relative overflow-hidden rounded-3xl border border-line-2 bg-surface p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-soft-lg md:p-9"
+      style={{ borderTopWidth: 2, borderTopColor: accent }}
+    >
+      {/* Decorative open-quote mark in the accent tint */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-4 left-6 font-serif font-light leading-none md:-top-6 md:left-8"
+        style={{ color: `${accent}33`, fontSize: 'clamp(120px,14vw,180px)' }}
+      >
+        &ldquo;
+      </div>
+      <blockquote className="relative pt-10 font-serif italic font-light text-[clamp(17px,2vw,22px)] leading-[1.5] text-ink md:pt-12">
+        {quote}
+      </blockquote>
+      <div className="mt-7 flex items-center gap-3.5 border-t border-line pt-5">
+        <div
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full font-display text-[14px] font-bold tracking-tight text-bg"
+          style={{ background: accent }}
+        >
+          {initials}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate font-display text-[15px] font-semibold leading-tight tracking-tight text-ink">
+            {name}
+          </div>
+          <div className="mt-0.5 truncate font-mono text-[10px] uppercase tracking-[0.2em] text-mute">
+            {role}
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+// ─── Jury panel (judges shown to all teams) ─────────────────────────────────
+// Data is curated by the coordinator from /console → "Judges panel". Stored
+// in the synced `panel` kv tree so it appears on every device in real time.
+
+function JuryPanel() {
+  return (
+    <section className="border-t border-line bg-bg py-24 md:py-32">
+      <div className="mx-auto max-w-[1320px] px-6">
+        <header className="mb-12 grid gap-10 md:mb-16 md:grid-cols-[1fr_2fr] md:gap-16">
+          <div>
+            <div className="mb-3 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.32em] text-mute">
+              <span className="h-px w-8 bg-line-2" />
+              The panel
+            </div>
+            <h2 className="font-display text-[clamp(36px,5vw,60px)] font-bold leading-[0.98] tracking-[-0.025em] text-ink">
+              Who&apos;s <span className="font-serif italic font-light text-accent">keeping score.</span>
+            </h2>
+          </div>
+          <p className="font-display text-[clamp(17px,1.8vw,20px)] leading-[1.55] text-ink-2 md:pt-6">
+            Five criteria — innovation, feasibility, presentation, impact, future potential — scored 0&ndash;10 per team. No applause meter, no audience vote on the panel side. Just honest sliders.
+          </p>
+        </header>
+
+        <ClientOnly fallback={<JuryGridSkeleton />}>
+          <JuryGridLive />
+        </ClientOnly>
+      </div>
+    </section>
+  );
+}
+
+function JuryGridLive() {
+  const panel = usePanel();
+
+  if (panel.length === 0) {
+    return (
+      <div className="rounded-3xl border border-dashed border-line-2 bg-surface p-12 text-center md:p-16">
+        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-bg ring-1 ring-line-2">
+          <span className="font-display text-[22px] font-bold text-mute">?</span>
+        </div>
+        <div className="font-display text-[clamp(20px,2.5vw,28px)] font-semibold leading-tight tracking-tight text-ink">
+          The panel is being <span className="font-serif italic font-light text-accent">finalised.</span>
+        </div>
+        <p className="mx-auto mt-3 max-w-[440px] text-[14px] leading-relaxed text-ink-2">
+          Names go up here as soon as they&apos;re confirmed. The coordinator adds them from the console.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 md:gap-4">
+      {panel.map((j) => <JudgeCard key={j.id} {...j} />)}
+    </div>
+  );
+}
+
+function JuryGridSkeleton() {
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 md:gap-4">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className="h-[136px] rounded-2xl border border-line-2 bg-surface/60 md:h-[156px]" />
+      ))}
+    </div>
+  );
+}
+
+function JudgeCard({ name, role, color }: PanelMember) {
+  const initials = makeInitials(name);
+  return (
+    <div className="group rounded-2xl border border-line-2 bg-surface p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-soft md:p-5">
+      <div
+        className="mb-4 flex h-12 w-12 items-center justify-center rounded-full font-display text-[15px] font-bold tracking-tight text-bg md:h-14 md:w-14 md:text-[16px]"
+        style={{ background: color }}
+      >
+        {initials}
+      </div>
+      <div className="font-display text-[15px] font-semibold leading-tight tracking-tight text-ink md:text-[16px]">
+        {name}
+      </div>
+      <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-mute">
+        {role}
+      </div>
+    </div>
+  );
+}
+
+function makeInitials(name: string): string {
+  const cleaned = name.replace(/[\[\]().]/g, '').trim();
+  const parts = cleaned.split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
 // ─── Register section ────────────────────────────────────────────────────────
 
 function RegisterSection({ initial, onSubmit }: LandingProps) {
@@ -564,77 +761,6 @@ function RegisterSection({ initial, onSubmit }: LandingProps) {
         </div>
       </div>
     </section>
-  );
-}
-
-// ─── Stakeholder strip ───────────────────────────────────────────────────────
-
-function StakeholderStrip() {
-  return (
-    <section className="border-t border-line bg-bg py-20 text-ink md:py-28">
-      <div className="mx-auto max-w-[1320px] px-6">
-        <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <div className="mb-3 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.32em] text-mute">
-              <span className="h-px w-8 bg-line-2" />
-              Backstage
-            </div>
-            <h2 className="font-display text-[clamp(36px,5vw,60px)] font-bold leading-[0.98] tracking-[-0.025em] text-ink">
-              Crew and judges, <span className="font-serif italic font-light text-accent">your doors are here.</span>
-            </h2>
-          </div>
-          <p className="max-w-[420px] text-[15px] leading-relaxed text-ink-2">
-            Same URL, different doors. Phone-first for coordinators, slider-first for judges, projector-first for the big screen.
-          </p>
-        </div>
-
-        <div className="grid gap-px overflow-hidden rounded-3xl bg-line-2 md:grid-cols-3">
-          <StakeholderTile
-            href="/console"
-            tag="Coordinator"
-            title="Run the show."
-            description="Phase override, spotlight wheel, timer, polls, sprints, reactions, results reveal. PIN-gated."
-          />
-          <StakeholderTile
-            href="/judges"
-            tag="Judges"
-            title="Score the pitches."
-            description="Five criteria, five sliders per team. Notes autosave. PIN-gated, name-tagged."
-          />
-          <StakeholderTile
-            href="/screen"
-            tag="Big screen"
-            title="Project the day."
-            description="Full-viewport phase-aware display. Press F for fullscreen. Reactions land here too."
-          />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function StakeholderTile({
-  href, tag, title, description,
-}: {
-  href: string; tag: string; title: string; description: string;
-}) {
-  return (
-    <a
-      href={href}
-      className="group flex flex-col bg-surface p-8 transition-colors hover:bg-surface-2 md:p-10"
-    >
-      <div className="mb-5 font-mono text-[10px] uppercase tracking-[0.26em] text-mute">
-        {tag}
-      </div>
-      <h3 className="font-display text-[clamp(24px,2.6vw,30px)] font-semibold leading-tight tracking-tight text-ink">
-        {title}
-      </h3>
-      <p className="mt-3 text-[14.5px] leading-relaxed text-ink-2">{description}</p>
-      <span className="mt-8 inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.22em] text-ink-2 transition-colors group-hover:text-accent">
-        Open
-        <span className="transition-transform group-hover:translate-x-1">→</span>
-      </span>
-    </a>
   );
 }
 
