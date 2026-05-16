@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Repeated here as CSS custom properties so we can use them inside
+     gradients / shadows / `color-mix()` where Tailwind utilities are awkward. */
+  --bg:        #0a0a0f;
+  --surface:   #16161e;
+  --surface-2: #1f1f29;
+  --line:      rgba(245, 243, 238, 0.08);
+  --line-2:    rgba(245, 243, 238, 0.14);
+  --primary:   #7c3aed;
+  --primary-2: #a78bfa;
+  --accent:    #84cc16;
+  --accent-2:  #bef264;
+  --spark:     #f97316;
+  --ink:       #f5f3ee;
+  --ink-2:     #d4d4d8;
+  --mute:      #6b7280;
+  --danger:    #ef4444;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 0%,  rgba(124, 58, 237, 0.18) 0, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 100% 100%, rgba(132, 204, 22, 0.10) 0, transparent 60%),
+    var(--bg);
+  min-height: 100vh;
+}
+
+::selection { background: var(--primary); color: var(--ink); }
+
+/* Range input styling for judge sliders */
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: var(--surface-2);
+  border-radius: 100px;
+  outline: none;
+}
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 4px 10px -2px rgba(132, 204, 22, 0.5);
+  transition: transform 0.15s;
+}
+input[type='range']::-webkit-slider-thumb:hover { transform: scale(1.15); }
+input[type='range']::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  cursor: pointer;
+}
