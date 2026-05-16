@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useSpotlight, setSpotlight, type SpotlightState } from '@/lib/data';
+import { useSpotlight, setSpotlight, usePreviewMode } from '@/lib/data';
 import { useAllTeams } from '@/lib/data';
+import { useEventPhase } from '@/lib/hooks';
 import type { Team } from '@/lib/teams';
 
 const SPIN_DURATION_MS = 4200;
@@ -18,10 +19,22 @@ const SPIN_DURATION_MS = 4200;
 export function SpotlightOverlay() {
   const [spotlight] = useSpotlight();
   const teams = useAllTeams();
+  const { state: eventState } = useEventPhase();
+  const [previewMode] = usePreviewMode();
   const [phase, setPhase] = useState<'idle' | 'spinning' | 'revealed'>('idle');
   const [rollIdx, setRollIdx] = useState(0);
   const intervalRef = useRef<number | null>(null);
   const timeoutRef = useRef<number | null>(null);
+
+  // Spotlight should only be visible during Phase 2 (its natural slot)
+  // or when preview mode is on for testing. Outside that window we ignore
+  // any leftover state in Supabase so a stale test spin doesn't pop up
+  // on participants' phones outside event hours.
+  const phaseId =
+    eventState.status === 'live' || eventState.status === 'override'
+      ? eventState.phase?.id
+      : null;
+  const contextAllowsSpotlight = previewMode || phaseId === 'phase2';
 
   // Resolve teamIds → Team objects
   const picked: Team[] = spotlight
@@ -66,6 +79,7 @@ export function SpotlightOverlay() {
   }, [spotlight?.spinId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!spotlight) return null;
+  if (!contextAllowsSpotlight) return null;
 
   // During spin, cycle through team names. Once revealed, lock to the 3 picks.
   const rolling: string =

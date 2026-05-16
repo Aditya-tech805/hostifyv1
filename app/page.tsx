@@ -11,6 +11,7 @@ import { ResultsOverlay } from '@/components/ResultsOverlay';
 import { MentorPingsBanner } from '@/components/MentorPingsBanner';
 import { PollResponder } from '@/components/PollResponder';
 import { SprintResponder } from '@/components/SprintResponder';
+import { PauseBanner } from '@/components/PauseBanner';
 import { readOwnTeam, writeOwnTeam, type Team } from '@/lib/teams';
 import { writeTeam } from '@/lib/data';
 
@@ -109,6 +110,7 @@ export default function ParticipantPage() {
       {/* Synced moments — appear on every device when triggered from coordinator */}
       <SpotlightOverlay />
       <ResultsOverlay />
+      <PauseBanner />
     </ToastProvider>
   );
 }

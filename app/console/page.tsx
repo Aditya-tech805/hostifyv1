@@ -15,6 +15,7 @@ import {
   useAllScores, revealResultsNow, useResults, clearResults,
   useUpNext, setUpNext, useAllVoteTallies,
   usePreviewMode, resetAllEventData,
+  usePauseMode,
   useTimer, setTimer,
   usePoll, setPoll,
   useSprint, setSprint, useSprintSubmissions,
@@ -69,6 +70,7 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
   const [upNext] = useUpNext();
   const voteTallies = useAllVoteTallies();
   const [previewMode, setPreviewMode] = usePreviewMode();
+  const [paused, setPaused] = usePauseMode();
   const [resetting, setResetting] = useState(false);
   const [timer] = useTimer();
   const [poll] = usePoll();
@@ -386,6 +388,25 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
             }`}
           >
             {previewMode ? '✓ Preview mode is ON · tap to turn OFF' : 'Turn ON preview mode'}
+          </button>
+        </Section>
+
+        {/* Pause the room — sudden-stop */}
+        <Section title="Pause the room" badge="freeze all participant devices" badgeClass="text-spark">
+          <p className="mb-4 text-[13.5px] leading-relaxed text-ink-2">
+            When <b>ON</b>, every participant device shows a full-screen <b className="text-spark">Paused by coordinator</b> banner that blocks new submissions, votes, photos, and sprint answers. Existing state is preserved — flip OFF and everyone resumes exactly where they were.
+            <br /><br />
+            Use it for announcements, technical timeouts, or anything that needs the room&apos;s attention.
+          </p>
+          <button
+            onClick={() => setPaused(!paused)}
+            className={`w-full rounded-2xl px-5 py-4 text-[15px] font-semibold transition-all ${
+              paused
+                ? 'border border-spark bg-spark text-ink hover:bg-[#fb923c]'
+                : 'border border-line-2 bg-transparent text-ink-2 hover:border-spark hover:bg-surface-2 hover:text-ink'
+            }`}
+          >
+            {paused ? '⏸ Room is PAUSED · tap to resume' : 'Pause the room'}
           </button>
         </Section>
 

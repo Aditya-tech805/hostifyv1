@@ -24,6 +24,7 @@ const PATHS = {
   mentorPings:   'mentorPings',    // mentorPings/{teamId}/{pingId} → MentorPing
   gallery:       'gallery',        // gallery/{photoId} → Photo (metadata)
   previewMode:   'previewMode',    // boolean — when true, all activities unlocked
+  pauseMode:     'pauseMode',      // boolean — when true, participant UI is frozen
   timer:         'timer',          // TimerState | null
   poll:          'poll',           // PollState | null
   pollSubmissions: 'pollSubmissions', // pollSubmissions/{deviceId} → string
@@ -62,6 +63,17 @@ export function usePhaseOverride(): [PhaseId | null, (v: PhaseId | null) => void
  */
 export function usePreviewMode(): [boolean, (v: boolean) => void] {
   const [value, set] = useSyncedValue<boolean>(PATHS.previewMode, false);
+  return [value, set];
+}
+
+// ─── Pause mode (sudden-stop on the room) ────────────────────────────────────
+/**
+ * When `true`, every participant device shows a "Paused" banner that blocks
+ * new submissions. State is preserved — just frozen. Coordinator can flip
+ * it on/off whenever, e.g. to make an announcement mid-activity.
+ */
+export function usePauseMode(): [boolean, (v: boolean) => void] {
+  const [value, set] = useSyncedValue<boolean>(PATHS.pauseMode, false);
   return [value, set];
 }
 
