@@ -211,7 +211,7 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
                   key={p.id}
                   onClick={() => setPhaseOverride(p.id)}
                   className={`rounded-xl border px-2.5 py-3.5 text-center transition-all ${
-                    active ? 'border-primary bg-primary/[0.18] text-ink' : 'border-line bg-surface-2 text-ink-2 hover:border-line-2 hover:bg-bg'
+                    active ? 'border-primary bg-primary/[0.10] text-primary' : 'border-line bg-surface-2 text-ink-2 hover:border-line-2 hover:bg-white'
                   }`}
                 >
                   <div className="font-display text-sm font-semibold">{p.label.split('·')[0].trim()}</div>
@@ -243,7 +243,7 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
           <button
             onClick={handleSpin}
             disabled={!inP2}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-4 text-[15px] font-semibold text-ink shadow-[0_6px_24px_-10px_rgba(124,58,237,0.55)] transition-colors hover:bg-primary-2 disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute disabled:shadow-none"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-4 text-[15px] font-semibold text-white shadow-glow transition-all hover:-translate-y-px hover:bg-primary-2 hover:shadow-glow-lg disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute disabled:shadow-none"
           >
             {inP2 ? 'Spin the wheel' : 'Available in Phase 2 (Build & Interact)'}
           </button>
@@ -301,7 +301,7 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
                     <div className="mb-2 h-1 rounded" style={{ background: t.color }} />
                     <div className="font-display text-[13px] font-semibold leading-tight">{t.name}</div>
                     {active && (
-                      <span className="absolute right-2 top-2 rounded-full bg-accent px-1.5 py-0.5 font-mono text-[8.5px] font-bold uppercase tracking-[0.14em] text-bg">
+                      <span className="absolute right-2 top-2 rounded-full bg-accent px-1.5 py-0.5 font-mono text-[8.5px] font-bold uppercase tracking-[0.14em] text-white">
                         LIVE
                       </span>
                     )}
@@ -349,7 +349,7 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
             <button
               onClick={handleReveal}
               disabled={results?.revealed === true}
-              className="w-full rounded-2xl bg-spark px-5 py-4 text-[15px] font-semibold text-ink shadow-[0_6px_24px_-10px_rgba(249,115,22,0.55)] transition-colors hover:bg-[#fb923c] disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute disabled:shadow-none"
+              className="w-full rounded-2xl bg-spark px-5 py-4 text-[15px] font-semibold text-white shadow-[0_6px_24px_-10px_rgba(245,158,11,0.45)] transition-all hover:-translate-y-px hover:bg-[#FBBF24] disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute disabled:shadow-none"
             >
               {results?.revealed ? '✓ Results revealed' : 'Reveal results'}
             </button>
@@ -383,7 +383,7 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
             onClick={() => setPreviewMode(!previewMode)}
             className={`w-full rounded-2xl px-5 py-4 text-[15px] font-semibold transition-all ${
               previewMode
-                ? 'border border-accent bg-accent text-bg hover:bg-accent-2'
+                ? 'border border-accent bg-accent text-white shadow-glow-cyan hover:bg-accent-2'
                 : 'border border-line-2 bg-transparent text-ink-2 hover:border-accent hover:bg-surface-2 hover:text-ink'
             }`}
           >
@@ -402,7 +402,7 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
             onClick={() => setPaused(!paused)}
             className={`w-full rounded-2xl px-5 py-4 text-[15px] font-semibold transition-all ${
               paused
-                ? 'border border-spark bg-spark text-ink hover:bg-[#fb923c]'
+                ? 'border border-spark bg-spark text-white shadow-[0_6px_24px_-10px_rgba(245,158,11,0.45)] hover:bg-[#FBBF24]'
                 : 'border border-line-2 bg-transparent text-ink-2 hover:border-spark hover:bg-surface-2 hover:text-ink'
             }`}
           >
@@ -418,7 +418,7 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
           <button
             onClick={handleReset}
             disabled={resetting}
-            className="w-full rounded-2xl bg-danger px-5 py-4 text-[15px] font-semibold text-ink transition-colors hover:bg-[#dc2626] disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute"
+            className="w-full rounded-2xl bg-danger px-5 py-4 text-[15px] font-semibold text-white shadow-[0_6px_24px_-10px_rgba(239,68,68,0.45)] transition-all hover:-translate-y-px hover:bg-[#DC2626] disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute"
           >
             {resetting ? 'Resetting…' : 'Reset all event data'}
           </button>
@@ -537,7 +537,7 @@ function TimerControls({ timer }: { timer: ReturnType<typeof useTimer>[0] }) {
           </div>
           <button
             onClick={start}
-            className="w-full rounded-2xl bg-primary px-5 py-3.5 text-[15px] font-semibold text-ink shadow-[0_6px_24px_-10px_rgba(124,58,237,0.55)] transition-colors hover:bg-primary-2"
+            className="w-full rounded-2xl bg-primary px-5 py-3.5 text-[15px] font-semibold text-white shadow-glow transition-all hover:-translate-y-px hover:bg-primary-2 hover:shadow-glow-lg"
           >
             Start timer
           </button>
@@ -587,7 +587,7 @@ function PollControls({ poll }: { poll: ReturnType<typeof usePoll>[0] }) {
           <button
             onClick={start}
             disabled={question.trim().length < 4}
-            className="w-full rounded-2xl bg-accent px-5 py-3.5 text-[15px] font-semibold text-bg transition-colors hover:bg-accent-2 disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute"
+            className="w-full rounded-2xl bg-accent px-5 py-3.5 text-[15px] font-semibold text-white shadow-glow-cyan transition-all hover:-translate-y-px hover:bg-accent-2 disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute"
           >
             Start poll
           </button>
@@ -666,7 +666,7 @@ function SprintControls({
           <button
             onClick={start}
             disabled={prompt.trim().length < 6}
-            className="w-full rounded-2xl bg-spark px-5 py-3.5 text-[15px] font-semibold text-ink shadow-[0_6px_24px_-10px_rgba(249,115,22,0.55)] transition-colors hover:bg-[#fb923c] disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute"
+            className="w-full rounded-2xl bg-spark px-5 py-3.5 text-[15px] font-semibold text-white shadow-[0_6px_24px_-10px_rgba(245,158,11,0.45)] transition-all hover:-translate-y-px hover:bg-[#FBBF24] disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute"
           >
             Start sprint
           </button>

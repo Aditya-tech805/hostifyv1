@@ -137,7 +137,7 @@ function StepCard({
         </button>
         <button
           onClick={onNext}
-          className="rounded-xl border border-primary bg-primary px-5 py-3.5 text-sm font-semibold text-ink shadow-[0_6px_24px_-10px_rgba(124,58,237,0.5)] transition-colors hover:bg-primary-2"
+          className="rounded-xl border border-primary bg-primary px-5 py-3.5 text-sm font-semibold text-white shadow-glow transition-all hover:-translate-y-px hover:bg-primary-2"
         >
           {stepIdx === totalSteps - 1 ? 'Review pitch →' : 'Next →'}
         </button>
@@ -172,7 +172,7 @@ function SummaryView({
         </button>
         <button
           onClick={onCopy}
-          className="rounded-xl border border-primary bg-primary px-5 py-3.5 text-sm font-semibold text-ink shadow-[0_6px_24px_-10px_rgba(124,58,237,0.5)] transition-colors hover:bg-primary-2"
+          className="rounded-xl border border-primary bg-primary px-5 py-3.5 text-sm font-semibold text-white shadow-glow transition-all hover:-translate-y-px hover:bg-primary-2"
         >
           Copy pitch as text
         </button>

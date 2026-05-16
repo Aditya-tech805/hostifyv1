@@ -86,7 +86,7 @@ function NameStage({ onSubmit }: { onSubmit: (name: string) => void }) {
         <button
           onClick={submit}
           disabled={name.trim().length < 2}
-          className="mt-[18px] w-full rounded-2xl bg-accent px-5 py-4 text-[15px] font-semibold text-bg transition-all hover:-translate-y-px hover:bg-accent-2 disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute"
+          className="mt-[18px] w-full rounded-2xl bg-accent px-5 py-4 text-[15px] font-semibold text-white shadow-glow-cyan transition-all hover:-translate-y-px hover:bg-accent-2 disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute disabled:shadow-none"
         >
           Begin mentoring →
         </button>
@@ -208,7 +208,7 @@ function ComposePing({ team, mentorName, onBack }: { team: Team; mentorName: str
         <button
           onClick={send}
           disabled={question.trim().length < 6}
-          className="mt-3.5 w-full rounded-2xl bg-accent px-5 py-4 text-[15px] font-semibold text-bg transition-all hover:-translate-y-px hover:bg-accent-2 disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute"
+          className="mt-3.5 w-full rounded-2xl bg-accent px-5 py-4 text-[15px] font-semibold text-white shadow-glow-cyan transition-all hover:-translate-y-px hover:bg-accent-2 disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute disabled:shadow-none"
         >
           Send ping →
         </button>

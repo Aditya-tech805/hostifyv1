@@ -69,7 +69,7 @@ export function PollResponder() {
         <button
           type="submit"
           disabled={!word.trim()}
-          className="rounded-xl bg-accent px-4 py-3 text-[14px] font-semibold text-bg transition-colors hover:bg-accent-2 disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute"
+          className="rounded-xl bg-accent px-4 py-3 text-[14px] font-semibold text-white shadow-glow-cyan transition-all hover:-translate-y-px hover:bg-accent-2 disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute disabled:shadow-none"
         >
           Add →
         </button>

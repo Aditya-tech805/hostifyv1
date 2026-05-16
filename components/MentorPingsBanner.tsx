@@ -48,7 +48,7 @@ function PingCard({ teamId, ping }: { teamId: string; ping: MentorPing }) {
           </div>
           <button
             onClick={() => acknowledgeMentorPing(teamId, ping)}
-            className="rounded-full bg-accent px-3 py-1 text-[11px] font-semibold text-bg transition-colors hover:bg-accent-2"
+            className="rounded-full bg-accent px-3 py-1 text-[11px] font-semibold text-white shadow-glow-cyan transition-all hover:bg-accent-2"
           >
             Got it
           </button>

@@ -3,22 +3,26 @@
 @tailwind utilities;
 
 :root {
-  /* Repeated here as CSS custom properties so we can use them inside
-     gradients / shadows / `color-mix()` where Tailwind utilities are awkward. */
-  --bg:        #0a0a0f;
-  --surface:   #16161e;
-  --surface-2: #1f1f29;
-  --line:      rgba(245, 243, 238, 0.08);
-  --line-2:    rgba(245, 243, 238, 0.14);
-  --primary:   #7c3aed;
-  --primary-2: #a78bfa;
-  --accent:    #84cc16;
-  --accent-2:  #bef264;
-  --spark:     #f97316;
-  --ink:       #f5f3ee;
-  --ink-2:     #d4d4d8;
-  --mute:      #6b7280;
-  --danger:    #ef4444;
+  /* CSS custom properties — mirror tailwind.config.ts for color-mix(),
+     gradients, and inline-style usage. */
+  --bg:          #F8FAFC;
+  --surface:     #FFFFFF;
+  --surface-2:   #F1F5F9;
+  --surface-3:   #E2E8F0;
+  --primary:     #4F46E5;
+  --primary-2:   #6366F1;
+  --secondary:   #7C3AED;
+  --secondary-2: #A78BFA;
+  --accent:      #06B6D4;
+  --accent-2:    #22D3EE;
+  --spark:       #F59E0B;
+  --ink:         #0F172A;
+  --ink-2:       #334155;
+  --mute:        #64748B;
+  --line:        rgba(15, 23, 42, 0.08);
+  --line-2:      rgba(15, 23, 42, 0.14);
+  --success:     #22C55E;
+  --danger:      #EF4444;
 }
 
 html, body {
@@ -29,16 +33,65 @@ html, body {
 }
 
 body {
+  /* Mesh gradient backdrop — overlapping soft radial blobs.
+     Subtle enough to read as "designed" not "decorated". */
   background:
-    radial-gradient(ellipse 80% 60% at 20% 0%,  rgba(124, 58, 237, 0.18) 0, transparent 60%),
-    radial-gradient(ellipse 70% 50% at 100% 100%, rgba(132, 204, 22, 0.10) 0, transparent 60%),
+    radial-gradient(at 15% 0%,   rgba(79, 70, 229, 0.14) 0px, transparent 50%),
+    radial-gradient(at 85% 15%,  rgba(6, 182, 212, 0.12) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(124, 58, 237, 0.10) 0px, transparent 50%),
     var(--bg);
+  background-attachment: fixed;
   min-height: 100vh;
 }
 
-::selection { background: var(--primary); color: var(--ink); }
+::selection { background: var(--primary); color: #FFFFFF; }
 
-/* Range input styling for judge sliders */
+/* Native scrollbar — make it visible against the light surfaces */
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track { background: var(--surface-2); }
+::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 6px; border: 3px solid var(--surface-2); }
+::-webkit-scrollbar-thumb:hover { background: var(--mute); }
+
+/* ─── Custom utilities ───────────────────────────────────────────────────── */
+@layer utilities {
+
+  /* Glass card — translucent white with backdrop blur. Use on top of
+     mesh-gradient body or coloured surfaces for a premium frosted look. */
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+  }
+  .glass-dark {
+    /* Used on darker overlay surfaces (e.g. inside a coloured spotlight) */
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  /* Animated gradient — useful on primary CTAs. Pair with bg-gradient-brand */
+  .gradient-animate {
+    background-size: 200% 200%;
+    animation: gradient-shift 6s ease infinite;
+  }
+
+  /* Neon glow text shadow */
+  .glow-text {
+    text-shadow: 0 0 24px rgba(79, 70, 229, 0.35);
+  }
+
+  /* Grid pattern overlay — use as ::before in a relative container */
+  .grid-pattern {
+    background-image:
+      linear-gradient(rgba(15, 23, 42, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15, 23, 42, 0.05) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+}
+
+/* Range input — judges' sliders */
 input[type='range'] {
   -webkit-appearance: none;
   appearance: none;
@@ -53,9 +106,9 @@ input[type='range']::-webkit-slider-thumb {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--primary);
   cursor: pointer;
-  box-shadow: 0 4px 10px -2px rgba(132, 204, 22, 0.5);
+  box-shadow: 0 4px 12px -2px rgba(79, 70, 229, 0.45);
   transition: transform 0.15s;
 }
 input[type='range']::-webkit-slider-thumb:hover { transform: scale(1.15); }
@@ -63,7 +116,7 @@ input[type='range']::-moz-range-thumb {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--primary);
   border: none;
   cursor: pointer;
 }

@@ -81,7 +81,7 @@ export function SprintResponder() {
           <button
             type="submit"
             disabled={draft.trim().length < 4}
-            className="w-full rounded-xl bg-spark px-4 py-3 text-[14px] font-semibold text-ink transition-colors hover:bg-[#fb923c] disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute"
+            className="w-full rounded-xl bg-spark px-4 py-3 text-[14px] font-semibold text-white shadow-[0_6px_24px_-10px_rgba(245,158,11,0.45)] transition-all hover:-translate-y-px hover:bg-[#FBBF24] disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute disabled:shadow-none"
           >
             {existing ? 'Update submission →' : 'Submit →'}
           </button>

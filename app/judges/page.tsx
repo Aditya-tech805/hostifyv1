@@ -106,7 +106,7 @@ function NameStage({ onSubmit }: { onSubmit: (name: string) => void }) {
         <button
           onClick={submit}
           disabled={name.trim().length < 2}
-          className="mt-[18px] w-full rounded-2xl bg-accent px-5 py-4 text-[15px] font-semibold text-bg transition-all hover:-translate-y-px hover:bg-accent-2 disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute"
+          className="mt-[18px] w-full rounded-2xl bg-accent px-5 py-4 text-[15px] font-semibold text-white shadow-glow-cyan transition-all hover:-translate-y-px hover:bg-accent-2 disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute disabled:shadow-none"
         >
           Begin judging →
         </button>
@@ -239,7 +239,7 @@ function JudgeConsole({ onSignOut }: { onSignOut: () => void }) {
                     </span>
                   </div>
                   {scored && (
-                    <span className="absolute right-3.5 top-3.5 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-accent text-[13px] font-bold text-bg">
+                    <span className="absolute right-3.5 top-3.5 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-accent text-[13px] font-bold text-white shadow-glow-cyan">
                       ✓
                     </span>
                   )}
@@ -388,7 +388,7 @@ function ScoreSheet({
               onSaveAndNext(entry);
               toast('Saved.');
             }}
-            className="flex-1 rounded-xl bg-accent px-5 py-3.5 text-[15px] font-semibold text-bg transition-all hover:-translate-y-px hover:bg-accent-2"
+            className="flex-1 rounded-xl bg-accent px-5 py-3.5 text-[15px] font-semibold text-white shadow-glow-cyan transition-all hover:-translate-y-px hover:bg-accent-2"
           >
             Save &amp; next →
           </button>

@@ -52,22 +52,30 @@ export default function ParticipantPage() {
 
 
         {hydrated && !team && (
-          <section className="py-8 text-center">
-            <span className="mb-[18px] inline-block rounded-full border border-accent/30 bg-accent/[0.06] px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.22em] text-accent">
-              Innovation Showcase Experience
-            </span>
-            <h1 className="mb-[18px] inline-block bg-gradient-to-b from-ink to-ink/65 bg-clip-text text-[clamp(48px,11vw,88px)] font-bold leading-[0.92] tracking-[-0.04em] text-transparent">
-              INNOVATRI<span className="x-letter inline-block animate-x-cycle text-primary [-webkit-text-fill-color:#7c3aed]">X</span>
-            </h1>
-            <p className="mx-auto max-w-[460px] text-[15px] leading-relaxed text-ink-2">
-              Not about perfect products. About <strong className="font-medium text-ink">powerful ideas</strong> and the future you can build. Welcome to a six-hour experience for sixteen teams.
-            </p>
-            <div className="mt-[22px] flex flex-wrap justify-center gap-[18px] font-mono text-[11px] uppercase tracking-[0.22em] text-mute">
-              <span>Innovation</span>
-              <span className="text-primary">·</span>
-              <span>Creativity</span>
-              <span className="text-primary">·</span>
-              <span>Future Potential</span>
+          <section className="relative py-10 text-center">
+            {/* Floating backdrop circles for depth */}
+            <div className="pointer-events-none absolute -left-20 top-0 h-72 w-72 rounded-full bg-primary/15 blur-3xl animate-float-slow" />
+            <div className="pointer-events-none absolute -right-20 top-20 h-80 w-80 rounded-full bg-accent/15 blur-3xl animate-float-slow" style={{ animationDelay: '7s' }} />
+            <div className="pointer-events-none absolute left-1/2 -top-12 h-64 w-64 -translate-x-1/2 rounded-full bg-secondary/10 blur-3xl" />
+
+            <div className="relative">
+              <span className="mb-[18px] inline-flex items-center gap-2 rounded-full border border-primary/30 bg-white/60 px-4 py-1.5 font-mono text-[11px] uppercase tracking-[0.22em] text-primary backdrop-blur-md shadow-soft">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-dot-pulse" />
+                Innovation Showcase Experience
+              </span>
+              <h1 className="mb-[18px] font-display text-[clamp(56px,12vw,120px)] font-extrabold leading-[0.92] tracking-[-0.04em] text-ink">
+                INNOVATRI<span className="inline-block animate-x-cycle bg-gradient-brand bg-clip-text text-transparent">X</span>
+              </h1>
+              <p className="mx-auto max-w-[480px] text-[16px] leading-relaxed text-ink-2">
+                Not about perfect products. About <strong className="font-semibold text-ink">powerful ideas</strong> and the future you can build. Welcome to a six-hour experience for sixteen teams.
+              </p>
+              <div className="mt-[22px] flex flex-wrap justify-center gap-[18px] font-mono text-[11px] uppercase tracking-[0.22em] text-mute">
+                <span>Innovation</span>
+                <span className="text-primary">·</span>
+                <span>Creativity</span>
+                <span className="text-primary">·</span>
+                <span>Future Potential</span>
+              </div>
             </div>
           </section>
         )}
@@ -81,10 +89,10 @@ export default function ParticipantPage() {
         {showRegistration && (
           <section className="mt-8 animate-view-in">
             <div className="mb-[18px]">
-              <div className="mb-2 font-mono text-[10.5px] uppercase tracking-[0.18em] text-accent">
+              <div className="mb-2 font-mono text-[10.5px] uppercase tracking-[0.18em] text-primary">
                 {editing ? 'Edit · update your team' : 'Step 01 · Lock in'}
               </div>
-              <h2 className="font-display text-[28px] font-semibold leading-tight tracking-tight">
+              <h2 className="font-display text-[28px] font-semibold leading-tight tracking-tight text-ink">
                 {editing ? 'Update team details.' : 'Register your team.'}
               </h2>
               <p className="mt-2.5 text-[14.5px] leading-relaxed text-ink-2">

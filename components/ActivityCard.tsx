@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ACTIVITY_PHASES, ACTIVITY_ROUTES, type ActivityId } from '@/lib/activities';
 import { useEventPhase } from '@/lib/hooks';
@@ -22,7 +21,6 @@ const PHASE_LABEL: Record<string, string> = {
   wrap:   'Wrap',
 };
 
-/** Friendly explanations for activities that have no destination page. */
 const PASSIVE_MESSAGES: Partial<Record<ActivityId, string>> = {
   spotlight: 'Spotlight is triggered by the coordinator — appears on every device automatically when they spin the wheel (~1 PM).',
 };
@@ -45,8 +43,6 @@ export function ActivityCard({ id, icon, title, description }: ActivityCardProps
       return;
     }
     if (!route) {
-      // No destination page → it's a passive moment triggered by the coordinator.
-      // Show a friendlier note rather than the misleading "coming soon".
       const msg = PASSIVE_MESSAGES[id] ?? 'This one happens automatically — no need to open it.';
       toast(msg);
       return;
@@ -58,15 +54,22 @@ export function ActivityCard({ id, icon, title, description }: ActivityCardProps
     <button
       onClick={onClick}
       aria-disabled={!unlocked}
-      className={`relative flex min-h-[124px] flex-col justify-between rounded-[18px] border bg-surface p-[18px] text-left transition-all duration-200 ${
+      className={`group relative flex min-h-[124px] flex-col justify-between overflow-hidden rounded-2xl border p-[18px] text-left transition-all duration-200 ${
         unlocked
-          ? 'border-line hover:-translate-y-0.5 hover:border-primary hover:bg-gradient-to-b hover:from-surface hover:to-surface-2'
-          : 'cursor-not-allowed border-line opacity-55'
+          ? 'border-line bg-white shadow-soft hover:-translate-y-1 hover:border-primary/30 hover:shadow-glow'
+          : 'cursor-not-allowed border-line bg-white/60 opacity-60'
       }`}
     >
-      <div>
+      {/* Subtle gradient blob in the corner of unlocked cards */}
+      {unlocked && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-gradient-brand opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-30"
+        />
+      )}
+      <div className="relative">
         <span className="mb-2 inline-block text-[22px]">{icon}</span>
-        <h3 className="font-display text-[15px] font-semibold leading-tight tracking-tight">
+        <h3 className="font-display text-[15px] font-semibold leading-tight tracking-tight text-ink">
           {title}
         </h3>
         <p className="mt-1 text-[12.5px] leading-snug text-ink-2">{description}</p>
@@ -75,7 +78,7 @@ export function ActivityCard({ id, icon, title, description }: ActivityCardProps
         <span className="absolute right-4 top-4 text-sm opacity-60">🔒</span>
       )}
       {unlocked && route && (
-        <span className="absolute right-3 top-3 rounded bg-accent px-1.5 py-[3px] font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-bg">
+        <span className="absolute right-3 top-3 rounded bg-gradient-cyan px-1.5 py-[3px] font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-white shadow-soft">
           LIVE
         </span>
       )}

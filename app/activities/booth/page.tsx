@@ -256,7 +256,7 @@ function Camera({ team }: { team: Team }) {
               <button
                 onClick={share}
                 disabled={uploading}
-                className="rounded-2xl bg-primary px-5 py-3.5 text-[14px] font-semibold text-ink shadow-[0_6px_24px_-10px_rgba(124,58,237,0.55)] transition-all hover:-translate-y-px hover:bg-primary-2 disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute disabled:shadow-none"
+                className="rounded-2xl bg-primary px-5 py-3.5 text-[14px] font-semibold text-white shadow-glow transition-all hover:-translate-y-px hover:bg-primary-2 hover:shadow-glow-lg disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute disabled:shadow-none"
               >
                 {uploading ? 'Uploading…' : 'Share with the room →'}
               </button>

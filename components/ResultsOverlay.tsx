@@ -141,7 +141,7 @@ export function ResultsOverlay() {
   if (!results?.revealed) return null;
   if (teams.length === 0) {
     return (
-      <div className="fixed inset-0 z-[300] flex items-center justify-center bg-bg/95 backdrop-blur-md animate-fade-in">
+      <div className="fixed inset-0 z-[300] flex items-center justify-center bg-white/85 backdrop-blur-2xl animate-fade-in">
         <div className="text-center">
           <div className="font-display text-4xl font-semibold tracking-tight">Thank you, everyone.</div>
           <div className="mt-4 text-mute">No teams scored. Wait for judges to submit.</div>
@@ -155,7 +155,7 @@ export function ResultsOverlay() {
   const place = ['🥇', '🥈', '🥉'];
 
   return (
-    <div className="fixed inset-0 z-[300] overflow-y-auto bg-bg/95 backdrop-blur-md animate-fade-in">
+    <div className="fixed inset-0 z-[300] overflow-y-auto bg-white/85 backdrop-blur-2xl animate-fade-in" style={{ backgroundImage: 'radial-gradient(ellipse 50% 50% at 30% 20%, rgba(79,70,229,0.16), transparent 70%), radial-gradient(ellipse 50% 50% at 70% 80%, rgba(245,158,11,0.16), transparent 70%)' }}>
       <canvas
         ref={canvasRef}
         className="pointer-events-none fixed inset-0 z-[10]"

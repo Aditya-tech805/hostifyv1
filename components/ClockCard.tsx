@@ -9,14 +9,9 @@ interface ClockCardProps {
   compact?: boolean;
 }
 
-/**
- * Live clock + dynamic phase status / countdown card.
- * The time-dependent bits are wrapped in <ClientOnly> so SSR and the initial
- * client render produce identical HTML — no hydration mismatch.
- */
 export function ClockCard({ compact = false }: ClockCardProps) {
   return (
-    <div className="grid grid-cols-[1fr_auto] items-center gap-4 rounded-2xl border border-line bg-surface p-5">
+    <div className="grid grid-cols-[1fr_auto] items-center gap-4 rounded-2xl border border-line bg-white p-5 shadow-soft">
       <div>
         <ClientOnly
           fallback={
@@ -33,7 +28,7 @@ export function ClockCard({ compact = false }: ClockCardProps) {
         <ClientOnly
           fallback={
             <>
-              <div className={`font-mono font-medium tracking-tight text-ink leading-none ${compact ? 'text-[22px]' : 'text-[26px]'}`}>--:--</div>
+              <div className={`font-mono font-semibold tracking-tight text-ink leading-none ${compact ? 'text-[22px]' : 'text-[26px]'}`}>--:--</div>
               <div className="mt-1.5 font-mono text-[10.5px] uppercase tracking-[0.16em] text-mute">···</div>
             </>
           }
@@ -55,8 +50,8 @@ function ClockBody() {
     const cd = formatCountdown(state.next.start - now.getTime());
     value = (
       <>
-        <span className="text-primary-2 font-semibold">{cd}</span>
-        <span className="text-ink-2"> · INNOVATRIX 26 · 18 May, 10:00</span>
+        <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent font-semibold">{cd}</span>
+        <span className="text-ink-2"> · 18 May, 10:00</span>
       </>
     );
   } else if ((state.status === 'live' || state.status === 'override') && state.phase) {
@@ -64,7 +59,7 @@ function ClockBody() {
     const cd = formatCountdown(state.phase.end - now.getTime());
     value = (
       <>
-        {state.phase.short} · ends in <span className="text-primary-2 font-semibold">{cd}</span>
+        {state.phase.short} · ends in <span className="text-primary font-semibold">{cd}</span>
       </>
     );
   } else if (state.status === 'post') {
@@ -84,7 +79,7 @@ function WallClock({ compact }: { compact: boolean }) {
   const { now } = useEventPhase();
   return (
     <>
-      <div className={`font-mono font-medium tracking-tight text-ink leading-none ${compact ? 'text-[22px]' : 'text-[26px]'}`}>
+      <div className={`font-mono font-semibold tracking-tight text-ink leading-none ${compact ? 'text-[22px]' : 'text-[26px]'}`}>
         {`${pad(now.getHours())}:${pad(now.getMinutes())}`}
       </div>
       <div className="mt-1.5 font-mono text-[10.5px] uppercase tracking-[0.16em] text-mute">

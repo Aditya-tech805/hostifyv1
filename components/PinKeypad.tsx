@@ -4,26 +4,15 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { BrandMark } from './BrandMark';
 
 interface PinKeypadProps {
-  /** "Coordinator Access" / "Judge Access" — shown as a pill above the title. */
   role: string;
-  /** Pill tone — primary (violet) for coordinator, accent (lime) for judges. */
   roleTone: 'primary' | 'accent';
-  /** Title shown above the keypad. */
   title?: string;
-  /** Subtitle shown below the title. */
   subtitle?: string;
-  /** The correct 6-digit PIN to compare against. */
   correctPin: string;
-  /** Called when the correct PIN is entered. */
   onSuccess: () => void;
-  /** Optional "back to participant" link at the bottom. */
   backHref?: string;
 }
 
-/**
- * Re-usable 6-digit PIN entry screen with shake-on-wrong, haptic vibration,
- * keyboard support (digits + Backspace + Esc), and 3-strike cooldown.
- */
 export function PinKeypad({
   role,
   roleTone,
@@ -53,10 +42,7 @@ export function PinKeypad({
     submitting.current = false;
   }, [correctPin, onSuccess]);
 
-  // Cooldown effect after 3 wrong attempts
-  useEffect(() => {
-    if (attempts >= 3) setCooldown(30);
-  }, [attempts]);
+  useEffect(() => { if (attempts >= 3) setCooldown(30); }, [attempts]);
   useEffect(() => {
     if (cooldown <= 0) return;
     const id = window.setInterval(() => {
@@ -68,7 +54,6 @@ export function PinKeypad({
     return () => window.clearInterval(id);
   }, [cooldown]);
 
-  // Keyboard support
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (cooldown > 0) return;
@@ -97,78 +82,85 @@ export function PinKeypad({
     if (next.length === 6) window.setTimeout(() => trySubmit(next), 150);
   };
 
-  const dotFillClass = roleTone === 'accent' ? 'bg-accent border-accent' : 'bg-primary border-primary';
+  const fillColor =
+    roleTone === 'accent'
+      ? 'bg-accent border-accent'
+      : 'bg-primary border-primary';
   const rolePillClass =
     roleTone === 'accent'
       ? 'border-accent/40 bg-accent/[0.08] text-accent'
-      : 'border-primary/40 bg-primary/[0.10] text-primary-2';
-  const markStroke = roleTone === 'accent' ? '#84cc16' : '#7c3aed';
-  const markDot    = roleTone === 'accent' ? '#7c3aed' : '#84cc16';
+      : 'border-primary/30 bg-primary/[0.08] text-primary';
 
   return (
     <section className="flex min-h-screen flex-col items-center justify-center px-5 py-10">
-      <div className="mb-3 flex items-center gap-2.5 font-display text-lg font-semibold">
-        <BrandMark stroke={markStroke} dot={markDot} size={24} />
-        <span>INNOVATRIX</span>
-      </div>
-      <div className={`mb-9 rounded-full border px-3.5 py-1.5 font-mono text-[11px] uppercase tracking-[0.22em] ${rolePillClass}`}>
-        {role}
-      </div>
-      <h1 className="mb-2 text-center font-display text-[28px] font-semibold tracking-tight">{title}</h1>
-      {subtitle && (
-        <p className="mb-9 max-w-[320px] text-center text-sm text-mute">{subtitle}</p>
-      )}
+      {/* Background floating circles */}
+      <div className="pointer-events-none fixed left-[-100px] top-[10vh] h-72 w-72 rounded-full bg-primary/20 blur-3xl animate-float-slow" />
+      <div className="pointer-events-none fixed right-[-100px] bottom-[10vh] h-80 w-80 rounded-full bg-accent/20 blur-3xl animate-float-slow" style={{ animationDelay: '7s' }} />
 
-      <div className={`mb-9 flex gap-3.5 ${errorPulse ? 'animate-shake' : ''}`}>
-        {Array.from({ length: 6 }).map((_, i) => (
-          <span
-            key={i}
-            className={`h-3.5 w-3.5 rounded-full border-2 transition-all duration-150 ${
-              errorPulse
-                ? 'border-danger bg-danger'
-                : i < buffer.length
-                  ? dotFillClass
-                  : 'border-line-2 bg-transparent'
-            }`}
-          />
-        ))}
-      </div>
-
-      <div className="grid grid-cols-3 gap-3.5">
-        {['1','2','3','4','5','6','7','8','9','clear','0','back'].map((d) => {
-          const isFn = d === 'clear' || d === 'back';
-          return (
-            <button
-              key={d}
-              onClick={() => press(d)}
-              disabled={cooldown > 0}
-              className={`flex h-20 w-20 select-none items-center justify-center rounded-full border font-display text-[26px] font-medium transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-30 ${
-                isFn
-                  ? 'border-transparent bg-transparent text-[18px] text-mute hover:text-ink'
-                  : 'border-line bg-surface text-ink hover:border-line-2 hover:bg-surface-2 active:scale-95 ' +
-                    (roleTone === 'accent' ? 'active:bg-accent active:border-accent active:text-bg' : 'active:bg-primary active:border-primary')
-              }`}
-            >
-              {d === 'back' ? '←' : d}
-            </button>
-          );
-        })}
-      </div>
-
-      {cooldown > 0 && (
-        <div className="mt-6 font-mono text-xs uppercase tracking-[0.1em] text-danger">
-          Locked · try again in {cooldown}s
+      <div className="relative z-10 flex flex-col items-center">
+        <div className="mb-3 flex items-center gap-2.5 font-display text-lg font-semibold text-ink">
+          <BrandMark filled size={24} />
+          <span>INNOVATRIX</span>
         </div>
-      )}
+        <div className={`mb-9 rounded-full border px-3.5 py-1.5 font-mono text-[11px] uppercase tracking-[0.22em] ${rolePillClass}`}>
+          {role}
+        </div>
+        <h1 className="mb-2 text-center font-display text-[28px] font-semibold tracking-tight text-ink">{title}</h1>
+        {subtitle && (
+          <p className="mb-9 max-w-[320px] text-center text-sm text-mute">{subtitle}</p>
+        )}
 
-      {backHref && (
-        <a
-          href={backHref}
-          className="mt-8 font-mono text-xs uppercase tracking-[0.12em] text-mute transition-colors hover:text-ink-2"
-        >
-          ← Back to participant view
-        </a>
-      )}
+        <div className={`mb-9 flex gap-3.5 ${errorPulse ? 'animate-shake' : ''}`}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <span
+              key={i}
+              className={`h-3.5 w-3.5 rounded-full border-2 transition-all duration-150 ${
+                errorPulse
+                  ? 'border-danger bg-danger'
+                  : i < buffer.length
+                    ? fillColor
+                    : 'border-line-2 bg-transparent'
+              }`}
+            />
+          ))}
+        </div>
+
+        <div className="grid grid-cols-3 gap-3.5">
+          {['1','2','3','4','5','6','7','8','9','clear','0','back'].map((d) => {
+            const isFn = d === 'clear' || d === 'back';
+            return (
+              <button
+                key={d}
+                onClick={() => press(d)}
+                disabled={cooldown > 0}
+                className={`flex h-20 w-20 select-none items-center justify-center rounded-full font-display text-[26px] font-semibold transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-30 ${
+                  isFn
+                    ? 'border border-transparent bg-transparent text-[18px] text-mute hover:text-ink-2'
+                    : 'border border-line bg-white text-ink shadow-soft hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-glow active:scale-95 ' +
+                      (roleTone === 'accent' ? 'active:bg-accent active:border-accent active:text-white' : 'active:bg-primary active:border-primary active:text-white')
+                }`}
+              >
+                {d === 'back' ? '←' : d}
+              </button>
+            );
+          })}
+        </div>
+
+        {cooldown > 0 && (
+          <div className="mt-6 font-mono text-xs uppercase tracking-[0.1em] text-danger">
+            Locked · try again in {cooldown}s
+          </div>
+        )}
+
+        {backHref && (
+          <a
+            href={backHref}
+            className="mt-8 font-mono text-xs uppercase tracking-[0.12em] text-mute transition-colors hover:text-ink-2"
+          >
+            ← Back to participant view
+          </a>
+        )}
+      </div>
     </section>
   );
 }

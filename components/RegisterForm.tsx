@@ -5,9 +5,7 @@ import { TEAM_COLORS, type Team } from '@/lib/teams';
 import { useToast } from './Toast';
 
 interface RegisterFormProps {
-  /** Optional team to pre-fill (when editing existing details). */
   initial?: Team;
-  /** Called with the fully-formed team object on submit. */
   onSubmit: (team: Team) => void;
 }
 
@@ -52,9 +50,8 @@ export function RegisterForm({ initial, onSubmit }: RegisterFormProps) {
   };
 
   return (
-    <form onSubmit={submit} autoComplete="off" className="rounded-2xl border border-line bg-surface p-6">
+    <form onSubmit={submit} autoComplete="off" className="rounded-3xl border border-line bg-white p-6 shadow-soft">
 
-      {/* Team name */}
       <Field label="Team name" hint="make it memorable">
         <input
           type="text"
@@ -63,11 +60,10 @@ export function RegisterForm({ initial, onSubmit }: RegisterFormProps) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. Phoenix"
-          className="w-full rounded-xl border border-line bg-surface-2 px-4 py-3.5 text-[15px] text-ink outline-none transition-colors placeholder:text-mute focus:border-primary focus:bg-bg"
+          className="w-full rounded-xl border border-line bg-surface-2 px-4 py-3.5 text-[15px] text-ink outline-none transition-all placeholder:text-mute focus:border-primary focus:bg-white focus:shadow-glow"
         />
       </Field>
 
-      {/* Colour picker */}
       <Field label="Team colour" hint="your booth identity">
         <div className="grid grid-cols-6 gap-2.5">
           {TEAM_COLORS.map((c) => (
@@ -77,12 +73,12 @@ export function RegisterForm({ initial, onSubmit }: RegisterFormProps) {
               aria-label={c.name}
               onClick={() => setColor(c.hex)}
               className={`relative aspect-square rounded-2xl border-2 transition-all duration-200 hover:-translate-y-0.5 ${
-                color === c.hex ? 'scale-105 border-ink' : 'border-transparent'
+                color === c.hex ? 'scale-105 border-ink shadow-glow' : 'border-transparent'
               }`}
               style={{ background: c.hex }}
             >
               {color === c.hex && (
-                <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-ink [text-shadow:0_1px_2px_rgba(0,0,0,.4)]">
+                <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-white [text-shadow:0_1px_3px_rgba(0,0,0,.45)]">
                   ✓
                 </span>
               )}
@@ -91,7 +87,6 @@ export function RegisterForm({ initial, onSubmit }: RegisterFormProps) {
         </div>
       </Field>
 
-      {/* Members */}
       <Field label="Team members" hint="1 to 5 names">
         <div className="space-y-2">
           {members.map((m, idx) => (
@@ -102,14 +97,14 @@ export function RegisterForm({ initial, onSubmit }: RegisterFormProps) {
                 value={m}
                 onChange={(e) => updateMember(idx, e.target.value)}
                 placeholder={idx === 0 ? 'Member 1 (you)' : `Member ${idx + 1}`}
-                className="flex-1 rounded-[10px] border border-line bg-surface-2 px-3.5 py-2.5 text-sm text-ink outline-none transition-colors focus:border-primary"
+                className="flex-1 rounded-[10px] border border-line bg-surface-2 px-3.5 py-2.5 text-sm text-ink outline-none transition-colors focus:border-primary focus:bg-white"
               />
               {idx > 0 && (
                 <button
                   type="button"
                   onClick={() => removeMember(idx)}
                   aria-label="Remove member"
-                  className="h-[38px] w-[38px] rounded-[10px] border border-line bg-transparent text-mute transition-colors hover:border-danger/40 hover:bg-danger/[0.06] hover:text-danger"
+                  className="h-[38px] w-[38px] rounded-[10px] border border-line bg-white text-mute transition-colors hover:border-danger/40 hover:bg-danger/[0.06] hover:text-danger"
                 >
                   ×
                 </button>
@@ -121,7 +116,7 @@ export function RegisterForm({ initial, onSubmit }: RegisterFormProps) {
           type="button"
           onClick={addMember}
           disabled={members.length >= MAX_MEMBERS}
-          className={`mt-2 w-full rounded-[10px] border border-dashed border-line-2 bg-transparent px-3.5 py-2.5 text-[13px] text-ink-2 transition-colors hover:border-primary hover:text-primary-2 ${
+          className={`mt-2 w-full rounded-[10px] border border-dashed border-line-2 bg-transparent px-3.5 py-2.5 text-[13px] text-ink-2 transition-colors hover:border-primary hover:text-primary ${
             members.length >= MAX_MEMBERS ? 'opacity-40' : ''
           }`}
         >
@@ -129,7 +124,6 @@ export function RegisterForm({ initial, onSubmit }: RegisterFormProps) {
         </button>
       </Field>
 
-      {/* Idea */}
       <Field label="Your idea, in one line" hint="be punchy, not generic">
         <textarea
           maxLength={IDEA_LIMIT}
@@ -137,7 +131,7 @@ export function RegisterForm({ initial, onSubmit }: RegisterFormProps) {
           value={idea}
           onChange={(e) => setIdea(e.target.value)}
           placeholder="An AI that translates restaurant menus into 23 languages in real time…"
-          className="min-h-[88px] w-full resize-none rounded-xl border border-line bg-surface-2 px-4 py-3.5 text-[15px] leading-relaxed text-ink outline-none transition-colors placeholder:text-mute focus:border-primary focus:bg-bg"
+          className="min-h-[88px] w-full resize-none rounded-xl border border-line bg-surface-2 px-4 py-3.5 text-[15px] leading-relaxed text-ink outline-none transition-all placeholder:text-mute focus:border-primary focus:bg-white focus:shadow-glow"
         />
         <div
           className={`mt-1.5 text-right font-mono text-[11px] ${
@@ -151,10 +145,10 @@ export function RegisterForm({ initial, onSubmit }: RegisterFormProps) {
       <button
         type="submit"
         disabled={!isValid}
-        className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-4 text-[15px] font-semibold text-ink shadow-[0_6px_24px_-8px_rgba(124,58,237,0.6)] transition-all hover:-translate-y-px hover:bg-primary-2 hover:shadow-[0_10px_30px_-8px_rgba(124,58,237,0.7)] disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute disabled:shadow-none"
+        className="gradient-animate mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-brand bg-[length:200%_200%] px-5 py-4 text-[15px] font-semibold text-white shadow-glow transition-all hover:-translate-y-px hover:shadow-glow-lg disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-surface-2 disabled:bg-none disabled:text-mute disabled:shadow-none"
       >
         <span>Lock it in</span>
-        <span className="transition-transform">→</span>
+        <span className="transition-transform group-hover:translate-x-1">→</span>
       </button>
     </form>
   );

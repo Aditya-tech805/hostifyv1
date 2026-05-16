@@ -27,22 +27,21 @@ export default function ScreenPage() {
 }
 
 function ScreenShell() {
-  // Minimal static skeleton for SSR / pre-mount. The live version replaces this.
   return (
     <div className="grid min-h-screen w-screen grid-rows-[auto_1fr_auto] gap-6 p-8 md:p-12">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3.5 font-display text-[22px] font-semibold tracking-tight">
-          <BrandMark size={36} />
+        <div className="flex items-center gap-3.5 font-display text-[22px] font-semibold tracking-tight text-ink">
+          <BrandMark filled size={36} />
           <span>INNOVATRIX</span>
-          <span className="rounded-full border border-line px-2.5 py-1 font-mono text-[13px] tracking-[0.18em] text-mute">&apos;26</span>
+          <span className="rounded-full border border-line bg-white px-2.5 py-1 font-mono text-[13px] tracking-[0.18em] text-mute shadow-soft">&apos;26</span>
         </div>
       </div>
       <div className="flex items-center justify-center text-center text-mute">···</div>
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <div className="rounded-[18px] border border-line bg-surface px-6 py-5" />
-        <div className="rounded-[18px] border border-line bg-surface px-6 py-5" />
-        <div className="rounded-[18px] border border-line bg-surface px-6 py-5" />
-        <div className="rounded-[18px] border border-line bg-surface px-6 py-5" />
+        <div className="rounded-2xl border border-line bg-white px-6 py-5 shadow-soft" />
+        <div className="rounded-2xl border border-line bg-white px-6 py-5 shadow-soft" />
+        <div className="rounded-2xl border border-line bg-white px-6 py-5 shadow-soft" />
+        <div className="rounded-2xl border border-line bg-white px-6 py-5 shadow-soft" />
       </div>
     </div>
   );
@@ -188,15 +187,15 @@ function ScreenLive() {
 
       {/* Top bar */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3.5 font-display text-[22px] font-semibold tracking-tight">
-          <BrandMark size={36} />
+        <div className="flex items-center gap-3.5 font-display text-[22px] font-semibold tracking-tight text-ink">
+          <BrandMark filled size={36} />
           <span>INNOVATRIX</span>
-          <span className="rounded-full border border-line px-2.5 py-1 font-mono text-[13px] tracking-[0.18em] text-mute">
+          <span className="rounded-full border border-line bg-white px-2.5 py-1 font-mono text-[13px] tracking-[0.18em] text-mute shadow-soft">
             &apos;26
           </span>
         </div>
         <div className="text-right">
-          <div className="font-mono text-[36px] font-medium leading-none tracking-tight">
+          <div className="font-mono text-[36px] font-semibold leading-none tracking-tight text-ink">
             {`${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`}
           </div>
           <div className="mt-1.5 font-mono text-[13px] uppercase tracking-[0.16em] text-mute">
@@ -240,12 +239,12 @@ function ScreenLive() {
 function Eyebrow({ tone, children }: { tone: 'primary' | 'accent' | 'spark'; children: React.ReactNode }) {
   const cls =
     tone === 'spark'
-      ? 'border-spark/40 bg-spark/[0.08] text-spark'
+      ? 'border-spark/40 bg-spark/[0.10] text-spark'
       : tone === 'accent'
-        ? 'border-accent/35 bg-accent/[0.06] text-accent'
-        : 'border-primary/40 bg-primary/[0.10] text-primary-2';
+        ? 'border-accent/35 bg-accent/[0.10] text-accent'
+        : 'border-primary/30 bg-primary/[0.08] text-primary';
   return (
-    <div className={`mb-6 inline-flex items-center rounded-full border px-5 py-2 font-mono text-[18px] uppercase tracking-[0.32em] ${cls}`}>
+    <div className={`mb-6 inline-flex items-center rounded-full border px-5 py-2 font-mono text-[18px] uppercase tracking-[0.32em] backdrop-blur-md ${cls}`}>
       <span className="mr-3 inline-block h-2 w-2 animate-pulse-soft rounded-full bg-current align-middle" />
       {children}
     </div>
@@ -254,7 +253,7 @@ function Eyebrow({ tone, children }: { tone: 'primary' | 'accent' | 'spark'; chi
 
 function Title({ children }: { children: React.ReactNode }) {
   return (
-    <h1 className="mb-8 bg-gradient-to-b from-ink to-ink/55 bg-clip-text text-[clamp(64px,12vw,200px)] font-bold leading-[0.95] tracking-[-0.04em] text-transparent">
+    <h1 className="mb-8 font-display text-[clamp(64px,12vw,200px)] font-extrabold leading-[0.92] tracking-[-0.04em] text-ink">
       {children}
     </h1>
   );
@@ -262,7 +261,7 @@ function Title({ children }: { children: React.ReactNode }) {
 
 function XLetter() {
   return (
-    <span className="inline-block animate-x-cycle text-primary [-webkit-text-fill-color:#7c3aed]" style={{ transformOrigin: '50% 55%' }}>
+    <span className="inline-block animate-x-cycle bg-gradient-brand bg-clip-text text-transparent" style={{ transformOrigin: '50% 55%' }}>
       X
     </span>
   );
@@ -282,7 +281,7 @@ function Countdown({ label, children }: { label: string; children: React.ReactNo
       <span className="mb-4 block font-mono text-[clamp(12px,1.4vw,18px)] font-normal uppercase tracking-[0.32em] text-mute">
         {label}
       </span>
-      <span className="font-mono text-[clamp(40px,7vw,96px)] font-medium tracking-tight text-accent">
+      <span className="bg-gradient-to-r from-primary to-accent bg-clip-text font-mono text-[clamp(40px,7vw,96px)] font-bold tracking-tight text-transparent">
         {children}
       </span>
     </div>
@@ -291,9 +290,9 @@ function Countdown({ label, children }: { label: string; children: React.ReactNo
 
 function Kpi({ label, figure, sub, figureClass = '' }: { label: string; figure: string; sub?: string; figureClass?: string }) {
   return (
-    <div className="rounded-[18px] border border-line bg-surface px-6 py-5">
+    <div className="rounded-2xl border border-line bg-white px-6 py-5 shadow-soft">
       <div className="mb-2.5 font-mono text-[11px] uppercase tracking-[0.22em] text-mute">{label}</div>
-      <div className={`font-display text-[clamp(28px,3vw,44px)] font-semibold leading-none tracking-tight ${figureClass}`}>
+      <div className={`font-display text-[clamp(28px,3vw,44px)] font-extrabold leading-none tracking-tight text-ink ${figureClass}`}>
         {figure}
       </div>
       {sub && <div className="mt-1.5 font-mono text-[11px] tracking-[0.08em] text-mute">{sub}</div>}

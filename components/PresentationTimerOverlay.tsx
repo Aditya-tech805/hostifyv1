@@ -67,7 +67,7 @@ export function PresentationTimerOverlay() {
 
   return (
     <div className="pointer-events-none fixed bottom-8 left-1/2 z-40 -translate-x-1/2 select-none">
-      <div className={`rounded-3xl border ${danger ? 'border-spark/40 bg-spark/[0.08]' : 'border-line bg-surface/85'} px-10 py-6 backdrop-blur-md`}>
+      <div className={`rounded-3xl border ${danger ? 'border-spark bg-spark/[0.10] shadow-glow' : 'border-line bg-white shadow-glow'} px-10 py-6 backdrop-blur-xl`}>
         <div className="font-mono text-[clamp(11px,1vw,14px)] uppercase tracking-[0.32em] text-mute text-center">
           {timer.label || (isOver ? "Time's up" : isPaused ? 'Paused' : 'Time remaining')}
         </div>

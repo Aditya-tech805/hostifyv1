@@ -118,21 +118,21 @@ function BingoBody() {
               className={`relative flex min-h-0 cursor-pointer flex-col justify-between overflow-hidden rounded-xl border p-2.5 text-left transition-all duration-200 hover:scale-[1.02] ${
                 done
                   ? inLineHere
-                    ? 'border-accent bg-gradient-to-br from-accent to-[color-mix(in_srgb,#84cc16_65%,#000)] text-bg'
-                    : 'border-primary bg-gradient-to-br from-primary to-[color-mix(in_srgb,#7c3aed_70%,#000)] text-white'
+                    ? 'border-accent bg-gradient-cyan text-white shadow-glow-cyan'
+                    : 'border-primary bg-gradient-indigo text-white shadow-glow'
                   : inLineHere
-                    ? 'border-line text-ink-2 [box-shadow:inset_0_0_0_2px_#84cc16]'
-                    : 'border-line bg-surface text-ink-2 hover:border-line-2'
+                    ? 'border-line bg-white text-ink-2 [box-shadow:inset_0_0_0_2px_#06B6D4]'
+                    : 'border-line bg-white text-ink-2 shadow-soft hover:border-line-2'
               }`}
             >
-              <span className={`font-mono text-[9.5px] tracking-[0.16em] ${done ? (inLineHere ? 'text-bg/70' : 'text-white/70') : 'text-mute'}`}>
+              <span className={`font-mono text-[9.5px] tracking-[0.16em] ${done ? 'text-white/70' : 'text-mute'}`}>
                 {String(idx + 1).padStart(2, '0')}
               </span>
-              <span className={`font-display text-[11px] font-medium leading-tight tracking-tight ${done ? (inLineHere ? 'text-bg' : 'text-white') : 'text-ink'}`}>
+              <span className={`font-display text-[11px] font-medium leading-tight tracking-tight ${done ? 'text-white' : 'text-ink'}`}>
                 {mission}
               </span>
               {done && (
-                <span className={`absolute right-2 top-1.5 text-[11px] font-bold ${inLineHere ? 'text-bg' : 'text-white/95'}`}>
+                <span className="absolute right-2 top-1.5 text-[11px] font-bold text-white/95">
                   ✓
                 </span>
               )}
@@ -169,7 +169,7 @@ function BingoBody() {
             </p>
             <button
               onClick={() => setCelebration(null)}
-              className="rounded-full bg-accent px-7 py-3 text-sm font-semibold text-bg transition-colors hover:bg-accent-2"
+              className="rounded-full bg-accent px-7 py-3 text-sm font-semibold text-white shadow-glow-cyan transition-all hover:-translate-y-px hover:bg-accent-2"
             >
               Back to the floor →
             </button>

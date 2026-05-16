@@ -28,7 +28,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div
         aria-live="polite"
-        className={`pointer-events-none fixed bottom-6 left-1/2 z-[200] -translate-x-1/2 rounded-xl border border-line-2 bg-surface px-[18px] py-3 text-sm text-ink transition-all duration-200 ${
+        className={`pointer-events-none fixed bottom-6 left-1/2 z-[200] -translate-x-1/2 rounded-2xl border border-line bg-white/90 px-5 py-3 text-sm text-ink shadow-glow backdrop-blur-xl transition-all duration-200 ${
           visible ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'
         }`}
       >
