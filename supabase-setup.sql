@@ -26,3 +26,25 @@ create policy "kv anon select" on public.kv for select to anon, authenticated us
 create policy "kv anon insert" on public.kv for insert to anon, authenticated with check (true);
 create policy "kv anon update" on public.kv for update to anon, authenticated using (true) with check (true);
 create policy "kv anon delete" on public.kv for delete to anon, authenticated using (true);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 4. Storage bucket for the photo booth (participant selfies w/ INNOVATRIX frame)
+-- ─────────────────────────────────────────────────────────────────────────────
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('gallery', 'gallery', true, 2097152, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do update set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+-- 5. Storage policies — open for the event scope
+drop policy if exists "gallery anon select" on storage.objects;
+drop policy if exists "gallery anon insert" on storage.objects;
+drop policy if exists "gallery anon delete" on storage.objects;
+
+create policy "gallery anon select" on storage.objects for select to anon, authenticated
+  using (bucket_id = 'gallery');
+create policy "gallery anon insert" on storage.objects for insert to anon, authenticated
+  with check (bucket_id = 'gallery');
+create policy "gallery anon delete" on storage.objects for delete to anon, authenticated
+  using (bucket_id = 'gallery');

@@ -9,7 +9,8 @@ export type ActivityId =
   | 'team-wall'
   | 'pitch-lab'
   | 'spotlight'
-  | 'vote';
+  | 'vote'
+  | 'booth';
 
 import type { PhaseId } from './schedule';
 
@@ -21,6 +22,8 @@ export const ACTIVITY_PHASES: Record<ActivityId, PhaseId[]> = {
   'pitch-lab':  ['phase2'],
   spotlight:    ['phase2'],
   vote:         ['phase3'],
+  // Booth is available all event long — selfies are nice in any phase.
+  booth:        ['phase1', 'phase2', 'lunch', 'phase3', 'wrap'],
 };
 
 /** Activities that currently have a built view. Others render as "Coming soon". */
@@ -30,6 +33,7 @@ export const ACTIVITY_ROUTES: Partial<Record<ActivityId, string>> = {
   bingo:        '/activities/bingo',
   'team-wall':  '/activities/team-wall',
   vote:         '/activities/vote',
+  booth:        '/activities/booth',
 };
 
 // ─── Idea Card Roulette ────────────────────────────────────────────────────────

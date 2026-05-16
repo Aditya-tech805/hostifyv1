@@ -8,6 +8,7 @@
 
 import { useMemo } from 'react';
 import { useSyncedValue, useSyncedMap, writeSynced, subscribeSynced } from './sync';
+import { getSupabase, SUPABASE_ENABLED } from './supabase';
 import type { Team } from './teams';
 import type { PhaseId } from './schedule';
 
@@ -21,6 +22,7 @@ const PATHS = {
   upNext:        'upNext',         // UpNextState | null
   audienceVotes: 'audienceVotes',  // audienceVotes/{teamId} → VoteTally
   mentorPings:   'mentorPings',    // mentorPings/{teamId}/{pingId} → MentorPing
+  gallery:       'gallery',        // gallery/{photoId} → Photo (metadata)
 } as const;
 
 // ─── Teams ───────────────────────────────────────────────────────────────────
@@ -202,4 +204,84 @@ export function subscribeSpotlight(cb: (v: SpotlightState | null) => void): () =
 }
 export function subscribeResults(cb: (v: ResultsState | null) => void): () => void {
   return subscribeSynced<ResultsState>(PATHS.results, cb);
+}
+
+// ─── Photo gallery ───────────────────────────────────────────────────────────
+export interface Photo {
+  id: string;
+  url: string;          // public URL of the file in Supabase Storage
+  teamId: string;
+  teamName: string;
+  teamColor: string;
+  uploadedAt: number;
+}
+
+const GALLERY_BUCKET = 'gallery';
+
+export function useGallery(): Photo[] {
+  const map = useSyncedMap<Photo>(PATHS.gallery);
+  return useMemo(
+    () => Object.values(map).sort((a, b) => b.uploadedAt - a.uploadedAt),
+    [map],
+  );
+}
+
+/**
+ * Upload a JPEG blob to Supabase Storage and record the metadata in the
+ * synced `gallery/{id}` path. Returns the resulting public URL.
+ *
+ * When Supabase isn't configured, we skip the upload and store a base64
+ * data URL inside the metadata so single-device dev still shows the
+ * gallery (just bigger memory footprint).
+ */
+export async function uploadGalleryPhoto(
+  blob: Blob,
+  team: { id: string; name: string; color: string },
+): Promise<Photo> {
+  const id = 'photo-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
+  let url = '';
+
+  if (SUPABASE_ENABLED) {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error('Supabase client unavailable.');
+    const path = `${id}.jpg`;
+    const { error } = await supabase.storage.from(GALLERY_BUCKET).upload(path, blob, {
+      contentType: 'image/jpeg',
+      cacheControl: '3600',
+    });
+    if (error) throw error;
+    const { data } = supabase.storage.from(GALLERY_BUCKET).getPublicUrl(path);
+    url = data.publicUrl;
+  } else {
+    // Fallback: turn the blob into a data URL so the gallery still works locally.
+    url = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  const photo: Photo = {
+    id,
+    url,
+    teamId: team.id,
+    teamName: team.name,
+    teamColor: team.color,
+    uploadedAt: Date.now(),
+  };
+  void writeSynced(`${PATHS.gallery}/${id}`, photo);
+  return photo;
+}
+
+/** Delete a photo. Coordinator-only at the UI layer (no auth on Storage yet). */
+export async function deleteGalleryPhoto(photo: Photo): Promise<void> {
+  if (SUPABASE_ENABLED) {
+    const supabase = getSupabase();
+    if (supabase) {
+      const path = `${photo.id}.jpg`;
+      await supabase.storage.from(GALLERY_BUCKET).remove([path]);
+    }
+  }
+  void writeSynced(`${PATHS.gallery}/${photo.id}`, null);
 }
