@@ -18,12 +18,23 @@ export interface Phase {
 
 const at = (hhmm: string) => new Date(`${EVENT_DATE}T${hhmm}:00${EVENT_TZ}`).getTime();
 
+// Aligned to the official INNOVATRIX 2026 event itinerary (PDF):
+//   09:30 - 10:00  Registration & Check-in        \
+//   10:00 - 10:30  Opening Ceremony                ) Phase 1 - Welcome
+//   10:30 - 10:45  Seat Allotments                /
+//   10:45 - 12:00  Idea Development Session       \
+//   12:00 - 12:15  Refreshments                    ) Phase 2 - Ideate
+//   12:15 - 13:00  Continue Idea Development      /
+//   13:00 - 14:00  Lunch Break                    -> Lunch
+//   14:00 - 15:45  Judging & Evaluation           -> Phase 3 - Judging
+//   15:45 - 16:00  Vote of Thanks                 \
+//   16:00 - 16:15  Award Ceremony                  ) Wrap - Thanks & Awards
 export const SCHEDULE: Phase[] = [
-  { id: 'phase1', label: 'Phase 1 · Opening',           short: 'OPENING',         start: at('10:00'), end: at('10:45') },
-  { id: 'phase2', label: 'Phase 2 · Build & Interact',  short: 'BUILD',           start: at('10:45'), end: at('13:30') },
-  { id: 'lunch',  label: 'Lunch · Reset & Recharge',    short: 'LUNCH',           start: at('13:30'), end: at('14:00') },
-  { id: 'phase3', label: 'Phase 3 · Presentations',     short: 'PITCH',           start: at('14:00'), end: at('16:00') },
-  { id: 'wrap',   label: 'Wrap · Results',              short: 'WRAP',            start: at('16:00'), end: at('17:00') },
+  { id: 'phase1', label: 'Phase 1 · Welcome',              short: 'WELCOME', start: at('09:30'), end: at('10:45') },
+  { id: 'phase2', label: 'Phase 2 · Idea Development',     short: 'IDEATE',  start: at('10:45'), end: at('13:00') },
+  { id: 'lunch',  label: 'Lunch · Reset & Recharge',       short: 'LUNCH',   start: at('13:00'), end: at('14:00') },
+  { id: 'phase3', label: 'Phase 3 · Judging & Evaluation', short: 'JUDGE',   start: at('14:00'), end: at('15:45') },
+  { id: 'wrap',   label: 'Wrap · Thanks & Awards',         short: 'AWARDS',  start: at('15:45'), end: at('16:15') },
 ];
 
 export const PHASE_MAP: Record<PhaseId, Phase> = Object.fromEntries(

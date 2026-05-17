@@ -888,7 +888,18 @@ function Booth({ team }: { team: Team }) {
     const url = URL.createObjectURL(shot.blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `innovatrix-${team.name.replace(/\s+/g, '-').toLowerCase()}-${templateId}-${Date.now()}.jpg`;
+    // Sanitize: strip everything that's not letters/digits/hyphen so a team
+    // name like "Apex / Aether" or "Team! O'Hara" can't produce an invalid
+    // filename (slashes broke the path on some Android downloads).
+    const safeName =
+      team.name
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '')
+        .replace(/-{2,}/g, '-')
+        .replace(/^-+|-+$/g, '')
+        || 'team';
+    a.download = `innovatrix-${safeName}-${templateId}-${Date.now()}.jpg`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -972,7 +983,16 @@ function Booth({ team }: { team: Team }) {
               >
                 <span className="block h-12 w-12 rounded-full border-[3px] border-bg" />
               </button>
-              <IconButton onClick={() => location.reload()} label="Reset">×</IconButton>
+              <IconButton
+                onClick={() => {
+                  // The reload tears down the camera stream and clears any
+                  // in-progress shot. Confirm so a stray tap doesn't lose
+                  // the user's framing.
+                  if (!confirm('Reset the booth? Camera will restart.')) return;
+                  location.reload();
+                }}
+                label="Reset"
+              >×</IconButton>
             </>
           ) : (
             <>

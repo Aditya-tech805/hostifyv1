@@ -61,7 +61,7 @@ export function TeamDashboard({ team, onEdit }: TeamDashboardProps) {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 [@media(min-width:360px)]:grid-cols-2">
           <ActivityCard id="booth"      icon="📸" title="Photo Booth"        description="Snap a selfie. Frame's on us." />
           <ActivityCard id="idea-cards" icon="💡" title="Idea Card Roulette" description="Random prompts to sharpen your pitch." />
           <ActivityCard id="bingo"      icon="🎯" title="Networking Bingo"  description="16 missions across the floor." />

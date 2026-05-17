@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { TopBar } from '@/components/TopBar';
 import { Landing } from '@/components/Landing';
+import { RegisterForm } from '@/components/RegisterForm';
 import { TeamDashboard } from '@/components/TeamDashboard';
 import { ToastProvider, useToast } from '@/components/Toast';
 import { ParticipantSync } from '@/components/ParticipantSync';
@@ -126,7 +127,15 @@ function ParticipantShell() {
     }
   };
 
-  const showLanding   = hydrated && (!team || editing);
+  // Three view states, mutually exclusive:
+  //   - showLanding   : no team yet -> full marketing landing + register form
+  //   - showEditPanel : team exists + editing -> just the focused edit form
+  //                     (not the full marketing scroll, which used to make
+  //                     the user scroll 6 screens past Hero / Phase spine /
+  //                     etc. to reach the form)
+  //   - showDashboard : team exists + not editing -> activity dashboard
+  const showLanding   = hydrated && !team;
+  const showEditPanel = hydrated && team && editing;
   const showDashboard = hydrated && team && !editing;
 
   return (
@@ -135,10 +144,29 @@ function ParticipantShell() {
       <ParticipantSync />
 
       {showLanding && (
-        <Landing
-          initial={editing ? team ?? undefined : undefined}
-          onSubmit={handleSubmit}
-        />
+        <Landing onSubmit={handleSubmit} />
+      )}
+
+      {showEditPanel && team && (
+        <main className="mx-auto max-w-[720px] px-5 pb-20 pt-8">
+          <button
+            onClick={() => setEditing(false)}
+            className="mb-6 inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.22em] text-mute transition-colors hover:text-ink"
+          >
+            <span aria-hidden>&larr;</span>
+            Back to dashboard
+          </button>
+          <div className="mb-3 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.32em] text-mute">
+            <span className="h-px w-8 bg-line-2" />
+            Edit team
+          </div>
+          <h1 className="mb-8 font-display text-[clamp(28px,4vw,40px)] font-bold leading-tight tracking-tight text-ink">
+            Update your <span className="font-serif italic font-light text-primary">registration.</span>
+          </h1>
+          <div className="animate-view-in">
+            <RegisterForm initial={team} onSubmit={handleSubmit} />
+          </div>
+        </main>
       )}
 
       {showDashboard && team && (

@@ -75,7 +75,14 @@ export function ActivityCard({ id, icon, title, description }: ActivityCardProps
         <p className="mt-1 text-[12.5px] leading-snug text-ink-2">{description}</p>
       </div>
       {!unlocked && (
-        <span className="absolute right-4 top-4 text-sm opacity-60">🔒</span>
+        <span
+          role="img"
+          aria-label="Locked"
+          title="Locked - opens later in the event"
+          className="absolute right-4 top-4 text-sm opacity-60"
+        >
+          🔒
+        </span>
       )}
       {unlocked && route && (
         <span className="absolute right-3 top-3 rounded bg-gradient-cyan px-1.5 py-[3px] font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-white shadow-soft">

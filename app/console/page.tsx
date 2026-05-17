@@ -242,9 +242,9 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
                     active ? 'border-primary bg-primary/[0.10] text-primary' : 'border-line bg-surface-2 text-ink-2 hover:border-line-2 hover:bg-surface-2'
                   }`}
                 >
-                  <div className="font-display text-sm font-semibold">{p.label.split('·')[0].trim()}</div>
-                  <div className={`mt-0.5 font-mono text-[10px] tracking-wider ${active ? 'text-primary-2' : 'text-mute'}`}>
-                    {p.short}
+                  <div className="font-display text-sm font-semibold leading-tight">{p.short}</div>
+                  <div className={`mt-0.5 font-mono text-[9.5px] tracking-[0.14em] ${active ? 'text-primary-2' : 'text-mute'}`}>
+                    {p.label.split('·')[0].trim().toUpperCase()}
                   </div>
                 </button>
               );

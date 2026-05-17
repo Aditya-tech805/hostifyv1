@@ -57,10 +57,15 @@ function Hero() {
           <span>Edition &apos;26</span>
         </div>
 
-        {/* The mark — sits in the visual centre of the viewport */}
+        {/* The mark — sits in the visual centre of the viewport.
+            Note: previously rendered "INNOVATR" + an animated <span>X</span>
+            which was *literally* missing the second I in source — the rotation
+            on the X also distracted attention from the missing letter. Now
+            spelt out in full, with the X kept as the brand-accent colour
+            using a slow horizontal gradient drift (no rotation, no overlap). */}
         <div className="flex flex-1 items-center">
           <h1 className="w-full animate-reveal-up font-display font-extrabold leading-[0.82] tracking-[-0.05em] text-ink text-[clamp(44px,15.5vw,240px)]">
-            INNOVATR<span className="inline-block animate-x-cycle bg-gradient-brand bg-clip-text text-transparent">X</span>
+            INNOVATRI<span className="bg-gradient-brand bg-[length:200%_100%] bg-clip-text text-transparent animate-gradient-shift">X</span>
           </h1>
         </div>
 
@@ -68,9 +73,9 @@ function Hero() {
         <div className="animate-reveal-up" style={{ animationDelay: '160ms' }}>
           {/* Doors / Stage / Wrap — the most event-coded gesture we have */}
           <div className="grid grid-cols-3 items-end border-y border-line-2 py-4">
-            <TimeStamp label="Doors" value="09:45" />
+            <TimeStamp label="Doors" value="09:30" />
             <TimeStamp label="Stage" value="10:00" highlight />
-            <TimeStamp label="Wrap"  value="16:00" alignRight />
+            <TimeStamp label="Wrap"  value="16:15" alignRight />
           </div>
           <div className="mt-2 text-center font-mono text-[clamp(10px,1vw,12px)] uppercase tracking-[0.32em] text-mute tabular-nums">
             Monday · 18 May 2026 · IST
@@ -214,39 +219,39 @@ function TeamsMarquee() {
 
 const PHASES_META: Record<PhaseId, { sub: string; tint: string; tintBg: string; activities: string[]; line: string }> = {
   phase1: {
-    sub: 'Open the room. Set the tone.',
+    sub: 'Doors open. Welcome. Seat allotments.',
     tint: '#4F46E5',
     tintBg: 'rgba(79, 70, 229, 0.05)',
-    activities: ['Registration', 'Welcome', 'Brand reveal'],
-    line: 'Twenty-four teams arrive. The day belongs to whoever shows up the most awake.',
+    activities: ['Registration', 'Opening ceremony', 'Seat allotments'],
+    line: 'Twenty-four teams arrive, settle in, and meet the day.',
   },
   phase2: {
-    sub: 'Make stuff. Bump into people. Talk loud.',
+    sub: 'Brainstorm. Prototype. Sharpen the pitch.',
     tint: '#06B6D4',
     tintBg: 'rgba(6, 182, 212, 0.05)',
-    activities: ['Idea cards', 'Networking bingo', 'Pitch lab', 'Photo booth'],
-    line: 'Three hours of crafted chaos — prompts, missions, a pitch sprint, and a wall of selfies.',
+    activities: ['Idea cards', 'Networking bingo', 'Pitch lab', 'Photo booth', 'Spotlight'],
+    line: 'Just over two hours of crafted chaos — prompts, missions, refreshments, and a spotlight moment from the stage.',
   },
   lunch: {
     sub: 'Catch your breath. Eat warm food.',
     tint: '#F59E0B',
     tintBg: 'rgba(245, 158, 11, 0.05)',
     activities: ['Reset', 'Recharge'],
-    line: 'The only thirty minutes of the day where nobody is keeping score.',
+    line: 'The one hour of the day where nobody is keeping score.',
   },
   phase3: {
-    sub: 'Pitch. Vote. Land it.',
+    sub: 'Present. Get judged. Land it.',
     tint: '#7C3AED',
     tintBg: 'rgba(124, 58, 237, 0.05)',
-    activities: ['Final pitches', 'Judge scoring', 'Audience reactions'],
-    line: 'Five criteria, five judges, one audience. Sometimes the audience out-votes everyone.',
+    activities: ['Team presentations', 'Judge scoring', 'Audience reactions'],
+    line: 'Five criteria, a full panel, one audience. Sometimes the audience out-votes everyone.',
   },
   wrap: {
-    sub: 'Results, photos, the long exhale.',
+    sub: 'Vote of thanks. Awards. The long exhale.',
     tint: '#EF4444',
     tintBg: 'rgba(239, 68, 68, 0.05)',
-    activities: ['Reveal', 'Group photo', 'Goodbyes'],
-    line: 'One winner. Fifteen teams that just spent a day getting sharper. Nobody loses that.',
+    activities: ['Faculty address', 'Awards ceremony', 'Group photo'],
+    line: 'One winner. Twenty-three teams that just spent a day getting sharper. Nobody loses that.',
   },
 };
 

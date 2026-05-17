@@ -47,7 +47,7 @@ function QRBody() {
       </h1>
 
       <p className="mt-3 text-center text-mute print:text-gray-600">
-        Twenty-four teams · Six hours · 18 May 2026 · 10 AM – 4 PM
+        Twenty-four teams · Six hours · 18 May 2026 · 9:30 AM – 4:15 PM
       </p>
 
       <div className="mt-10 rounded-3xl bg-white p-8 shadow-2xl print:mt-8 print:shadow-none">

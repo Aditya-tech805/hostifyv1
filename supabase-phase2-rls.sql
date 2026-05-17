@@ -72,14 +72,12 @@ begin
     return false;
   end if;
 
-  -- No token at all (anon): the only writes still open are the things that
-  -- participants need to do without ever logging in:
-  --   - teams/*               (registration — TODO: Phase 3 will require a team JWT)
-  --   - audienceVotes/*       (TODO: Phase 4 moves this behind /api/vote)
-  --   - mentorPings/*         (anyone in the room can ping)
-  --   - pollSubmissions/*     (one word per device)
-  --   - sprintSubs/*          (one answer per team during a sprint)
-  --   - gallery/*             (photo metadata uploaded by team devices)
+  -- No token at all (anon): Phase 2's baseline. Subsequent phases narrow
+  -- this set further - Phase 3 requires a team JWT for teams/*, gallery/*,
+  -- sprintSubs/* and mentor pings, and Phase 4 moves audienceVotes/* behind
+  -- the /api/vote endpoint. If you only run Phase 2 (e.g., for a stripped-
+  -- down version of the event), the anon-writable paths below are what
+  -- participants still need to use without ever logging in.
   if role = '' or role is null then
     return p like 'teams/%'
         or p like 'audienceVotes/%'

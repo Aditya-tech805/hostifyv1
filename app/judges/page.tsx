@@ -221,7 +221,7 @@ function JudgeConsole({ onSignOut }: { onSignOut: () => void }) {
           <div className="flex items-center gap-2.5 font-display font-semibold tracking-tight">
             <BrandMark stroke="#84cc16" dot="#7c3aed" size={20} />
             <span>INNOVATRIX</span>
-            <span className="rounded-full border border-accent/40 bg-accent/[0.08] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-accent">
+            <span className="max-w-[180px] truncate rounded-full border border-accent/40 bg-accent/[0.08] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-accent sm:max-w-[260px]">
               Judge · {judgeName}
             </span>
           </div>

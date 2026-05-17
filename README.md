@@ -1,6 +1,6 @@
 # INNOVATRIX '26
 
-A live innovation experience for twenty-four teams · **18 May 2026 · 10 AM – 4 PM IST** · one URL on every phone.
+A live innovation experience for twenty-four teams · **18 May 2026 · 9:30 AM – 4:15 PM IST** · one URL on every phone.
 
 Built with **Next.js 14 · TypeScript · Tailwind CSS**. Deploys static to Vercel.
 
@@ -12,8 +12,9 @@ Built with **Next.js 14 · TypeScript · Tailwind CSS**. Deploys static to Verce
 | `/activities/idea-cards` | Participants (Phase 2) | Random pitch-sharpening prompts |
 | `/activities/bingo` | Participants (Phase 2) | 4x4 networking missions |
 | `/activities/pitch-lab` | Participants (Phase 2) | 5-step pitch coaching |
-| `/console` | Coordinator (PIN `260518`) | Phase override, spotlight, team list |
-| `/judges` | Judges (PIN `180526`) | Score 24 teams on 5 criteria |
+| `/console` | Coordinator (PIN from `COORD_PIN` env var) | Phase override, spotlight, team list |
+| `/judges` | Judges (PIN from `JUDGE_PIN` env var) | Score 24 teams on 5 criteria |
+| `/mentor` | Mentors (same PIN as judges) | Send pings to teams during Phase 2 |
 | `/screen` | Projector | Full-viewport phase-aware display (press F for fullscreen) |
 
 ## Stack
@@ -72,13 +73,25 @@ The app works without Supabase — it falls back to localStorage and runs single
    ```
 7. Restart `npm run dev`. Open two browser windows — register a team in one, see it appear instantly in the other. Done.
 
-After the event, tighten the RLS policies in `supabase-setup.sql` (replace `using (true)` with `auth.uid() = ...` checks) if you keep the project around.
+RLS is tightened by the `supabase-phase2-rls.sql`, `supabase-phase3-rls.sql`, and `supabase-phase4-*.sql` migrations - run those in order after setup. See [memory: security model](.claude) for the layered JWT / RLS architecture.
+
+## Security setup
+
+The app verifies PINs server-side and signs JWTs with the Supabase JWT secret. Three server-only env vars are required:
+
+```
+SUPABASE_JWT_SECRET=<long base64 string from Supabase Dashboard -> Settings -> API -> JWT Settings>
+COORD_PIN=<your 4-8 digit coordinator PIN>
+JUDGE_PIN=<your 4-8 digit judge PIN (mentors share this)>
+```
+
+**Never** prefix these with `NEXT_PUBLIC_` and **never** commit `.env.local`.
 
 ## Test the activities right now
 
 The phase-aware unlocks gate everything until 10:45 AM on May 18. To preview activities before then:
 
-1. Open [/console](http://localhost:3000/console), enter PIN `260518`
+1. Open [/console](http://localhost:3000/console), enter your coordinator PIN
 2. Tap **Phase 2** under "Phase override" (confirm dialog)
 3. Open [/](http://localhost:3000/) in another tab — activity cards now show `LIVE`
 4. When done, return to console → "Clear override" to resume auto-clock
@@ -99,12 +112,14 @@ The phase-aware unlocks gate everything until 10:45 AM on May 18. To preview act
 - [x] Next.js + TypeScript + Tailwind scaffold
 - [x] Brand foundation (fonts, palette, asterisk-burst mark)
 - [x] Phase 1 registration · team dashboard · live clock
-- [x] Coordinator console + PIN auth + phase override + spotlight picker
-- [x] Judges console + PIN + per-judge scores (auto-save sliders + notes)
-- [x] Big screen (projector)
-- [x] Phase 2 activities: Idea Card Roulette · Pitch Lab · Networking Bingo
-- [ ] Firebase wiring (cross-device sync)
-- [ ] Phase 2 remaining: Spotlight Wheel synced animation, Team Wall, Mentor Pings
-- [ ] Phase 3 audience vote / final reveal
+- [x] Coordinator console + server PIN auth + phase override + spotlight picker
+- [x] Judges console + per-judge scores (auto-save sliders + notes)
+- [x] Mentor console + ping system
+- [x] Big screen (projector) with rotating carousel + persistent QR
+- [x] Phase 2 activities: Idea Card Roulette · Pitch Lab · Networking Bingo · Photo Booth · Team Wall
+- [x] Phase 3 audience vote / final reveal
+- [x] Supabase Realtime cross-device sync
+- [x] Server-issued JWTs + per-path RLS authorisation (4 phases shipped)
+- [x] Rate-limited /api/vote with cookie-based device fingerprint
 
 `legacy/` contains the prior single-file HTML prototype.

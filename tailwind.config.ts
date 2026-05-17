@@ -55,11 +55,10 @@ const config: Config = {
         shake:             { '0%, 100%': { transform: 'translateX(0)' }, '20%, 60%': { transform: 'translateX(-6px)' }, '40%, 80%': { transform: 'translateX(6px)' } },
         'pop-in':          { from: { opacity: '0', transform: 'scale(0.85)' }, to: { opacity: '1', transform: 'scale(1)' } },
         'fade-in':         { from: { opacity: '0' }, to: { opacity: '1' } },
-        'x-cycle':         {
-          '0%, 100%': { transform: 'rotate(0deg)',  color: '#6366F1' },
-          '33%':      { transform: 'rotate(8deg)',  color: '#22D3EE' },
-          '66%':      { transform: 'rotate(-8deg)', color: '#A78BFA' },
-        },
+        // x-cycle keyframe + animation removed: previously rotated the X in
+        // INNOVATRIX +/- 8 degrees, which at tight tracking caused the X
+        // to overlap the preceding I and read as INNOVATRX. The hero is
+        // now one continuous wordmark with a gradient-shift animation.
         'pulse-soft':      { '0%, 100%': { opacity: '1', transform: 'scale(1)' }, '50%': { opacity: '0.5', transform: 'scale(0.8)' } },
         bounce:            { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-8px)' } },
         'float-slow':      { '0%, 100%': { transform: 'translate(0, 0)' }, '50%': { transform: 'translate(20px, -30px)' } },
@@ -76,7 +75,6 @@ const config: Config = {
         shake:            'shake 0.4s',
         'pop-in':         'pop-in 0.4s cubic-bezier(0.25, 1.4, 0.5, 1)',
         'fade-in':        'fade-in 0.3s ease',
-        'x-cycle':        'x-cycle 6s ease-in-out infinite',
         'pulse-soft':     'pulse-soft 2s ease-in-out infinite',
         bounce:           'bounce 1.2s ease infinite',
         'float-slow':     'float-slow 14s ease-in-out infinite',
