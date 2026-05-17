@@ -8,8 +8,15 @@ interface PinKeypadProps {
   roleTone: 'primary' | 'accent';
   title?: string;
   subtitle?: string;
-  correctPin: string;
-  onSuccess: () => void;
+  /**
+   * Asynchronously verify the PIN. Returns true on success.
+   *
+   * Server-side: the actual PIN comparison happens behind an API route, so
+   * this callback typically fetches /api/auth/* and resolves with the
+   * boolean result. Errors thrown by the callback are caught and surface
+   * as an error message under the keypad.
+   */
+  onSubmitPin: (pin: string) => Promise<boolean>;
   backHref?: string;
 }
 
@@ -18,29 +25,43 @@ export function PinKeypad({
   roleTone,
   title = 'Enter PIN',
   subtitle,
-  correctPin,
-  onSuccess,
+  onSubmitPin,
   backHref,
 }: PinKeypadProps) {
   const [buffer, setBuffer] = useState('');
   const [attempts, setAttempts] = useState(0);
   const [errorPulse, setErrorPulse] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const [errMsg, setErrMsg] = useState<string | null>(null);
   const submitting = useRef(false);
 
-  const trySubmit = useCallback((pin: string) => {
+  const trySubmit = useCallback(async (pin: string) => {
     if (submitting.current) return;
     submitting.current = true;
-    if (pin === correctPin) {
-      onSuccess();
-    } else {
+    setErrMsg(null);
+    try {
+      const ok = await onSubmitPin(pin);
+      if (ok) {
+        // Success handler is responsible for navigation/state. Don't reset
+        // submitting flag here — page typically unmounts.
+        return;
+      }
       setErrorPulse(true);
       setAttempts((a) => a + 1);
       if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate?.([60, 30, 60]);
-      window.setTimeout(() => { setBuffer(''); setErrorPulse(false); submitting.current = false; }, 500);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Network error. Try again.';
+      setErrMsg(msg);
+      setErrorPulse(true);
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate?.([60, 30, 60]);
+    } finally {
+      window.setTimeout(() => {
+        setBuffer('');
+        setErrorPulse(false);
+        submitting.current = false;
+      }, 500);
     }
-    submitting.current = false;
-  }, [correctPin, onSuccess]);
+  }, [onSubmitPin]);
 
   useEffect(() => { if (attempts >= 3) setCooldown(30); }, [attempts]);
   useEffect(() => {
@@ -149,6 +170,11 @@ export function PinKeypad({
         {cooldown > 0 && (
           <div className="mt-6 font-mono text-xs uppercase tracking-[0.1em] text-danger">
             Locked · try again in {cooldown}s
+          </div>
+        )}
+        {errMsg && cooldown === 0 && (
+          <div className="mt-6 max-w-[320px] text-center font-mono text-[10.5px] uppercase tracking-[0.14em] text-danger">
+            {errMsg}
           </div>
         )}
 

@@ -67,6 +67,7 @@ const config: Config = {
         marquee:           { from: { transform: 'translateX(0)' }, to: { transform: 'translateX(-50%)' } },
         'reveal-up':       { from: { opacity: '0', transform: 'translateY(24px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
         'sweep-x':         { from: { transform: 'translateX(-105%)' }, to: { transform: 'translateX(105%)' } },
+        'slide-in':        { from: { opacity: '0', transform: 'translateY(18px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
       },
       animation: {
         'spin-slow':      'spin-slow 16s linear infinite',
@@ -83,6 +84,7 @@ const config: Config = {
         marquee:          'marquee 50s linear infinite',
         'reveal-up':      'reveal-up 0.7s cubic-bezier(0.2, 0.7, 0.1, 1) both',
         'sweep-x':        'sweep-x 1.4s cubic-bezier(0.7, 0, 0.3, 1) forwards',
+        'slide-in':       'slide-in 0.7s cubic-bezier(0.2, 0.7, 0.1, 1) both',
       },
       backgroundImage: {
         'gradient-brand':    'linear-gradient(135deg, #6366F1, #A78BFA, #22D3EE)',

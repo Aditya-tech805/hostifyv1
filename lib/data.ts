@@ -31,6 +31,7 @@ const PATHS = {
   sprint:        'sprint',         // SprintState | null
   sprintSubs:    'sprintSubs',     // sprintSubs/{teamId} → SprintSubmission
   panel:         'panel',          // panel/{id} → PanelMember (jury list shown on the landing)
+  messages:      'messages',       // messages/{slot} → ScreenMessage (faculty/hod/studentCoord — projector carousel)
 } as const;
 
 // ─── Teams ───────────────────────────────────────────────────────────────────
@@ -443,6 +444,35 @@ export function writePanelMember(member: PanelMember): void {
 
 export function removePanelMember(memberId: string): void {
   void writeSynced(`${PATHS.panel}/${memberId}`, null);
+}
+
+// ─── Screen carousel messages (faculty / HOD / student coordinator) ─────────
+/**
+ * Messages shown on the projector's idle carousel. Coordinator types them
+ * from /console; the screen route reads them via useMessage(slot).
+ *
+ * `body` is the actual message; empty/whitespace-only bodies cause the slide
+ * to be skipped on the projector, so coordinators can stage messages in
+ * advance without showing placeholders.
+ */
+export type MessageSlot = 'faculty' | 'hod' | 'studentCoord';
+
+export interface ScreenMessage {
+  from: string;
+  role: string;
+  body: string;
+  updatedAt: number;
+}
+
+const EMPTY_MESSAGE: ScreenMessage = { from: '', role: '', body: '', updatedAt: 0 };
+
+export function useMessage(slot: MessageSlot): ScreenMessage {
+  const [value] = useSyncedValue<ScreenMessage>(`${PATHS.messages}/${slot}`, EMPTY_MESSAGE);
+  return value ?? EMPTY_MESSAGE;
+}
+
+export function writeMessage(slot: MessageSlot, msg: ScreenMessage): void {
+  void writeSynced(`${PATHS.messages}/${slot}`, msg);
 }
 
 // ─── Reset all event data (coordinator-only nuke) ────────────────────────────

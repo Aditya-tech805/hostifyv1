@@ -6,10 +6,10 @@ import { ClientOnly } from '@/components/ClientOnly';
 import { PinKeypad } from '@/components/PinKeypad';
 import { ToastProvider, useToast } from '@/components/Toast';
 import { useEventPhase } from '@/lib/hooks';
-import { PINS } from '@/lib/activities';
 import { type Team } from '@/lib/teams';
 import { SCHEDULE, type PhaseId, pad, formatCountdown } from '@/lib/schedule';
 import { STORAGE_KEYS, readString, writeString, removeKey } from '@/lib/storage';
+import { readAppToken, writeAppToken, clearAppToken } from '@/lib/auth-client';
 import {
   useAllTeams, usePhaseOverride, setSpotlight, useSpotlight,
   useAllScores, revealResultsNow, useResults, clearResults,
@@ -20,6 +20,7 @@ import {
   usePoll, setPoll,
   useSprint, setSprint, useSprintSubmissions,
   usePanel, writePanelMember, removePanelMember, type PanelMember,
+  useMessage, writeMessage, type MessageSlot, type ScreenMessage,
 } from '@/lib/data';
 import { JUDGING_CRITERIA } from '@/lib/activities';
 
@@ -34,8 +35,12 @@ export default function ConsolePage() {
 function ConsoleShell() {
   const [authed, setAuthed] = useState<boolean | null>(null);
 
+  // Auth is now bound to a server-issued JWT, not a localStorage flag.
+  // A stale `coordAuth=1` left over from the old client-only flow is
+  // ignored — we re-check the JWT presence + expiry on every mount.
   useEffect(() => {
-    setAuthed(readString(STORAGE_KEYS.coordAuth) === '1');
+    const t = readAppToken();
+    setAuthed(t?.app_role === 'coordinator');
   }, []);
 
   if (authed === null) return null;
@@ -46,18 +51,40 @@ function ConsoleShell() {
         role="Coordinator Access"
         roleTone="primary"
         title="Enter coordinator PIN"
-        subtitle="Six digits. Only you and your co-coordinators should know it."
-        correctPin={PINS.coordinator}
-        onSuccess={() => {
-          writeString(STORAGE_KEYS.coordAuth, '1');
-          setAuthed(true);
+        subtitle="Six digits. Verified server-side. Only you and your co-coordinators should know it."
+        onSubmitPin={async (pin) => {
+          const res = await fetch('/api/auth/coordinator', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ pin }),
+          });
+          if (res.status === 401) return false; // wrong PIN — keypad shows shake
+          if (!res.ok) {
+            const j = await res.json().catch(() => ({}));
+            throw new Error(j.error || 'Auth failed.');
+          }
+          const data = (await res.json()) as { token: string; exp: number };
+          writeAppToken({ token: data.token, exp: data.exp, app_role: 'coordinator' });
+          // Hard reload so the Supabase client picks up the new bearer token
+          // on its next instantiation — clean, no stale subscriptions.
+          window.location.reload();
+          return true;
         }}
         backHref="/"
       />
     );
   }
 
-  return <Console onSignOut={() => { removeKey(STORAGE_KEYS.coordAuth); setAuthed(false); }} />;
+  return (
+    <Console
+      onSignOut={() => {
+        clearAppToken();
+        removeKey(STORAGE_KEYS.coordAuth); // legacy flag cleanup
+        setAuthed(false);
+        window.location.reload();
+      }}
+    />
+  );
 }
 
 function Console({ onSignOut }: { onSignOut: () => void }) {
@@ -339,6 +366,8 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
 
         <PanelManager />
 
+        <MessagesManager />
+
         <Section title="Final reveal" badge="end-of-event only" badgeClass="text-spark" borderClass="border-spark/30">
           <p className="mb-4 text-[13.5px] leading-relaxed text-ink-2">
             Pressing this aggregates all judge scores, ranks the teams, and triggers the final reveal — confetti + winner announcement on every phone + the projector.
@@ -598,6 +627,155 @@ function PanelManager() {
         </button>
       </div>
     </Section>
+  );
+}
+
+// ─── Projector carousel messages (faculty / HOD / student coordinator) ────
+// Edited live by the coordinator. The projector's idle carousel reads each
+// slot via useMessage(slot) and skips slots whose body is blank.
+
+const MESSAGE_SLOTS: { slot: MessageSlot; label: string; defaultRole: string; placeholder: string }[] = [
+  {
+    slot: 'faculty',
+    label: 'From the faculty',
+    defaultRole: 'Faculty · Department',
+    placeholder: "A few sentences from the chief patron / faculty advisor. Keep it 60-120 words — it'll be read from the back of the room.",
+  },
+  {
+    slot: 'hod',
+    label: 'From the HOD',
+    defaultRole: 'Head of Department',
+    placeholder: 'A short message from the Head of Department. Welcoming, ambitious, brief.',
+  },
+  {
+    slot: 'studentCoord',
+    label: 'From the student coordinator',
+    defaultRole: 'Student Coordinator',
+    placeholder: 'A peer-to-peer note from the student coordinator. Energetic. Specific.',
+  },
+];
+
+function MessagesManager() {
+  return (
+    <Section title="Projector messages" badge="rotate on the big screen — faculty · HOD · student coord">
+      <p className="mb-4 text-[13.5px] leading-relaxed text-ink-2">
+        These three messages cycle on the <b>/screen</b> projector view, alongside the event poster and the judges panel.
+        Leave a slot empty and it&apos;s skipped on the carousel — handy if a faculty message isn&apos;t finalised yet.
+      </p>
+      <div className="space-y-3">
+        {MESSAGE_SLOTS.map((cfg) => (
+          <MessageEditor key={cfg.slot} {...cfg} />
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+function MessageEditor({
+  slot, label, defaultRole, placeholder,
+}: { slot: MessageSlot; label: string; defaultRole: string; placeholder: string }) {
+  const live = useMessage(slot);
+  const [from, setFrom] = useState(live.from);
+  const [role, setRole] = useState(live.role);
+  const [body, setBody] = useState(live.body);
+  const [savedAt, setSavedAt] = useState<number>(live.updatedAt);
+
+  // Hydrate fields when the synced value first arrives or another device edits it.
+  useEffect(() => {
+    if (live.updatedAt && live.updatedAt !== savedAt) {
+      setFrom(live.from);
+      setRole(live.role);
+      setBody(live.body);
+      setSavedAt(live.updatedAt);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [live.updatedAt]);
+
+  const dirty = from !== live.from || role !== live.role || body !== live.body;
+  const canSave = body.trim().length > 0 && from.trim().length > 0;
+
+  const save = () => {
+    const msg: ScreenMessage = {
+      from: from.trim(),
+      role: role.trim() || defaultRole,
+      body: body.trim(),
+      updatedAt: Date.now(),
+    };
+    writeMessage(slot, msg);
+    setSavedAt(msg.updatedAt);
+  };
+  const clear = () => {
+    if (!confirm(`Clear the ${label.toLowerCase()} message? The slide will be hidden from the projector.`)) return;
+    const empty: ScreenMessage = { from: '', role: '', body: '', updatedAt: Date.now() };
+    writeMessage(slot, empty);
+    setFrom(''); setRole(''); setBody(''); setSavedAt(empty.updatedAt);
+  };
+
+  const wordCount = body.trim().length === 0 ? 0 : body.trim().split(/\s+/).length;
+  const isLive = body.trim().length > 0;
+
+  return (
+    <div className="rounded-2xl border border-line bg-surface-2 p-4">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h4 className="font-display text-[14px] font-semibold tracking-tight text-ink">{label}</h4>
+        <span
+          className={`font-mono text-[9.5px] uppercase tracking-[0.18em] ${
+            isLive ? 'text-accent' : 'text-mute'
+          }`}
+        >
+          {isLive ? '● On carousel' : '○ Hidden'}
+        </span>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <input
+          type="text"
+          maxLength={64}
+          placeholder="Name (e.g. Dr. Anita Sharma)"
+          value={from}
+          onChange={(e) => setFrom(e.target.value)}
+          className="rounded-xl border border-line bg-bg px-3 py-2 text-[13px] text-ink outline-none transition-colors focus:border-primary"
+        />
+        <input
+          type="text"
+          maxLength={64}
+          placeholder={defaultRole}
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          className="rounded-xl border border-line bg-bg px-3 py-2 text-[13px] text-ink outline-none transition-colors focus:border-primary"
+        />
+      </div>
+      <textarea
+        rows={4}
+        maxLength={600}
+        placeholder={placeholder}
+        value={body}
+        onChange={(e) => setBody(e.target.value)}
+        className="mt-2 w-full resize-none rounded-xl border border-line bg-bg px-3 py-2.5 text-[13.5px] leading-relaxed text-ink outline-none transition-colors focus:border-primary"
+      />
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-mute">
+          {wordCount} {wordCount === 1 ? 'word' : 'words'}
+          {wordCount > 60 ? <span className="text-spark"> · long — consider shortening</span> : null}
+        </span>
+        <div className="flex gap-2">
+          {isLive && (
+            <button
+              onClick={clear}
+              className="rounded-xl border border-line bg-transparent px-3 py-1.5 text-[12px] font-medium text-mute transition-colors hover:border-danger/40 hover:text-danger"
+            >
+              Clear
+            </button>
+          )}
+          <button
+            onClick={save}
+            disabled={!dirty || !canSave}
+            className="rounded-xl bg-primary px-4 py-1.5 text-[12.5px] font-semibold text-white shadow-glow transition-all hover:-translate-y-px hover:bg-primary-2 hover:shadow-glow-lg disabled:cursor-not-allowed disabled:bg-surface-3 disabled:text-mute disabled:shadow-none"
+          >
+            {dirty ? 'Save' : 'Saved'}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

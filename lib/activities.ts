@@ -156,8 +156,9 @@ export const JUDGING_CRITERIA: Criterion[] = [
   { id: 'future',       name: 'Future Potential', hint: 'Could this be a startup? A product? A movement?' },
 ];
 
-// ─── Auth PINs (placeholders — change before event) ──────────────────────────
-export const PINS = {
-  coordinator: '260518',
-  judge:       '180526',
-} as const;
+// ─── Auth PINs (server-only) ─────────────────────────────────────────────────
+// PINs are NO LONGER stored in this bundle. Anything in this file ships to
+// the browser, and the old constants here were trivially extractable via
+// view-source / DevTools. The real PINs now live in COORD_PIN / JUDGE_PIN
+// server env vars and are verified by /api/auth/coordinator + /api/auth/judge.
+// See `lib/jwt.ts`, `lib/auth-client.ts`, and the API routes for the flow.

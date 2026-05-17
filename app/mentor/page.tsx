@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react';
 import { BrandMark } from '@/components/BrandMark';
 import { PinKeypad } from '@/components/PinKeypad';
 import { ToastProvider, useToast } from '@/components/Toast';
-import { PINS } from '@/lib/activities';
 import { useAllTeams, sendMentorPing, useMentorPings } from '@/lib/data';
 import { readString, writeString, removeKey, STORAGE_KEYS } from '@/lib/storage';
 import type { Team } from '@/lib/teams';
 import { pad } from '@/lib/schedule';
+import { readAppToken, writeAppToken, clearAppToken } from '@/lib/auth-client';
 
 type Stage = 'pin' | 'name' | 'console';
 
@@ -22,12 +22,14 @@ export default function MentorPage() {
 
 function MentorShell() {
   const [stage, setStage] = useState<Stage | null>(null);
+  // Hold the PIN in memory between the keypad and name stages — same
+  // pattern as /judges. The same JUDGE_PIN authorises mentors (the room
+  // treats them as scoring-adjacent staff).
+  const [pinBuffer, setPinBuffer] = useState<string>('');
 
   useEffect(() => {
-    const authed = readString(STORAGE_KEYS.judgeAuth) === '1';
-    const name = readString(STORAGE_KEYS.judgeName);
-    if (authed && name) setStage('console');
-    else if (authed) setStage('name');
+    const t = readAppToken();
+    if (t?.app_role === 'judge' && t.judge_name) setStage('console');
     else setStage('pin');
   }, []);
 
@@ -39,31 +41,83 @@ function MentorShell() {
         role="Mentor Access"
         roleTone="accent"
         title="Enter mentor PIN"
-        subtitle="Same PIN as judges. Mentor pings during Phase 2; scoring in Phase 3."
-        correctPin={PINS.judge}
-        onSuccess={() => {
-          writeString(STORAGE_KEYS.judgeAuth, '1');
+        subtitle="Same PIN as judges. Verified server-side."
+        onSubmitPin={async (pin) => {
+          const res = await fetch('/api/auth/judge/check-pin', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ pin }),
+          });
+          if (res.status === 401) return false;
+          if (!res.ok) {
+            const j = await res.json().catch(() => ({}));
+            throw new Error(j.error || 'Auth failed.');
+          }
+          setPinBuffer(pin);
           setStage('name');
+          return true;
         }}
       />
     );
   }
   if (stage === 'name') {
-    return <NameStage onSubmit={(name) => { writeString(STORAGE_KEYS.judgeName, name); setStage('console'); }} />;
+    return (
+      <NameStage
+        pin={pinBuffer}
+        onSuccess={() => {
+          setPinBuffer('');
+          window.location.reload();
+        }}
+      />
+    );
   }
   return (
     <MentorConsole onSignOut={() => {
       if (!confirm('Sign out?')) return;
+      clearAppToken();
       removeKey(STORAGE_KEYS.judgeAuth);
       removeKey(STORAGE_KEYS.judgeName);
       setStage('pin');
+      window.location.reload();
     }} />
   );
 }
 
-function NameStage({ onSubmit }: { onSubmit: (name: string) => void }) {
+function NameStage({ pin, onSuccess }: { pin: string; onSuccess: () => void }) {
   const [name, setName] = useState('');
-  const submit = () => { if (name.trim().length >= 2) onSubmit(name.trim()); };
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const submit = async () => {
+    const trimmed = name.trim();
+    if (trimmed.length < 2 || busy) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await fetch('/api/auth/judge', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ pin, name: trimmed }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setErr(j.error || (res.status === 401 ? 'PIN no longer valid.' : 'Failed.'));
+        return;
+      }
+      const data = (await res.json()) as { token: string; exp: number; judge_name: string };
+      writeAppToken({
+        token: data.token,
+        exp: data.exp,
+        app_role: 'judge',
+        judge_name: data.judge_name,
+      });
+      writeString(STORAGE_KEYS.judgeName, data.judge_name);
+      onSuccess();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Network error.');
+    } finally {
+      setBusy(false);
+    }
+  };
   return (
     <section className="flex min-h-screen flex-col items-center justify-center px-5 py-10">
       <div className="mb-9 flex items-center gap-2.5 font-display text-lg font-semibold">
@@ -85,11 +139,16 @@ function NameStage({ onSubmit }: { onSubmit: (name: string) => void }) {
         />
         <button
           onClick={submit}
-          disabled={name.trim().length < 2}
+          disabled={name.trim().length < 2 || busy}
           className="mt-[18px] w-full rounded-2xl bg-accent px-5 py-4 text-[15px] font-semibold text-white shadow-glow-cyan transition-all hover:-translate-y-px hover:bg-accent-2 disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute disabled:shadow-none"
         >
-          Begin mentoring →
+          {busy ? 'Signing in…' : 'Begin mentoring →'}
         </button>
+        {err && (
+          <div className="mt-3 text-center font-mono text-[10.5px] uppercase tracking-[0.14em] text-danger">
+            {err}
+          </div>
+        )}
       </div>
     </section>
   );

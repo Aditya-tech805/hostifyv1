@@ -4,11 +4,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { BrandMark } from '@/components/BrandMark';
 import { PinKeypad } from '@/components/PinKeypad';
 import { ToastProvider, useToast } from '@/components/Toast';
-import { JUDGING_CRITERIA, PINS } from '@/lib/activities';
+import { JUDGING_CRITERIA } from '@/lib/activities';
 import { type Team } from '@/lib/teams';
 import { pad } from '@/lib/schedule';
 import { readString, writeString, removeKey, STORAGE_KEYS } from '@/lib/storage';
 import { useAllTeams, useJudgeScores, useUpNext, type ScoreEntry } from '@/lib/data';
+import { readAppToken, writeAppToken, clearAppToken } from '@/lib/auth-client';
 
 type Stage = 'pin' | 'name' | 'console';
 
@@ -22,12 +23,14 @@ export default function JudgesPage() {
 
 function JudgesShell() {
   const [stage, setStage] = useState<Stage | null>(null);
+  // The PIN sits in component state between the keypad and name stages so
+  // we can re-send it (together with the name) to /api/auth/judge to get
+  // the final JWT. A refresh wipes it and the judge re-enters — fine.
+  const [pinBuffer, setPinBuffer] = useState<string>('');
 
   useEffect(() => {
-    const authed = readString(STORAGE_KEYS.judgeAuth) === '1';
-    const name = readString(STORAGE_KEYS.judgeName);
-    if (authed && name) setStage('console');
-    else if (authed) setStage('name');
+    const t = readAppToken();
+    if (t?.app_role === 'judge' && t.judge_name) setStage('console');
     else setStage('pin');
   }, []);
 
@@ -39,11 +42,21 @@ function JudgesShell() {
         role="Judge Access"
         roleTone="accent"
         title="Enter judges PIN"
-        subtitle="Six digits. Shared with all judges — you'll enter your name on the next screen."
-        correctPin={PINS.judge}
-        onSuccess={() => {
-          writeString(STORAGE_KEYS.judgeAuth, '1');
+        subtitle="Six digits. Verified server-side. You'll enter your name on the next screen."
+        onSubmitPin={async (pin) => {
+          const res = await fetch('/api/auth/judge/check-pin', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ pin }),
+          });
+          if (res.status === 401) return false;
+          if (!res.ok) {
+            const j = await res.json().catch(() => ({}));
+            throw new Error(j.error || 'Auth failed.');
+          }
+          setPinBuffer(pin);
           setStage('name');
+          return true;
         }}
       />
     );
@@ -52,9 +65,13 @@ function JudgesShell() {
   if (stage === 'name') {
     return (
       <NameStage
-        onSubmit={(name) => {
-          writeString(STORAGE_KEYS.judgeName, name);
-          setStage('console');
+        pin={pinBuffer}
+        onSuccess={() => {
+          // Clear the in-memory PIN once the JWT is in localStorage.
+          setPinBuffer('');
+          // Hard reload so the Supabase client picks up the new bearer
+          // token cleanly across all live subscriptions.
+          window.location.reload();
         }}
       />
     );
@@ -64,19 +81,59 @@ function JudgesShell() {
     <JudgeConsole
       onSignOut={() => {
         if (!confirm('Sign out? Your scores are kept on this device.')) return;
+        clearAppToken();
+        // Legacy localStorage flags — clean up so old installs don't carry stale state.
         removeKey(STORAGE_KEYS.judgeAuth);
         removeKey(STORAGE_KEYS.judgeName);
         setStage('pin');
+        window.location.reload();
       }}
     />
   );
 }
 
-function NameStage({ onSubmit }: { onSubmit: (name: string) => void }) {
+function NameStage({ pin, onSuccess }: { pin: string; onSuccess: () => void }) {
   const [name, setName] = useState('');
-  const submit = () => {
-    if (name.trim().length < 2) return;
-    onSubmit(name.trim());
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const submit = async () => {
+    const trimmed = name.trim();
+    if (trimmed.length < 2 || busy) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await fetch('/api/auth/judge', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ pin, name: trimmed }),
+      });
+      if (res.status === 401) {
+        setErr('PIN no longer valid. Go back and re-enter.');
+        return;
+      }
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setErr(j.error || 'Failed to sign in.');
+        return;
+      }
+      const data = (await res.json()) as { token: string; exp: number; judge_name: string };
+      writeAppToken({
+        token: data.token,
+        exp: data.exp,
+        app_role: 'judge',
+        judge_name: data.judge_name,
+      });
+      // Also write the legacy `judgeName` key — the rest of the page still
+      // reads it via readString(STORAGE_KEYS.judgeName). One source of
+      // truth migration can come later.
+      writeString(STORAGE_KEYS.judgeName, data.judge_name);
+      onSuccess();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Network error.');
+    } finally {
+      setBusy(false);
+    }
   };
   return (
     <section className="flex min-h-screen flex-col items-center justify-center px-5 py-10">
@@ -105,11 +162,16 @@ function NameStage({ onSubmit }: { onSubmit: (name: string) => void }) {
         />
         <button
           onClick={submit}
-          disabled={name.trim().length < 2}
+          disabled={name.trim().length < 2 || busy}
           className="mt-[18px] w-full rounded-2xl bg-accent px-5 py-4 text-[15px] font-semibold text-white shadow-glow-cyan transition-all hover:-translate-y-px hover:bg-accent-2 disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute disabled:shadow-none"
         >
-          Begin judging →
+          {busy ? 'Signing in…' : 'Begin judging →'}
         </button>
+        {err && (
+          <div className="mt-3 text-center font-mono text-[10.5px] uppercase tracking-[0.14em] text-danger">
+            {err}
+          </div>
+        )}
       </div>
     </section>
   );
