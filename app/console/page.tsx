@@ -265,30 +265,41 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
           )}
         </Section>
 
-        {/* Spotlight Wheel */}
-        <Section title="Phase 2 · Spotlight Wheel" badge="runs in Phase 2 only">
+        {/* Spotlight Wheel - explicit start / stop toggle so it's never
+            "stuck" on the projector after a test run. The same big button
+            triggers a spin when nothing is active, and stops the spotlight
+            (clearing the overlay from every device) when one is running. */}
+        <Section
+          title="Phase 2 · Spotlight Wheel"
+          badge={spotlight ? 'LIVE on every screen' : 'runs in Phase 2 only'}
+          badgeClass={spotlight ? 'text-spark' : ''}
+          borderClass={spotlight ? 'border-spark/40' : 'border-line'}
+        >
           <p className="mb-4 text-[13.5px] leading-relaxed text-ink-2">
-            Press at <b className="text-accent">~1:00 PM</b>. Picks 3 random teams from the registered list. The wheel animates on every phone + the projector simultaneously. Each pick gets 90 seconds on stage.
+            Picks 3 random teams from the registered list. The wheel animates on every phone and on the projector simultaneously. Each pick gets 90 seconds on stage.
+            <br /><br />
+            When you&apos;re done, <b className="text-spark">stop it</b> &mdash; the same big button below toggles. Otherwise the reveal stays visible on every device.
           </p>
-          <button
-            onClick={handleSpin}
-            disabled={!inP2}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-4 text-[15px] font-semibold text-white shadow-glow transition-all hover:-translate-y-px hover:bg-primary-2 hover:shadow-glow-lg disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute disabled:shadow-none"
-          >
-            {inP2 ? 'Spin the wheel' : 'Available in Phase 2 (Build & Interact)'}
-          </button>
+          {spotlight ? (
+            <button
+              onClick={() => setSpotlight(null)}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-spark px-5 py-4 text-[15px] font-semibold text-white shadow-[0_6px_24px_-10px_rgba(245,158,11,0.45)] transition-all hover:-translate-y-px hover:bg-[#FBBF24]"
+            >
+              ◼ Stop spotlight &middot; clear from all screens
+            </button>
+          ) : (
+            <button
+              onClick={handleSpin}
+              disabled={!inP2}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-4 text-[15px] font-semibold text-white shadow-glow transition-all hover:-translate-y-px hover:bg-primary-2 hover:shadow-glow-lg disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute disabled:shadow-none"
+            >
+              {inP2 ? '▶ Spin the wheel' : 'Available in Phase 2 (Idea Development)'}
+            </button>
+          )}
           {spotlight && spotlightTeams.length > 0 && (
-            <div className="mt-3.5">
-              <div className="mb-2.5 flex items-center justify-between">
-                <div className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-accent">
-                  Spotlight teams · live on every device
-                </div>
-                <button
-                  onClick={() => setSpotlight(null)}
-                  className="font-mono text-[10px] uppercase tracking-[0.14em] text-mute hover:text-danger"
-                >
-                  Clear
-                </button>
+            <div className="mt-4">
+              <div className="mb-2.5 font-mono text-[10.5px] uppercase tracking-[0.18em] text-spark">
+                Currently showing on every device
               </div>
               <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
                 {spotlightTeams.map((t) => (
