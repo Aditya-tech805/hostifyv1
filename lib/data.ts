@@ -185,14 +185,45 @@ export function useVoteTally(teamId: string | null): VoteTally {
   return tally ?? { wow: 0, cool: 0, fine: 0 };
 }
 
+export type CastVoteResult =
+  | { ok: true; tally: VoteTally }
+  | { ok: false; alreadyVoted?: boolean; error: string };
+
 /**
- * Increment vote count for a team. Read-modify-write race exists at scale,
- * but for a 100-person event it's acceptable — the absolute count isn't
- * audit-critical.
+ * Cast a vote via the rate-limited API (Phase 4). The server validates
+ * against the active presenter window, deduplicates by an HttpOnly cookie,
+ * and writes both the audit log and the aggregate. The client no longer
+ * touches audienceVotes/* directly — RLS would reject it anyway.
+ *
+ * `current` is unused now (kept for call-site compatibility); the API
+ * returns the authoritative tally.
  */
-export function castAudienceVote(teamId: string, choice: AudienceVoteChoice, current: VoteTally): void {
-  const next: VoteTally = { ...current, [choice]: (current[choice] ?? 0) + 1 };
-  void writeSynced(`${PATHS.audienceVotes}/${teamId}`, next);
+export async function castAudienceVote(
+  teamId: string,
+  choice: AudienceVoteChoice,
+  _current: VoteTally,
+): Promise<CastVoteResult> {
+  try {
+    const res = await fetch('/api/vote', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      // credentials: 'same-origin' is the default — the device cookie
+      // is on the same host so it flows automatically.
+      body: JSON.stringify({ teamId, choice }),
+    });
+    if (res.status === 409) {
+      const j = (await res.json().catch(() => ({}))) as { error?: string; alreadyVoted?: boolean };
+      return { ok: false, alreadyVoted: !!j.alreadyVoted, error: j.error || 'Already voted.' };
+    }
+    if (!res.ok) {
+      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      return { ok: false, error: j.error || 'Could not record vote.' };
+    }
+    const data = (await res.json()) as { ok: true; tally: VoteTally };
+    return { ok: true, tally: data.tally };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Network error.' };
+  }
 }
 
 export function useAllVoteTallies(): Record<string, VoteTally> {

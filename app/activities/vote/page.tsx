@@ -37,8 +37,12 @@ function VoteBody() {
   const team = upNext ? teams.find((t) => t.id === upNext.teamId) ?? null : null;
   const totalVotes = tally.wow + tally.cool + tally.fine;
 
-  // Track which teamIds this device has voted on
+  // Soft local hint that this device has already voted on a team. The real
+  // dedup happens server-side (Phase 4) via an HttpOnly cookie + a unique
+  // index in public.vote_log. localStorage is just for instant UI gating;
+  // clearing it lets the user retry but the server will still return 409.
   const [votedSet, setVotedSet] = useState<Set<string>>(new Set());
+  const [submitting, setSubmitting] = useState(false);
   useEffect(() => {
     setVotedSet(new Set(readJSON<string[]>(VOTED_KEY, [])));
   }, []);
@@ -58,15 +62,31 @@ function VoteBody() {
 
   const alreadyVoted = votedSet.has(team.id);
 
-  const cast = (choice: AudienceVoteChoice) => {
-    if (alreadyVoted) return;
-    castAudienceVote(team.id, choice, tally);
-    const next = new Set(votedSet);
-    next.add(team.id);
-    setVotedSet(next);
-    writeJSON(VOTED_KEY, [...next]);
-    toast('Vote in.');
-    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate?.([20, 30, 20]);
+  const cast = async (choice: AudienceVoteChoice) => {
+    if (alreadyVoted || submitting) return;
+    setSubmitting(true);
+    try {
+      const result = await castAudienceVote(team.id, choice, tally);
+      if (result.ok) {
+        const next = new Set(votedSet);
+        next.add(team.id);
+        setVotedSet(next);
+        writeJSON(VOTED_KEY, [...next]);
+        toast('Vote in.');
+        if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate?.([20, 30, 20]);
+      } else if (result.alreadyVoted) {
+        // Server says we already voted — sync the local hint.
+        const next = new Set(votedSet);
+        next.add(team.id);
+        setVotedSet(next);
+        writeJSON(VOTED_KEY, [...next]);
+        toast('You already voted for this team.');
+      } else {
+        toast(result.error || 'Could not record vote.');
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -93,9 +113,9 @@ function VoteBody() {
       </div>
 
       <div className="mt-6 grid grid-cols-3 gap-3">
-        <VoteButton emoji="🤩" label="Wow" tone="spark" onClick={() => cast('wow')}  disabled={alreadyVoted} />
-        <VoteButton emoji="🙂" label="Cool" tone="accent" onClick={() => cast('cool')} disabled={alreadyVoted} />
-        <VoteButton emoji="😐" label="Fine" tone="mute"  onClick={() => cast('fine')} disabled={alreadyVoted} />
+        <VoteButton emoji="🤩" label="Wow" tone="spark" onClick={() => cast('wow')}  disabled={alreadyVoted || submitting} />
+        <VoteButton emoji="🙂" label="Cool" tone="accent" onClick={() => cast('cool')} disabled={alreadyVoted || submitting} />
+        <VoteButton emoji="😐" label="Fine" tone="mute"  onClick={() => cast('fine')} disabled={alreadyVoted || submitting} />
       </div>
 
       {alreadyVoted && (
