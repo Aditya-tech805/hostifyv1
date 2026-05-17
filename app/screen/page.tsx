@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BrandMark } from '@/components/BrandMark';
 import { ClientOnly } from '@/components/ClientOnly';
+import { QrTile } from '@/components/QrTile';
 import { SpotlightOverlay } from '@/components/SpotlightOverlay';
 import { ResultsOverlay } from '@/components/ResultsOverlay';
 import { PresentationTimerOverlay } from '@/components/PresentationTimerOverlay';
@@ -67,7 +68,7 @@ function ScreenShell() {
 // ─── Carousel timing ─────────────────────────────────────────────────────────
 const SLIDE_MS = 12_000; // 12 seconds per slide — readable from the back row.
 
-type SlideId = 'phase' | 'about' | 'panel' | 'faculty' | 'hod' | 'studentCoord';
+type SlideId = 'phase' | 'about' | 'join' | 'panel' | 'faculty' | 'hod' | 'studentCoord';
 
 function ScreenLive() {
   const { now, state } = useEventPhase();
@@ -85,8 +86,10 @@ function ScreenLive() {
   const coordMsg = useMessage('studentCoord');
 
   // Decide which slides are actually shown — drop empty ones.
+  // The 'join' QR slide is always in the rotation so late arrivals can scan
+  // and register at any moment of the day.
   const slides: SlideId[] = useMemo(() => {
-    const list: SlideId[] = ['phase', 'about'];
+    const list: SlideId[] = ['phase', 'about', 'join'];
     if (panel.length > 0) list.push('panel');
     if (facultyMsg.body.trim().length > 0) list.push('faculty');
     if (hodMsg.body.trim().length > 0) list.push('hod');
@@ -168,6 +171,7 @@ function ScreenLive() {
             facultyMsg={facultyMsg}
             hodMsg={hodMsg}
             coordMsg={coordMsg}
+            joinUrl={`https://${host}/`}
           />
         )}
 
@@ -201,7 +205,7 @@ function ScreenLive() {
           }
         />
         <Kpi label="Event window" figure="10:00 → 16:00" sub="18 MAY · IST" figureClass="text-[clamp(22px,2.2vw,30px)]" />
-        <Kpi label="Open the experience" figure={host} sub="SCAN THE QR ON YOUR PASS" figureClass="font-mono text-[clamp(16px,1.6vw,22px)]" />
+        <ScanKpi host={host} />
       </div>
 
       {/* Synced moments — overlay everything when triggered from coordinator */}
@@ -218,7 +222,7 @@ function ScreenLive() {
 // ─── Carousel stage (rotates between slides) ─────────────────────────────────
 
 function CarouselStage({
-  current, now, state, panel, facultyMsg, hodMsg, coordMsg,
+  current, now, state, panel, facultyMsg, hodMsg, coordMsg, joinUrl,
 }: {
   current: SlideId;
   now: Date;
@@ -227,12 +231,14 @@ function CarouselStage({
   facultyMsg: ScreenMessage;
   hodMsg: ScreenMessage;
   coordMsg: ScreenMessage;
+  joinUrl: string;
 }) {
   // Re-key the wrapper on each slide so the fade-in animation re-fires.
   return (
     <div key={current} className="flex w-full max-w-[1500px] flex-col items-center justify-center text-center animate-slide-in">
       {current === 'phase'        && <PhaseSlide now={now} state={state} />}
       {current === 'about'        && <AboutSlide />}
+      {current === 'join'         && <JoinSlide url={joinUrl} />}
       {current === 'panel'        && <PanelSlide members={panel} />}
       {current === 'faculty'      && <MessageSlide kicker="From the faculty" msg={facultyMsg} accent="primary" />}
       {current === 'hod'          && <MessageSlide kicker="From the HOD"     msg={hodMsg}     accent="accent" />}
@@ -249,7 +255,7 @@ function PhaseSlide({ now, state }: { now: Date; state: ReturnType<typeof useEve
     return (
       <>
         <Eyebrow tone="primary">Coming up</Eyebrow>
-        <Title>INNOVATRI<XLetter /></Title>
+        <HeroWordmark />
         <Subtitle>
           Twenty-four teams. Six hours. <b>Innovation, creativity, and the future you can build.</b>
         </Subtitle>
@@ -357,6 +363,35 @@ function AboutTick({ label, sub }: { label: string; sub: string }) {
       <span className="font-display text-[clamp(34px,4.5vw,64px)] font-bold text-ink">{label}</span>
       <span className="text-mute">{sub}</span>
     </div>
+  );
+}
+
+// ─── Slide · Scan to Join ───────────────────────────────────────────────────
+//
+// Late arrivals can always scan this. Sized so the QR is readable across a
+// classroom-sized room (300+ px on a 1080p projector ≈ scannable from ~10m).
+
+function JoinSlide({ url }: { url: string }) {
+  // Strip protocol for the printed URL — the QR carries the full https://.
+  const printable = url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  return (
+    <>
+      <Eyebrow tone="accent">Join the room</Eyebrow>
+      <h1 className="mb-3 font-display text-[clamp(48px,9vw,140px)] font-extrabold leading-[0.92] tracking-[-0.04em] text-ink">
+        Scan to <span className="font-serif italic font-light text-accent">begin.</span>
+      </h1>
+      <p className="mx-auto mb-10 max-w-[900px] text-[clamp(17px,2vw,24px)] leading-snug text-ink-2">
+        Point your camera at the code. Register your team in under a minute. <b>One URL on every phone.</b>
+      </p>
+      <div className="flex flex-col items-center gap-6">
+        <div className="rounded-3xl border border-line-2 bg-ink p-6 shadow-soft-lg">
+          <QrTile value={url} size={360} fg="#0A0B14" bg="#F5F3EE" />
+        </div>
+        <div className="font-mono text-[clamp(18px,2vw,28px)] tracking-[0.18em] text-ink">
+          {printable}
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -506,11 +541,29 @@ function Title({ children }: { children: React.ReactNode }) {
   );
 }
 
-function XLetter() {
+/**
+ * The hero wordmark on the /screen pre-event slide. One uniform string so
+ * the spelling reads correctly from the back of the room. Gradient slowly
+ * shifts horizontally for life without overlapping or rotating any letter.
+ *
+ * (Previously this was "INNOVATRI" + an animated <XLetter /> that rotated
+ * ±8 degrees, which at tight tracking made the X overlap the preceding I
+ * and look like "INNOVATRX" from a distance. Fixed by going one-piece.)
+ */
+function HeroWordmark() {
   return (
-    <span className="inline-block animate-x-cycle bg-gradient-brand bg-clip-text text-transparent" style={{ transformOrigin: '50% 55%' }}>
-      X
-    </span>
+    <div className="mb-8 flex flex-col items-center">
+      <h1
+        className="font-display text-[clamp(64px,13vw,220px)] font-extrabold leading-[0.92] tracking-[-0.04em] bg-gradient-brand bg-[length:200%_100%] bg-clip-text text-transparent animate-gradient-shift"
+      >
+        INNOVATRIX
+      </h1>
+      <div className="mt-4 flex items-center gap-3 font-mono text-[clamp(11px,1.3vw,16px)] uppercase tracking-[0.42em] text-mute">
+        <span className="h-px w-12 bg-line-2" />
+        <span>Edition&nbsp;&apos;26&nbsp;&middot;&nbsp;18&nbsp;May&nbsp;2026</span>
+        <span className="h-px w-12 bg-line-2" />
+      </div>
+    </div>
   );
 }
 
@@ -543,6 +596,28 @@ function Kpi({ label, figure, sub, figureClass = '' }: { label: string; figure: 
         {figure}
       </div>
       {sub && <div className="mt-1.5 font-mono text-[11px] tracking-[0.08em] text-mute">{sub}</div>}
+    </div>
+  );
+}
+
+/**
+ * Persistent QR tile that sits in the bottom KPI strip. Smaller than the
+ * dedicated JoinSlide but always on-screen — late arrivals can pull out
+ * their phone any moment of the day.
+ */
+function ScanKpi({ host }: { host: string }) {
+  const url = `https://${host}/`;
+  const printable = host.replace(/\/$/, '');
+  return (
+    <div className="flex items-center gap-4 rounded-2xl border border-accent/30 bg-surface px-5 py-4 shadow-soft">
+      <div className="rounded-lg bg-ink p-1.5">
+        <QrTile value={url} size={68} fg="#0A0B14" bg="#F5F3EE" />
+      </div>
+      <div className="min-w-0">
+        <div className="mb-1 font-mono text-[11px] uppercase tracking-[0.22em] text-accent">Scan to join</div>
+        <div className="truncate font-mono text-[clamp(12px,1.1vw,15px)] tracking-[0.1em] text-ink">{printable}</div>
+        <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-mute">Register · vote · play</div>
+      </div>
     </div>
   );
 }
