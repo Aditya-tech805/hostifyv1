@@ -270,6 +270,83 @@ export function subscribeResults(cb: (v: ResultsState | null) => void): () => vo
   return subscribeSynced<ResultsState>(PATHS.results, cb);
 }
 
+// ─── Avatars (judge + senior profile photos) ────────────────────────────────
+/**
+ * Coordinator-only photo upload. Used to give Panel members and Seniors
+ * a real face instead of initials. Files land in the `avatars` Supabase
+ * Storage bucket under "<kind>/<id>.<ext>".
+ *
+ * Returns the public URL. Caller is responsible for writing the URL back
+ * into the corresponding kv record (PanelMember.photoUrl / Senior.photoUrl).
+ */
+export type AvatarKind = 'panel' | 'senior';
+
+const AVATAR_BUCKET = 'avatars';
+const AVATAR_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
+const AVATAR_ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
+function avatarExtensionFor(file: File): 'jpg' | 'png' | 'webp' | null {
+  if (file.type === 'image/jpeg' || /\.jpe?g$/i.test(file.name)) return 'jpg';
+  if (file.type === 'image/png'  || /\.png$/i.test(file.name))   return 'png';
+  if (file.type === 'image/webp' || /\.webp$/i.test(file.name))  return 'webp';
+  return null;
+}
+
+export async function uploadAvatar(kind: AvatarKind, id: string, file: File): Promise<string> {
+  if (file.size > AVATAR_MAX_BYTES) {
+    throw new Error(`Image is ${Math.round(file.size / 1024)} KB - max is 2 MB.`);
+  }
+  if (!AVATAR_ALLOWED_TYPES.has(file.type) && !avatarExtensionFor(file)) {
+    throw new Error('Use a .jpg, .png, or .webp image.');
+  }
+  const ext = avatarExtensionFor(file);
+  if (!ext) throw new Error('Unsupported image format.');
+
+  if (!SUPABASE_ENABLED) throw new Error('Supabase is not configured - cannot upload.');
+  const supabase = getSupabase();
+  if (!supabase) throw new Error('Supabase client unavailable.');
+
+  // Wipe any previous avatar files for this id (cover the case where the
+  // earlier upload was a different extension - keeps the storage clean).
+  const { data: existing } = await supabase.storage.from(AVATAR_BUCKET).list(kind);
+  if (existing && existing.length > 0) {
+    const toRemove = existing
+      .filter((f) => f.name.startsWith(`${id}.`))
+      .map((f) => `${kind}/${f.name}`);
+    if (toRemove.length > 0) {
+      await supabase.storage.from(AVATAR_BUCKET).remove(toRemove);
+    }
+  }
+
+  const path = `${kind}/${id}.${ext}`;
+  const { error } = await supabase.storage.from(AVATAR_BUCKET).upload(path, file, {
+    contentType: file.type,
+    cacheControl: '3600',
+    upsert: true,
+  });
+  if (error) throw error;
+
+  const { data } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(path);
+  // Add a cache-buster so a re-upload of the same path forces fresh fetches
+  // on every device (Supabase Storage uses long cache-control by default).
+  return `${data.publicUrl}?v=${Date.now()}`;
+}
+
+export async function removeAvatar(kind: AvatarKind, id: string): Promise<void> {
+  if (!SUPABASE_ENABLED) return;
+  const supabase = getSupabase();
+  if (!supabase) return;
+  const { data: existing } = await supabase.storage.from(AVATAR_BUCKET).list(kind);
+  if (existing && existing.length > 0) {
+    const toRemove = existing
+      .filter((f) => f.name.startsWith(`${id}.`))
+      .map((f) => `${kind}/${f.name}`);
+    if (toRemove.length > 0) {
+      await supabase.storage.from(AVATAR_BUCKET).remove(toRemove);
+    }
+  }
+}
+
 // ─── Team presentations (PPT / PPTX / PDF uploads) ──────────────────────────
 /**
  * Each team uploads one presentation file to Supabase Storage's `slides`
@@ -588,6 +665,8 @@ export interface PanelMember {
   role: string;
   color: string;
   addedAt: number;
+  /** Optional uploaded photo URL. When absent, UI falls back to initials. */
+  photoUrl?: string;
 }
 
 export function usePanel(): PanelMember[] {
@@ -619,6 +698,8 @@ export interface Senior {
   linkedinUrl: string;
   color: string;
   addedAt: number;
+  /** Optional uploaded photo URL. When absent, UI falls back to initials. */
+  photoUrl?: string;
 }
 
 export function useSeniors(): Senior[] {

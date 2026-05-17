@@ -10,15 +10,17 @@
 // routes that run in the Node runtime.
 // ============================================================================
 
-// The six brand colors a team can pick. Server-enforced.
+// The six brand colours a team can pick. Server-enforced.
 // Clients cannot smuggle in their own hex.
+// Kept in sync with TEAM_COLORS in lib/teams.ts - if you edit one, edit
+// both. Hex values are case-sensitive (we compare exact strings).
 export const ALLOWED_TEAM_COLORS = [
-  '#7c3aed', // violet
-  '#84cc16', // lime
-  '#f97316', // coral
-  '#0ea5e9', // sky
-  '#f43f5e', // rose
-  '#fbbf24', // amber
+  '#6366F1', // indigo / primary
+  '#A78BFA', // violet / secondary
+  '#22D3EE', // cyan / accent
+  '#FBBF24', // amber / spark
+  '#84CC16', // lime
+  '#F87171', // rose
 ] as const;
 
 // Strip invisible / bidi-override / control characters before storing.

@@ -93,14 +93,26 @@ function Hero() {
                 className="group inline-flex items-center gap-3 rounded-full bg-ink px-7 py-4 font-display text-[15px] font-semibold text-bg shadow-soft-lg transition-all hover:-translate-y-0.5 hover:bg-primary hover:text-white hover:shadow-glow-lg"
               >
                 Get on the bill
-                <span className="transition-transform group-hover:translate-x-1">→</span>
+                <span className="transition-transform group-hover:translate-x-1">&rarr;</span>
               </a>
               <a
                 href="#the-day"
                 className="group inline-flex items-center gap-1.5 px-2 font-mono text-[10px] uppercase tracking-[0.24em] text-mute transition-colors hover:text-ink"
               >
                 see the lineup
-                <span className="transition-transform group-hover:translate-y-0.5">↓</span>
+                <span className="transition-transform group-hover:translate-y-0.5">&darr;</span>
+              </a>
+              {/* Direct link to the QR poster page (full-screen, print-friendly).
+                  Organisers walking around with a phone open this to flash the
+                  QR at participants who haven't registered yet. */}
+              <a
+                href="/qr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex items-center gap-1.5 px-2 font-mono text-[10px] uppercase tracking-[0.24em] text-accent transition-colors hover:text-ink"
+              >
+                show the QR poster
+                <span className="transition-transform group-hover:translate-x-0.5">&#8599;</span>
               </a>
             </div>
           </div>
@@ -702,15 +714,20 @@ function JuryGridSkeleton() {
   );
 }
 
-function JudgeCard({ name, role, color }: PanelMember) {
+function JudgeCard({ name, role, color, photoUrl }: PanelMember) {
   const initials = makeInitials(name);
   return (
     <div className="group rounded-2xl border border-line-2 bg-surface p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-soft md:p-5">
       <div
-        className="mb-4 flex h-12 w-12 items-center justify-center rounded-full font-display text-[15px] font-bold tracking-tight text-bg md:h-14 md:w-14 md:text-[16px]"
+        className="mb-4 flex h-12 w-12 items-center justify-center overflow-hidden rounded-full font-display text-[15px] font-bold tracking-tight text-bg md:h-14 md:w-14 md:text-[16px]"
         style={{ background: color }}
       >
-        {initials}
+        {photoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photoUrl} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <span>{initials}</span>
+        )}
       </div>
       <div className="font-display text-[15px] font-semibold leading-tight tracking-tight text-ink md:text-[16px]">
         {name}

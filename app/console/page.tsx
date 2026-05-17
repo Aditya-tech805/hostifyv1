@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BrandMark } from '@/components/BrandMark';
 import { ClientOnly } from '@/components/ClientOnly';
 import { PinKeypad } from '@/components/PinKeypad';
@@ -23,6 +23,7 @@ import {
   useMessage, writeMessage, type MessageSlot, type ScreenMessage,
   useSeniors, writeSenior, removeSenior, type Senior,
   useAllPresentations, removePresentation, type Presentation,
+  uploadAvatar, removeAvatar, type AvatarKind,
 } from '@/lib/data';
 import { JUDGING_CRITERIA } from '@/lib/activities';
 
@@ -536,6 +537,100 @@ function Section({
   );
 }
 
+// ─── Reusable avatar slot (photo + upload trigger + clear) ────────────────
+// Used by both PanelManager (judges) and SeniorsManager. Shows the
+// uploaded photo if present, otherwise an initials circle. Clicking the
+// slot opens a file picker. A small × in the corner clears the photo
+// back to initials (without deleting the panel/senior record).
+
+function AvatarSlot({
+  kind, id, color, photoUrl, fallback, onUploaded, onCleared,
+}: {
+  kind: AvatarKind;
+  id: string;
+  color: string;
+  photoUrl?: string;
+  fallback: string;
+  onUploaded: (publicUrl: string) => void;
+  onCleared: () => void;
+}) {
+  const { push: toast } = useToast();
+  const [busy, setBusy] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const onPick = () => { if (!busy) inputRef.current?.click(); };
+
+  const onChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || busy) return;
+    setBusy(true);
+    try {
+      const url = await uploadAvatar(kind, id, file);
+      onUploaded(url);
+      toast('Photo uploaded.');
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Upload failed.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onClear = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (busy) return;
+    if (!confirm('Remove this photo? It will go back to initials.')) return;
+    setBusy(true);
+    try {
+      await removeAvatar(kind, id);
+      onCleared();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="relative shrink-0">
+      <button
+        type="button"
+        onClick={onPick}
+        disabled={busy}
+        title={photoUrl ? 'Replace photo' : 'Upload photo'}
+        aria-label={photoUrl ? 'Replace photo' : 'Upload photo'}
+        className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full font-display text-[12px] font-bold text-bg ring-2 ring-transparent transition-all hover:ring-primary disabled:cursor-not-allowed disabled:opacity-60"
+        style={{ background: color }}
+      >
+        {photoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photoUrl} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <span>{fallback}</span>
+        )}
+        {busy && (
+          <span className="absolute inset-0 flex items-center justify-center bg-bg/70 text-[10px] font-mono text-ink">…</span>
+        )}
+      </button>
+      {photoUrl && !busy && (
+        <button
+          type="button"
+          onClick={onClear}
+          aria-label="Remove photo"
+          className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border border-line bg-bg text-[10px] leading-none text-mute hover:border-danger/60 hover:text-danger"
+        >
+          ×
+        </button>
+      )}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+        onChange={onChange}
+        className="hidden"
+      />
+    </div>
+  );
+}
+
 // ─── Judges panel manager ──────────────────────────────────────────────────
 // Curates the jury list shown on the participant landing. Coordinator-only.
 const PANEL_COLORS = ['#6366F1', '#A78BFA', '#22D3EE', '#FBBF24', '#F87171', '#84CC16', '#F97316', '#0EA5E9'];
@@ -588,12 +683,15 @@ function PanelManager() {
         <div className="space-y-1.5">
           {panel.map((j) => (
             <div key={j.id} className="flex items-center gap-3 rounded-xl border border-line bg-surface-2 p-2.5">
-              <div
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-display text-[12px] font-bold text-bg"
-                style={{ background: j.color }}
-              >
-                {panelInitials(j.name)}
-              </div>
+              <AvatarSlot
+                kind="panel"
+                id={j.id}
+                color={j.color}
+                photoUrl={j.photoUrl}
+                fallback={panelInitials(j.name)}
+                onUploaded={(url) => writePanelMember({ ...j, photoUrl: url })}
+                onCleared={() => writePanelMember({ ...j, photoUrl: undefined })}
+              />
               <div className="min-w-0 flex-1">
                 <div className="truncate font-display text-[14px] font-semibold leading-tight tracking-tight text-ink">
                   {j.name}
@@ -605,6 +703,9 @@ function PanelManager() {
               <button
                 onClick={() => {
                   if (!confirm(`Remove ${j.name} from the panel?`)) return;
+                  // Also delete the avatar file, otherwise it lingers in
+                  // storage with no record pointing at it.
+                  void removeAvatar('panel', j.id);
                   removePanelMember(j.id);
                 }}
                 aria-label="Remove"
@@ -698,12 +799,15 @@ function SeniorsManager() {
         <div className="space-y-1.5">
           {seniors.map((s) => (
             <div key={s.id} className="flex items-center gap-3 rounded-xl border border-line bg-surface-2 p-2.5">
-              <div
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-display text-[12px] font-bold text-bg"
-                style={{ background: s.color }}
-              >
-                {seniorInitials(s.name)}
-              </div>
+              <AvatarSlot
+                kind="senior"
+                id={s.id}
+                color={s.color}
+                photoUrl={s.photoUrl}
+                fallback={seniorInitials(s.name)}
+                onUploaded={(url) => writeSenior({ ...s, photoUrl: url })}
+                onCleared={() => writeSenior({ ...s, photoUrl: undefined })}
+              />
               <div className="min-w-0 flex-1">
                 <div className="truncate font-display text-[14px] font-semibold leading-tight tracking-tight text-ink">
                   {s.name}
@@ -724,6 +828,7 @@ function SeniorsManager() {
               <button
                 onClick={() => {
                   if (!confirm(`Remove ${s.name} from the seniors list?`)) return;
+                  void removeAvatar('senior', s.id);
                   removeSenior(s.id);
                 }}
                 aria-label={`Remove ${s.name}`}

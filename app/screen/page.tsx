@@ -68,7 +68,7 @@ function ScreenShell() {
 // ─── Carousel timing ─────────────────────────────────────────────────────────
 const SLIDE_MS = 12_000; // 12 seconds per slide — readable from the back row.
 
-type SlideId = 'phase' | 'about' | 'join' | 'panel' | 'faculty' | 'hod' | 'studentCoord';
+type SlideId = 'phase' | 'about' | 'panel' | 'faculty' | 'hod' | 'studentCoord';
 
 function ScreenLive() {
   const { now, state } = useEventPhase();
@@ -89,10 +89,11 @@ function ScreenLive() {
   const coordMsg = useMessage('studentCoord');
 
   // Decide which slides are actually shown — drop empty ones.
-  // The 'join' QR slide is always in the rotation so late arrivals can scan
-  // and register at any moment of the day.
+  // The QR is now only the persistent tile in the bottom KPI strip
+  // (ScanKpi). The full-screen "Join the room" slide was removed because
+  // it overflowed the carousel area on most viewports.
   const slides: SlideId[] = useMemo(() => {
-    const list: SlideId[] = ['phase', 'about', 'join'];
+    const list: SlideId[] = ['phase', 'about'];
     if (panel.length > 0) list.push('panel');
     if (facultyMsg.body.trim().length > 0) list.push('faculty');
     if (hodMsg.body.trim().length > 0) list.push('hod');
@@ -141,7 +142,7 @@ function ScreenLive() {
   const currentSlide = slides[slideIdx] ?? 'phase';
 
   return (
-    <div className="grid min-h-screen w-screen cursor-none grid-rows-[auto_1fr_auto] gap-6 overflow-hidden p-8 md:p-12 [body:has(&)]:cursor-none">
+    <div className="grid min-h-screen w-screen grid-rows-[auto_1fr_auto] gap-6 overflow-hidden p-8 md:p-12">
       {/* (The PRESS F / arrow-keys keyboard hint that used to live here
           overlapped the clock on the top-right and confused the audience
           who shouldn't be looking for keyboard shortcuts. Operator already
@@ -180,7 +181,6 @@ function ScreenLive() {
             facultyMsg={facultyMsg}
             hodMsg={hodMsg}
             coordMsg={coordMsg}
-            joinUrl={host ? `https://${host}/` : null}
           />
         )}
 
@@ -234,7 +234,7 @@ function ScreenLive() {
 // ─── Carousel stage (rotates between slides) ─────────────────────────────────
 
 function CarouselStage({
-  slides, currentIdx, now, state, panel, facultyMsg, hodMsg, coordMsg, joinUrl,
+  slides, currentIdx, now, state, panel, facultyMsg, hodMsg, coordMsg,
 }: {
   slides: SlideId[];
   currentIdx: number;
@@ -244,7 +244,6 @@ function CarouselStage({
   facultyMsg: ScreenMessage;
   hodMsg: ScreenMessage;
   coordMsg: ScreenMessage;
-  joinUrl: string | null;
 }) {
   // True cross-fade: every slide is mounted simultaneously and absolute-
   // positioned over the same area, with opacity tweening on transition.
@@ -257,7 +256,6 @@ function CarouselStage({
     switch (id) {
       case 'phase':        return <PhaseSlide now={now} state={state} />;
       case 'about':        return <AboutSlide />;
-      case 'join':         return <JoinSlide url={joinUrl ?? ''} />;
       case 'panel':        return <PanelSlide members={panel} />;
       case 'faculty':      return <MessageSlide kicker="From the faculty"               msg={facultyMsg} accent="primary" />;
       case 'hod':          return <MessageSlide kicker="From the HOD"                   msg={hodMsg}     accent="accent" />;
@@ -412,45 +410,10 @@ function AboutTick({ label, sub }: { label: string; sub: string }) {
   );
 }
 
-// ─── Slide · Scan to Join ───────────────────────────────────────────────────
-//
-// Late arrivals can always scan this. Sized so the QR is readable across a
-// classroom-sized room (300+ px on a 1080p projector ≈ scannable from ~10m).
-
-function JoinSlide({ url }: { url: string }) {
-  // Empty url = host not yet known (first paint before window mounts).
-  // Render the slide chrome but skip the QR until we have a real URL —
-  // avoids the QR briefly encoding a wrong fallback domain.
-  if (!url) {
-    return (
-      <>
-        <Eyebrow tone="accent">Join the room</Eyebrow>
-        <div className="font-display text-[clamp(28px,3vw,42px)] text-ink-2">Loading…</div>
-      </>
-    );
-  }
-  // Strip protocol for the printed URL — the QR carries the full https://.
-  const printable = url.replace(/^https?:\/\//, '').replace(/\/$/, '');
-  return (
-    <>
-      <Eyebrow tone="accent">Join the room</Eyebrow>
-      <h1 className="mb-3 font-display text-[clamp(48px,9vw,140px)] font-extrabold leading-[0.92] tracking-[-0.04em] text-ink">
-        Scan to <span className="font-serif italic font-light text-accent">begin.</span>
-      </h1>
-      <p className="mx-auto mb-10 max-w-[900px] text-[clamp(17px,2vw,24px)] leading-snug text-ink-2">
-        Point your camera at the code. Register your team in under a minute. <b>One URL on every phone.</b>
-      </p>
-      <div className="flex flex-col items-center gap-6">
-        <div className="rounded-3xl border border-line-2 bg-ink p-6 shadow-soft-lg">
-          <QrTile value={url} size={360} fg="#0A0B14" bg="#F5F3EE" />
-        </div>
-        <div className="font-mono text-[clamp(18px,2vw,28px)] tracking-[0.18em] text-ink">
-          {printable}
-        </div>
-      </div>
-    </>
-  );
-}
+// (JoinSlide was removed - the full-screen QR slide overflowed the
+// carousel area on most viewports. The persistent QR tile in the bottom
+// KPI strip is enough; a "Show QR" link on the landing Hero opens the
+// dedicated /qr poster page for anyone who needs to display it at scale.)
 
 // ─── Slide · The panel ──────────────────────────────────────────────────────
 
@@ -478,10 +441,15 @@ function JudgeBigCard({ member }: { member: PanelMember }) {
   return (
     <div className="rounded-2xl border border-line-2 bg-surface p-5 shadow-soft md:p-6">
       <div
-        className="mb-5 flex h-16 w-16 items-center justify-center rounded-full font-display text-[20px] font-bold tracking-tight text-bg md:h-20 md:w-20 md:text-[24px]"
+        className="mb-5 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full font-display text-[20px] font-bold tracking-tight text-bg md:h-20 md:w-20 md:text-[24px]"
         style={{ background: member.color }}
       >
-        {initialsOf(member.name)}
+        {member.photoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={member.photoUrl} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <span>{initialsOf(member.name)}</span>
+        )}
       </div>
       <div className="font-display text-[clamp(15px,1.4vw,20px)] font-semibold leading-tight tracking-tight text-ink">
         {member.name}

@@ -63,10 +63,15 @@ function SeniorCard({ senior }: { senior: Senior }) {
       className="group flex items-center gap-4 rounded-2xl border border-line bg-surface p-4 shadow-soft transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-glow-cyan"
     >
       <div
-        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full font-display text-[14px] font-bold tracking-tight text-bg"
+        className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full font-display text-[14px] font-bold tracking-tight text-bg"
         style={{ background: senior.color }}
       >
-        {initialsOf(senior.name)}
+        {senior.photoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={senior.photoUrl} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <span>{initialsOf(senior.name)}</span>
+        )}
       </div>
       <div className="min-w-0 flex-1">
         <div className="truncate font-display text-[16px] font-semibold leading-tight tracking-tight text-ink">
