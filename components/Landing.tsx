@@ -15,7 +15,7 @@ import { RegisterForm } from './RegisterForm';
 import { useEventPhase } from '@/lib/hooks';
 import { useAllTeams, usePanel, type PanelMember } from '@/lib/data';
 import { SCHEDULE, formatCountdown, pad, type PhaseId, type Phase } from '@/lib/schedule';
-import { IDEA_PROMPTS, BINGO_MISSIONS, PITCH_STEPS } from '@/lib/activities';
+import { BINGO_MISSIONS } from '@/lib/activities';
 import type { Team } from '@/lib/teams';
 
 interface LandingProps {
@@ -232,7 +232,7 @@ const PHASES_META: Record<PhaseId, { sub: string; tint: string; tintBg: string; 
     sub: 'Brainstorm. Prototype. Sharpen the pitch.',
     tint: '#06B6D4',
     tintBg: 'rgba(6, 182, 212, 0.05)',
-    activities: ['Idea cards', 'Networking bingo', 'Pitch lab', 'Photo booth', 'Spotlight'],
+    activities: ['Networking bingo', 'Photo booth', 'Team wall', 'Connect on LinkedIn', 'Spotlight'],
     line: 'Just over two hours of crafted chaos — prompts, missions, refreshments, and a spotlight moment from the stage.',
   },
   lunch: {
@@ -395,21 +395,21 @@ function ActivityShowcase() {
       </header>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <ShowcaseCard title="Idea Card Roulette" tag="Phase 2" tint="#06B6D4"
-          preview={<IdeaSample />}
-          description="Random pitch-sharpening prompts pulled from a deck of thirty. Tap, think, lock in. Built for the team that keeps saying &lsquo;we&rsquo;ll figure it out later.&rsquo;"
-        />
         <ShowcaseCard title="Networking Bingo" tag="Phase 2" tint="#7C3AED"
           preview={<BingoSample />}
-          description="Sixteen missions on a 4×4 grid. Cross paths with teams you wouldn&rsquo;t otherwise meet — and get a row before anyone else."
+          description="Sixteen missions on a 4&times;4 grid. Cross paths with teams you wouldn&rsquo;t otherwise meet &mdash; and get a row before anyone else."
         />
-        <ShowcaseCard title="Pitch Lab" tag="Phase 2" tint="#F59E0B"
-          preview={<PitchSample />}
-          description="Five steps, five questions, one tighter pitch. With live hints, word targets, and a brutally honest progress bar."
+        <ShowcaseCard title="Connect on LinkedIn" tag="All day" tint="#0A66C2"
+          preview={<ConnectSample />}
+          description="Curated list of seniors and mentors in the room. Tap a card, open their LinkedIn, send the request before the day ends."
         />
         <ShowcaseCard title="Photo Booth" tag="All day" tint="#EF4444"
           preview={<BoothSample />}
           description="Branded frame, a shared room gallery, and a way to remember which table you sat at when this all started."
+        />
+        <ShowcaseCard title="Team Wall" tag="Phase 2 / 3" tint="#22D3EE"
+          preview={<TeamWallSample />}
+          description="Every team&rsquo;s name, colour, and idea in one wall. Scan it during ideation, return to it before judging."
         />
       </div>
     </section>
@@ -441,19 +441,49 @@ function ShowcaseCard({
   );
 }
 
-function IdeaSample() {
+function ConnectSample() {
   return (
-    <div className="flex aspect-[16/9] flex-col justify-between rounded-2xl bg-surface-2 p-6 text-ink ring-1 ring-line">
-      <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-mute">
-        Prompt 17 of 30
+    <div className="flex aspect-[16/9] flex-col gap-2 rounded-2xl bg-surface-2 p-4 ring-1 ring-line">
+      <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.22em] text-mute">
+        4 seniors in the room
       </div>
-      <p className="font-display text-[clamp(15px,1.8vw,20px)] font-medium leading-[1.3] text-ink">
-        &ldquo;{IDEA_PROMPTS[16]}&rdquo;
-      </p>
-      <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.18em]">
-        <span className="text-mute">← Prev</span>
-        <span className="rounded-full bg-accent px-3 py-1 font-bold text-bg">Next ↻</span>
-      </div>
+      {[
+        { name: 'Aanya Sharma', role: 'SDE II · Google', color: '#0A66C2' },
+        { name: 'Vikram Joshi', role: 'PM · Razorpay',   color: '#A78BFA' },
+        { name: 'Ria Patel',    role: 'Founder · YC W24', color: '#22D3EE' },
+      ].map((s) => (
+        <div key={s.name} className="flex items-center gap-2.5 rounded-md bg-bg/60 p-2">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-bg" style={{ background: s.color }}>
+            {s.name.split(' ').map((p) => p[0]).join('')}
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="truncate font-display text-[11px] font-semibold text-ink">{s.name}</div>
+            <div className="truncate font-mono text-[9px] uppercase tracking-[0.12em] text-mute">{s.role}</div>
+          </div>
+          <span className="shrink-0 rounded bg-[#0A66C2] px-1.5 py-[1px] font-mono text-[8px] font-bold text-white">in</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TeamWallSample() {
+  const sampleTeams = [
+    { name: 'Apex',   color: '#7c3aed' },
+    { name: 'Aether', color: '#84cc16' },
+    { name: 'Nimbus', color: '#f97316' },
+    { name: 'Ravine', color: '#0ea5e9' },
+    { name: 'Polaris', color: '#f43f5e' },
+    { name: 'Vesper', color: '#fbbf24' },
+  ];
+  return (
+    <div className="grid aspect-[16/9] grid-cols-3 gap-1.5 rounded-2xl bg-bg p-3 ring-1 ring-line">
+      {sampleTeams.map((t) => (
+        <div key={t.name} className="flex flex-col justify-end overflow-hidden rounded-md bg-surface p-1.5">
+          <div className="mb-1 h-1 rounded" style={{ background: t.color }} />
+          <div className="truncate font-display text-[10px] font-semibold text-ink">{t.name}</div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -478,32 +508,6 @@ function BingoSample() {
           <span className="line-clamp-2">{m}</span>
         </div>
       ))}
-    </div>
-  );
-}
-
-function PitchSample() {
-  return (
-    <div className="flex aspect-[16/9] flex-col justify-between rounded-2xl bg-spark/[0.08] p-5">
-      <div>
-        <div className="mb-4 flex items-center gap-1.5">
-          {[0, 1, 2, 3, 4].map((i) => (
-            <span
-              key={i}
-              className={`h-1 flex-1 rounded-full ${i < 3 ? 'bg-spark' : 'bg-line-2'}`}
-            />
-          ))}
-        </div>
-        <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.22em] text-spark">
-          Step 03 of 05 · Who
-        </div>
-        <p className="font-display text-[clamp(15px,1.7vw,18px)] font-semibold leading-snug text-ink">
-          {PITCH_STEPS[2].question}
-        </p>
-      </div>
-      <p className="font-serif italic font-light text-[clamp(12px,1.3vw,14px)] leading-snug text-ink-2">
-        {PITCH_STEPS[2].hint}
-      </p>
     </div>
   );
 }

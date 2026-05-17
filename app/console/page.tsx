@@ -21,6 +21,8 @@ import {
   useSprint, setSprint, useSprintSubmissions,
   usePanel, writePanelMember, removePanelMember, type PanelMember,
   useMessage, writeMessage, type MessageSlot, type ScreenMessage,
+  useSeniors, writeSenior, removeSenior, type Senior,
+  useAllPresentations, removePresentation, type Presentation,
 } from '@/lib/data';
 import { JUDGING_CRITERIA } from '@/lib/activities';
 
@@ -355,6 +357,9 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
           )}
         </Section>
 
+        {/* Team presentations — coordinator pulls these up during judging */}
+        <PresentationsSection teams={teams} upNextTeamId={upNext?.teamId ?? null} />
+
         {/* Presentation Timer */}
         <TimerControls timer={timer} />
 
@@ -365,6 +370,8 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
         <SprintControls sprint={sprint} sprintSubs={sprintSubs} teamCount={teams.length} />
 
         <PanelManager />
+
+        <SeniorsManager />
 
         <MessagesManager />
 
@@ -627,6 +634,272 @@ function PanelManager() {
         </button>
       </div>
     </Section>
+  );
+}
+
+// ─── Seniors / mentors manager (LinkedIn-connect curator) ──────────────────
+// Coordinator curates the list shown on /activities/connect. Each entry
+// has a name, a role (free-form), and a LinkedIn URL. Order is add-time
+// to keep the on-screen list deterministic.
+const SENIOR_COLORS = ['#0A66C2', '#6366F1', '#A78BFA', '#22D3EE', '#FBBF24', '#84CC16', '#F97316', '#F87171'];
+
+function SeniorsManager() {
+  const seniors = useSeniors();
+  const [name, setName] = useState('');
+  const [role, setRole] = useState('');
+  const [url, setUrl] = useState('');
+
+  const trimmedUrl = url.trim();
+  const looksLikeUrl = /^https?:\/\/(www\.)?linkedin\.com\//i.test(trimmedUrl) || /^https?:\/\/(www\.)?lnkd\.in\//i.test(trimmedUrl);
+  const canAdd = name.trim().length >= 2 && role.trim().length >= 2 && looksLikeUrl;
+
+  const add = () => {
+    if (!canAdd) return;
+    const color = SENIOR_COLORS[seniors.length % SENIOR_COLORS.length];
+    const member: Senior = {
+      id: 'senior-' + (typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID().slice(0, 8)
+        : Math.random().toString(36).slice(2, 10)),
+      name: name.trim(),
+      role: role.trim(),
+      linkedinUrl: trimmedUrl,
+      color,
+      addedAt: Date.now(),
+    };
+    writeSenior(member);
+    setName('');
+    setRole('');
+    setUrl('');
+  };
+
+  return (
+    <Section title="Seniors panel" badge="LinkedIn connect list — /activities/connect">
+      <p className="mb-4 text-[13.5px] leading-relaxed text-ink-2">
+        Senior alumni and mentors the participants can reach out to on LinkedIn. Each card opens the URL in a new tab.
+        URLs must start with <code className="font-mono text-[12px] text-accent">https://linkedin.com/...</code>.
+      </p>
+
+      {seniors.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-line-2 bg-surface-2 p-5 text-center text-[13px] text-mute">
+          No seniors yet — the activity shows a &ldquo;finalising&rdquo; placeholder.
+        </div>
+      ) : (
+        <div className="space-y-1.5">
+          {seniors.map((s) => (
+            <div key={s.id} className="flex items-center gap-3 rounded-xl border border-line bg-surface-2 p-2.5">
+              <div
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-display text-[12px] font-bold text-bg"
+                style={{ background: s.color }}
+              >
+                {seniorInitials(s.name)}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-display text-[14px] font-semibold leading-tight tracking-tight text-ink">
+                  {s.name}
+                </div>
+                <div className="truncate font-mono text-[10px] uppercase tracking-[0.16em] text-mute">
+                  {s.role}
+                </div>
+                <a
+                  href={s.linkedinUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-0.5 inline-block truncate font-mono text-[10px] text-accent hover:underline"
+                  style={{ maxWidth: '260px' }}
+                >
+                  {s.linkedinUrl}
+                </a>
+              </div>
+              <button
+                onClick={() => {
+                  if (!confirm(`Remove ${s.name} from the seniors list?`)) return;
+                  removeSenior(s.id);
+                }}
+                aria-label={`Remove ${s.name}`}
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-line bg-bg text-mute transition-colors hover:border-danger/40 hover:text-danger"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <input
+          type="text"
+          maxLength={48}
+          placeholder="Name (e.g. Aanya Sharma)"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="rounded-xl border border-line bg-surface-2 px-3.5 py-2.5 text-sm text-ink outline-none transition-colors focus:border-primary focus:bg-surface-3"
+        />
+        <input
+          type="text"
+          maxLength={64}
+          placeholder="Role (e.g. SDE II · Google)"
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          className="rounded-xl border border-line bg-surface-2 px-3.5 py-2.5 text-sm text-ink outline-none transition-colors focus:border-primary focus:bg-surface-3"
+        />
+      </div>
+      <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto]">
+        <input
+          type="url"
+          maxLength={256}
+          placeholder="https://linkedin.com/in/..."
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && canAdd) add(); }}
+          className="rounded-xl border border-line bg-surface-2 px-3.5 py-2.5 text-sm text-ink outline-none transition-colors focus:border-primary focus:bg-surface-3"
+        />
+        <button
+          onClick={add}
+          disabled={!canAdd}
+          className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-glow transition-all hover:-translate-y-px hover:bg-primary-2 hover:shadow-glow-lg disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute disabled:shadow-none"
+        >
+          Add senior
+        </button>
+      </div>
+      {url.length > 0 && !looksLikeUrl && (
+        <div className="mt-2 font-mono text-[10px] uppercase tracking-[0.16em] text-spark">
+          URL must start with https://linkedin.com/ or https://lnkd.in/
+        </div>
+      )}
+    </Section>
+  );
+}
+
+function seniorInitials(name: string): string {
+  const parts = name.replace(/[\[\]().]/g, '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+// ─── Team presentations (PPT/PDF) — coordinator's go-to during judging ─────
+// Lists every team with their uploaded presentation. The team currently
+// "Up Next" sits at the top of the list and is highlighted. Coordinator
+// clicks Open to launch the file in a new tab so they can present from
+// their own laptop while the team explains the idea on stage.
+
+function PresentationsSection({
+  teams,
+  upNextTeamId,
+}: {
+  teams: ReturnType<typeof useAllTeams>;
+  upNextTeamId: string | null;
+}) {
+  const presentations = useAllPresentations();
+  const uploadedCount = Object.keys(presentations).length;
+
+  // Sort: Up Next first, then teams with uploads (most recent first),
+  // then teams without uploads alphabetically.
+  const ordered = [...teams].sort((a, b) => {
+    if (a.id === upNextTeamId) return -1;
+    if (b.id === upNextTeamId) return 1;
+    const aHas = !!presentations[a.id];
+    const bHas = !!presentations[b.id];
+    if (aHas && !bHas) return -1;
+    if (!aHas && bHas) return 1;
+    if (aHas && bHas) return presentations[b.id].uploadedAt - presentations[a.id].uploadedAt;
+    return a.name.localeCompare(b.name);
+  });
+
+  return (
+    <Section
+      title="Team presentations"
+      badge={`${uploadedCount} / ${teams.length} uploaded`}
+    >
+      <p className="mb-4 text-[13.5px] leading-relaxed text-ink-2">
+        Every team uploads their PPT / PDF from their dashboard. When a team is on stage, click <b className="text-accent">Open</b> on their row to launch
+        the file in a new tab &mdash; you drive the slides on the projector while they explain the idea to the panel. The team marked
+        <b className="text-spark"> Up Next</b> floats to the top.
+      </p>
+
+      {teams.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-line-2 bg-surface-2 p-5 text-center text-[13px] text-mute">
+          No teams registered yet.
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {ordered.map((t) => (
+            <PresentationRow
+              key={t.id}
+              team={t}
+              presentation={presentations[t.id] ?? null}
+              isUpNext={t.id === upNextTeamId}
+            />
+          ))}
+        </div>
+      )}
+    </Section>
+  );
+}
+
+function PresentationRow({
+  team, presentation, isUpNext,
+}: {
+  team: { id: string; name: string; color: string };
+  presentation: Presentation | null;
+  isUpNext: boolean;
+}) {
+  const sizeMb = presentation ? (presentation.sizeBytes / 1024 / 1024).toFixed(1) : null;
+  return (
+    <div
+      className={`flex items-center gap-3 rounded-xl border p-3 transition-colors ${
+        isUpNext
+          ? 'border-spark/60 bg-spark/[0.06]'
+          : presentation
+            ? 'border-line bg-surface-2'
+            : 'border-dashed border-line-2 bg-surface-2/50'
+      }`}
+    >
+      <div className="h-10 w-1.5 shrink-0 rounded" style={{ background: team.color }} />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <div className="truncate font-display text-[14px] font-semibold leading-tight tracking-tight text-ink">
+            {team.name}
+          </div>
+          {isUpNext && (
+            <span className="shrink-0 rounded-full bg-spark px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-white">
+              Up next
+            </span>
+          )}
+        </div>
+        {presentation ? (
+          <div className="mt-0.5 truncate font-mono text-[10px] uppercase tracking-[0.14em] text-ink-2">
+            {presentation.filename} &middot; {sizeMb} MB
+          </div>
+        ) : (
+          <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-mute">
+            Not uploaded yet
+          </div>
+        )}
+      </div>
+      {presentation && (
+        <>
+          <a
+            href={presentation.publicUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 rounded-lg bg-accent px-3.5 py-2 font-display text-[12.5px] font-semibold text-bg shadow-glow-cyan transition-all hover:-translate-y-px hover:bg-accent-2"
+          >
+            Open
+          </a>
+          <button
+            onClick={() => {
+              if (!confirm(`Remove ${team.name}'s uploaded presentation?`)) return;
+              void removePresentation(team.id, presentation.storagePath);
+            }}
+            aria-label={`Remove ${team.name}'s presentation`}
+            className="shrink-0 flex h-8 w-8 items-center justify-center rounded-full border border-line bg-bg text-mute transition-colors hover:border-danger/40 hover:text-danger"
+          >
+            ×
+          </button>
+        </>
+      )}
+    </div>
   );
 }
 

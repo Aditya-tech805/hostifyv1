@@ -32,6 +32,8 @@ const PATHS = {
   sprintSubs:    'sprintSubs',     // sprintSubs/{teamId} → SprintSubmission
   panel:         'panel',          // panel/{id} → PanelMember (jury list shown on the landing)
   messages:      'messages',       // messages/{slot} → ScreenMessage (faculty/hod/studentCoord — projector carousel)
+  seniors:       'seniors',         // seniors/{id} → Senior (LinkedIn-connect list)
+  presentations: 'presentations',   // presentations/{teamId} → Presentation (PPT/PDF metadata)
 } as const;
 
 // ─── Teams ───────────────────────────────────────────────────────────────────
@@ -268,6 +270,133 @@ export function subscribeResults(cb: (v: ResultsState | null) => void): () => vo
   return subscribeSynced<ResultsState>(PATHS.results, cb);
 }
 
+// ─── Team presentations (PPT / PPTX / PDF uploads) ──────────────────────────
+/**
+ * Each team uploads one presentation file to Supabase Storage's `slides`
+ * bucket. The file path is `<team_id>/presentation.<ext>`; uploading a
+ * new file deletes any previously stored ones in the same folder so the
+ * coordinator always sees the latest.
+ *
+ * Metadata lives in the kv row `presentations/<team_id>` so it streams
+ * to the console via realtime, just like every other piece of state.
+ */
+export interface Presentation {
+  teamId: string;
+  filename: string;       // original filename for download display
+  sizeBytes: number;
+  contentType: string;
+  storagePath: string;    // path inside the slides bucket
+  publicUrl: string;      // direct downloadable URL (public bucket)
+  uploadedAt: number;
+}
+
+export const PRESENTATION_BUCKET = 'slides';
+export const PRESENTATION_MAX_BYTES = 25 * 1024 * 1024; // 25 MB
+export const PRESENTATION_ALLOWED_TYPES = new Set([
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'application/vnd.ms-powerpoint',
+  'application/pdf',
+]);
+
+/** Returns the file extension we should store the upload under. */
+function extensionForUpload(file: File): 'pptx' | 'ppt' | 'pdf' | null {
+  const name = file.name.toLowerCase();
+  const mime = file.type;
+  if (mime === 'application/pdf' || name.endsWith('.pdf')) return 'pdf';
+  if (mime === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' || name.endsWith('.pptx')) return 'pptx';
+  if (mime === 'application/vnd.ms-powerpoint' || name.endsWith('.ppt')) return 'ppt';
+  return null;
+}
+
+/** Subscribe to one team's presentation metadata (null if none uploaded). */
+export function usePresentation(teamId: string | null): Presentation | null {
+  const [value] = useSyncedValue<Presentation | null>(
+    teamId ? `${PATHS.presentations}/${teamId}` : `${PATHS.presentations}/__none__`,
+    null,
+  );
+  return value;
+}
+
+/** Subscribe to all presentations - used by the coordinator console. */
+export function useAllPresentations(): Record<string, Presentation> {
+  return useSyncedMap<Presentation>(PATHS.presentations);
+}
+
+/**
+ * Upload a presentation file for the given team. Replaces any previously
+ * stored file in the team's folder. Returns the new Presentation record.
+ *
+ * Throws on:
+ *   - Supabase not configured
+ *   - file too large / wrong MIME type
+ *   - storage upload error
+ */
+export async function uploadPresentation(
+  file: File,
+  team: { id: string; name: string },
+): Promise<Presentation> {
+  if (file.size > PRESENTATION_MAX_BYTES) {
+    throw new Error(`File is ${Math.round(file.size / 1024 / 1024)} MB - max is 25 MB.`);
+  }
+  const ext = extensionForUpload(file);
+  if (!ext) {
+    throw new Error('Unsupported file type. Use .ppt, .pptx, or .pdf.');
+  }
+  if (!SUPABASE_ENABLED) {
+    throw new Error('Supabase is not configured - cannot upload.');
+  }
+  const supabase = getSupabase();
+  if (!supabase) throw new Error('Supabase client unavailable.');
+
+  const folder = team.id;
+  const storagePath = `${folder}/presentation.${ext}`;
+
+  // Wipe any previously-uploaded files in the team's folder. Otherwise a
+  // change of extension (e.g. pptx -> pdf) leaves an orphan that nobody
+  // sees but still counts against the free-tier storage quota.
+  const { data: existing } = await supabase.storage.from(PRESENTATION_BUCKET).list(folder);
+  if (existing && existing.length > 0) {
+    const toRemove = existing.map((f) => `${folder}/${f.name}`);
+    await supabase.storage.from(PRESENTATION_BUCKET).remove(toRemove);
+  }
+
+  // Upload. upsert: true so a re-upload of the same extension overwrites
+  // cleanly without needing a separate delete call.
+  const { error: uploadErr } = await supabase.storage
+    .from(PRESENTATION_BUCKET)
+    .upload(storagePath, file, {
+      contentType: file.type,
+      cacheControl: '3600',
+      upsert: true,
+    });
+  if (uploadErr) throw uploadErr;
+
+  const { data: urlData } = supabase.storage.from(PRESENTATION_BUCKET).getPublicUrl(storagePath);
+
+  const record: Presentation = {
+    teamId: team.id,
+    filename: file.name,
+    sizeBytes: file.size,
+    contentType: file.type,
+    storagePath,
+    publicUrl: urlData.publicUrl,
+    uploadedAt: Date.now(),
+  };
+  void writeSynced(`${PATHS.presentations}/${team.id}`, record);
+  return record;
+}
+
+/** Coordinator-only: remove a team's uploaded file + kv metadata. */
+export async function removePresentation(teamId: string, storagePath: string): Promise<void> {
+  if (SUPABASE_ENABLED) {
+    const supabase = getSupabase();
+    if (supabase) {
+      await supabase.storage.from(PRESENTATION_BUCKET).remove([storagePath]);
+    }
+  }
+  void writeSynced(`${PATHS.presentations}/${teamId}`, null);
+}
+
 // ─── Photo gallery ───────────────────────────────────────────────────────────
 export interface Photo {
   id: string;
@@ -475,6 +604,37 @@ export function writePanelMember(member: PanelMember): void {
 
 export function removePanelMember(memberId: string): void {
   void writeSynced(`${PATHS.panel}/${memberId}`, null);
+}
+
+// ─── Seniors / mentors (curated LinkedIn list shown on /activities/connect) ─
+/**
+ * Senior alumni or mentors that participants can connect with on LinkedIn.
+ * Coordinator curates the list from /console; participants see it on the
+ * /activities/connect page. Pattern mirrors PanelMember.
+ */
+export interface Senior {
+  id: string;
+  name: string;
+  role: string;       // "SDE II - Google" / "Founder - Y Combinator W24" etc.
+  linkedinUrl: string;
+  color: string;
+  addedAt: number;
+}
+
+export function useSeniors(): Senior[] {
+  const map = useSyncedMap<Senior>(PATHS.seniors);
+  return useMemo(
+    () => Object.values(map).sort((a, b) => a.addedAt - b.addedAt),
+    [map],
+  );
+}
+
+export function writeSenior(senior: Senior): void {
+  void writeSynced(`${PATHS.seniors}/${senior.id}`, senior);
+}
+
+export function removeSenior(seniorId: string): void {
+  void writeSynced(`${PATHS.seniors}/${seniorId}`, null);
 }
 
 // ─── Screen carousel messages (faculty / HOD / student coordinator) ─────────

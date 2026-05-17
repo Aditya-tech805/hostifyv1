@@ -142,9 +142,10 @@ function ScreenLive() {
 
   return (
     <div className="grid min-h-screen w-screen cursor-none grid-rows-[auto_1fr_auto] gap-6 overflow-hidden p-8 md:p-12 [body:has(&)]:cursor-none">
-      <div className="absolute right-3 top-2 font-mono text-[10px] uppercase tracking-[0.12em] text-mute opacity-50">
-        PRESS F · FULLSCREEN · ←/→ TO STEP
-      </div>
+      {/* (The PRESS F / arrow-keys keyboard hint that used to live here
+          overlapped the clock on the top-right and confused the audience
+          who shouldn't be looking for keyboard shortcuts. Operator already
+          knows F = fullscreen and arrow keys step the carousel.) */}
 
       {/* Top bar */}
       <div className="flex items-center justify-between">
@@ -198,24 +199,25 @@ function ScreenLive() {
         )}
       </div>
 
-      {/* Bottom strip — KPIs + persistent scan panel */}
-      <div className="flex flex-col gap-4">
-        <div className="grid grid-cols-3 gap-4">
-          <Kpi label="Teams registered" figure={String(teamCount)} sub="OF 24 EXPECTED" figureClass="text-accent" />
-          <Kpi
-            label="Current phase"
-            figure={state.status === 'pre' ? 'PRE' : state.status === 'post' ? 'DONE' : state.phase?.label.toUpperCase() ?? '—'}
-            sub={
-              state.status === 'pre' && state.next
-                ? 'STARTS ' + formatCountdown(state.next.start - now.getTime())
-                : (state.status === 'live' || state.status === 'override') && state.phase
-                  ? 'ENDS ' + formatCountdown(state.phase.end - now.getTime())
-                  : 'EVENT COMPLETE'
-            }
-          />
-          <Kpi label="Event window" figure="09:30 → 16:15" sub="18 MAY · IST" figureClass="text-[clamp(22px,2.2vw,30px)]" />
-        </div>
-        <ScanBanner host={host} />
+      {/* Bottom strip — 4 KPI tiles in a single row. The Scan tile is
+          one of the four (~120px QR + label) so the bottom band stays at
+          a normal KPI strip height and the carousel keeps full vertical
+          space for editorial slides. */}
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <Kpi label="Teams registered" figure={String(teamCount)} sub="OF 24 EXPECTED" figureClass="text-accent" />
+        <Kpi
+          label="Current phase"
+          figure={state.status === 'pre' ? 'PRE' : state.status === 'post' ? 'DONE' : state.phase?.label.toUpperCase() ?? '—'}
+          sub={
+            state.status === 'pre' && state.next
+              ? 'STARTS ' + formatCountdown(state.next.start - now.getTime())
+              : (state.status === 'live' || state.status === 'override') && state.phase
+                ? 'ENDS ' + formatCountdown(state.phase.end - now.getTime())
+                : 'EVENT COMPLETE'
+          }
+        />
+        <Kpi label="Event window" figure="09:30 → 16:15" sub="18 MAY · IST" figureClass="text-[clamp(22px,2.2vw,30px)]" />
+        <ScanKpi host={host} />
       </div>
 
       {/* Synced moments — overlay everything when triggered from coordinator */}
@@ -324,7 +326,7 @@ function PhaseSlide({ now, state }: { now: Date; state: ReturnType<typeof useEve
           <Eyebrow tone={tone}>{prefix}{state.phase.label}</Eyebrow>
           <Title>Ideate.</Title>
           <Subtitle>
-            Idea Cards. Networking Bingo. Pitch Lab. Photo Booth. Talk to people, refine the pitch. <b>Lunch at 1:00 PM.</b>
+            Networking Bingo. Photo Booth. Team Wall. Connect with seniors on LinkedIn. <b>Lunch at 1:00 PM.</b>
           </Subtitle>
           <Countdown label="Lunch in">{formatHHMMSS(ms)}</Countdown>
         </>
@@ -335,7 +337,7 @@ function PhaseSlide({ now, state }: { now: Date; state: ReturnType<typeof useEve
         <>
           <Eyebrow tone={tone}>Break · Lunch</Eyebrow>
           <Title>Recharge.</Title>
-          <Subtitle>Judging begins at <b>2:00 PM</b>. Last call on the Pitch Lab.</Subtitle>
+          <Subtitle>Judging begins at <b>2:00 PM</b>. Final prep on the Team Wall.</Subtitle>
           <Countdown label="Phase 3 in">{formatHHMMSS(ms)}</Countdown>
         </>
       );
@@ -377,21 +379,25 @@ function AboutSlide() {
   return (
     <>
       <Eyebrow tone="accent">About</Eyebrow>
-      <h1 className="mb-8 font-display text-[clamp(48px,9vw,140px)] font-extrabold leading-[0.92] tracking-[-0.04em] text-ink">
+      {/* Slightly tighter type than the original; on 1080p the carousel
+          area is around 600px tall and the two-line h1 + paragraph + tick
+          row needs to fit cleanly. clamp() upper bound 110px (was 140px)
+          keeps two lines at ~200px total instead of ~260px. */}
+      <h1 className="mb-6 font-display text-[clamp(40px,7vw,110px)] font-extrabold leading-[0.95] tracking-[-0.035em] text-ink">
         Twenty-four teams.
         <br />
         <span className="font-serif italic font-light text-accent">One day to ship.</span>
       </h1>
-      <p className="mx-auto max-w-[1100px] text-[clamp(18px,2.2vw,28px)] leading-snug text-ink-2">
-        INNOVATRIX is the department&apos;s one-day live innovation showcase. From <b>9:30 AM to 4:15 PM</b>, twenty-four teams move through three phases —
-        <b className="text-primary"> Welcome</b> · <b className="text-accent">Ideate</b> · <b className="text-spark">Judging</b> —
+      <p className="mx-auto max-w-[1100px] text-[clamp(16px,1.9vw,24px)] leading-snug text-ink-2">
+        INNOVATRIX is the department&apos;s one-day live innovation showcase. From <b>9:30 AM to 4:15 PM</b>, twenty-four teams move through three phases &mdash;
+        <b className="text-primary"> Welcome</b> &middot; <b className="text-accent">Ideate</b> &middot; <b className="text-spark">Judging</b> &mdash;
         and end the day with a panel decision on five honest criteria.
       </p>
-      <div className="mt-10 flex flex-wrap items-center justify-center gap-x-12 gap-y-4 font-mono text-[clamp(12px,1.4vw,18px)] uppercase tracking-[0.28em] text-mute">
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-x-10 gap-y-3 font-mono text-[clamp(11px,1.3vw,16px)] uppercase tracking-[0.28em] text-mute">
         <AboutTick label="24" sub="teams" />
         <AboutTick label="6" sub="hours" />
         <AboutTick label="5" sub="criteria" />
-        <AboutTick label="1" sub="day · 18 May" />
+        <AboutTick label="1" sub="day &middot; 18 May" />
       </div>
     </>
   );
@@ -400,7 +406,7 @@ function AboutSlide() {
 function AboutTick({ label, sub }: { label: string; sub: string }) {
   return (
     <div className="flex items-baseline gap-3">
-      <span className="font-display text-[clamp(34px,4.5vw,64px)] font-bold text-ink">{label}</span>
+      <span className="font-display text-[clamp(28px,3.6vw,52px)] font-bold text-ink">{label}</span>
       <span className="text-mute">{sub}</span>
     </div>
   );
@@ -652,56 +658,39 @@ function Kpi({ label, figure, sub, figureClass = '' }: { label: string; figure: 
 }
 
 /**
- * Persistent scan-to-join banner. Wide, prominent, always-visible no
- * matter which carousel slide is on stage. Sized so the QR is readable
- * across a classroom-scale room (160px on a 1080p projector ≈ scannable
- * from ~8m). Has a soft pulse on the accent ring so the eye is drawn
- * to it without it being noisy.
+ * Persistent scan-to-join tile that sits as one of the four KPI cards
+ * in the bottom strip. Same height as the other Kpi components so the
+ * row stays a normal KPI strip and the carousel keeps full height.
+ *
+ * Host is null until the post-hydration effect reads window.location.host;
+ * rendering a placeholder until then avoids briefly encoding a wrong
+ * fallback URL that anyone scanning at that instant would land on.
  */
-function ScanBanner({ host }: { host: string | null }) {
-  // Host is null until the post-hydration effect reads window.location.host.
-  // Don't render a real QR yet — avoids encoding a fallback URL on first
-  // paint that anyone snapping a screenshot would scan wrong.
+function ScanKpi({ host }: { host: string | null }) {
   if (!host) {
     return (
-      <div className="rounded-2xl border border-accent/40 bg-surface p-5 shadow-soft">
+      <div className="rounded-2xl border border-accent/40 bg-surface px-5 py-4 shadow-soft">
         <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-accent">Scan to join</div>
-        <div className="mt-2 font-mono text-[13px] text-mute">Preparing&hellip;</div>
+        <div className="mt-2 font-mono text-[12px] text-mute">Preparing&hellip;</div>
       </div>
     );
   }
   const url = `https://${host}/`;
-  const printable = host.replace(/\/$/, '');
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-accent/40 bg-surface shadow-soft">
-      {/* Pulse ring behind the QR — subtle, always on. */}
-      <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-[200px] bg-accent/[0.05] blur-2xl animate-pulse-soft" />
-
-      <div className="relative flex items-center gap-6 p-5">
-        {/* The QR — large enough to scan from across a classroom */}
-        <div className="shrink-0 rounded-xl bg-ink p-2 shadow-soft">
-          <QrTile value={url} size={140} fg="#0A0B14" bg="#F5F3EE" />
+    <div className="flex items-center gap-3 rounded-2xl border border-accent/40 bg-surface px-4 py-3 shadow-soft">
+      <div className="shrink-0 rounded-lg bg-ink p-1.5">
+        <QrTile value={url} size={84} fg="#0A0B14" bg="#F5F3EE" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="mb-1 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-accent">
+          <span className="inline-block h-1.5 w-1.5 animate-pulse-soft rounded-full bg-accent" />
+          Scan to join
         </div>
-
-        {/* Headline + URL — fills the rest of the row, scales with viewport */}
-        <div className="min-w-0 flex-1">
-          <div className="mb-2 flex items-center gap-3 font-mono text-[clamp(11px,1.1vw,14px)] uppercase tracking-[0.32em] text-accent">
-            <span className="inline-block h-2 w-2 animate-pulse-soft rounded-full bg-accent" />
-            Scan to join · open any time
-          </div>
-          <div className="font-display text-[clamp(28px,3.4vw,52px)] font-bold leading-[0.95] tracking-[-0.025em] text-ink">
-            Point your camera here.
-          </div>
-          <div className="mt-2 font-mono text-[clamp(13px,1.4vw,20px)] tracking-[0.16em] text-ink-2">
-            {printable}
-          </div>
+        <div className="font-display text-[clamp(15px,1.4vw,20px)] font-bold leading-tight tracking-tight text-ink">
+          Open anytime
         </div>
-
-        {/* Right-edge tag — quick read of what the QR does. Hidden on narrow projectors. */}
-        <div className="hidden shrink-0 flex-col items-end gap-1.5 text-right md:flex">
-          <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-mute">Register</span>
-          <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-mute">Vote</span>
-          <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-mute">Play</span>
+        <div className="mt-1 truncate font-mono text-[10px] tracking-[0.08em] text-mute">
+          {host}
         </div>
       </div>
     </div>
