@@ -193,7 +193,10 @@ function TeamsMarquee() {
   return (
     <section
       aria-label="Registered teams"
-      className="relative border-y border-line bg-surface-2 py-6 text-ink"
+      // overflow-hidden is load-bearing here: the inner marquee uses w-max
+      // and translates to -50%, so without clipping it adds the off-screen
+      // half of the row to the page's horizontal scroll width.
+      className="relative overflow-hidden border-y border-line bg-surface-2 py-6 text-ink"
     >
       {/* Side fade masks */}
       <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-surface-2 to-transparent" />

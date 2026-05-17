@@ -30,6 +30,10 @@ html, body {
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* Defensive: any single off-screen element (marquee, animated decoration,
+     fluid-sized hero text) should never make the whole page scroll
+     horizontally. Vertical scroll stays on as normal. */
+  overflow-x: hidden;
 }
 
 body {
