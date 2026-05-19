@@ -34,6 +34,7 @@ const PATHS = {
   messages:      'messages',       // messages/{slot} → ScreenMessage (faculty/hod/studentCoord — projector carousel)
   seniors:       'seniors',         // seniors/{id} → Senior (LinkedIn-connect list)
   presentations: 'presentations',   // presentations/{teamId} → Presentation (PPT/PDF metadata)
+  finalResults:  'finalResults',    // FinalResults — post-event prize ceremony state
 } as const;
 
 // ─── Teams ───────────────────────────────────────────────────────────────────
@@ -745,6 +746,78 @@ export function useMessage(slot: MessageSlot): ScreenMessage {
 
 export function writeMessage(slot: MessageSlot, msg: ScreenMessage): void {
   void writeSynced(`${PATHS.messages}/${slot}`, msg);
+}
+
+// ─── Final results (post-event prize ceremony) ──────────────────────────────
+/**
+ * Captured rankings + ceremony reveal state for the Prize Distribution
+ * Ceremony. The coordinator enters the ranked 24 teams (and any DQs) once
+ * from /console, then drives the projector through staged reveals:
+ *
+ *   idle -> third -> second -> first -> leaderboard
+ *
+ * Each reveal stage is a separate kv write so every device (projector,
+ * coordinator's phone, participants' phones) updates instantly via the
+ * realtime channel.
+ */
+export type CeremonyStage = 'idle' | 'third' | 'second' | 'first' | 'leaderboard';
+
+export interface FinalRanking {
+  /** Numeric rank (1, 2, 3, ...). A 3-way tie can have three entries at
+   *  rank 19 with the next entry at 22, etc. Disqualified teams use rank
+   *  -1 and have disqualified=true so the ceremony renders them grayed
+   *  out at the bottom of the leaderboard. */
+  rank: number;
+  /** Team number on the printed roster (1-24). Optional - mostly cosmetic. */
+  teamNumber?: number;
+  /** Team display name shown on the projector. */
+  teamName: string;
+  /** Total marks awarded by the panel. */
+  marks: number;
+  /** Optional team_id if we matched this entry to a record in the teams kv. */
+  teamId?: string;
+  /** Optional brand colour for the team stripe. Falls back to a palette. */
+  color?: string;
+  disqualified?: boolean;
+}
+
+export interface FinalResults {
+  rankings: FinalRanking[];
+  stage: CeremonyStage;
+  /** When each reveal was triggered. Lets us drive entrance animations
+   *  off a fresh timestamp instead of guessing on first render. */
+  revealedAt?: Partial<Record<CeremonyStage, number>>;
+}
+
+export function useFinalResults(): [FinalResults | null, (v: FinalResults | null) => void] {
+  const [value, set] = useSyncedValue<FinalResults | null>(PATHS.finalResults, null);
+  return [value, set];
+}
+
+export function setFinalResults(v: FinalResults | null): void {
+  void writeSynced(PATHS.finalResults, v);
+}
+
+/** Convenience: flip just the ceremony stage without rewriting the rankings. */
+export function setCeremonyStage(current: FinalResults | null, stage: CeremonyStage): void {
+  if (!current) {
+    // No rankings entered yet - allow stage to be set anyway so the
+    // projector can show idle / a placeholder before data exists.
+    setFinalResults({ rankings: [], stage, revealedAt: { [stage]: Date.now() } });
+    return;
+  }
+  setFinalResults({
+    ...current,
+    stage,
+    revealedAt: { ...(current.revealedAt ?? {}), [stage]: Date.now() },
+  });
+}
+
+/** Pull the top-3 entries in display order ([third, second, first]). */
+export function topThree(results: FinalResults | null): { first?: FinalRanking; second?: FinalRanking; third?: FinalRanking } {
+  if (!results) return {};
+  const byRank = (r: number) => results.rankings.find((x) => x.rank === r && !x.disqualified);
+  return { first: byRank(1), second: byRank(2), third: byRank(3) };
 }
 
 // ─── Reset all event data (coordinator-only nuke) ────────────────────────────

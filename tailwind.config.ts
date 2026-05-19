@@ -67,6 +67,25 @@ const config: Config = {
         'reveal-up':       { from: { opacity: '0', transform: 'translateY(24px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
         'sweep-x':         { from: { transform: 'translateX(-105%)' }, to: { transform: 'translateX(105%)' } },
         'slide-in':        { from: { opacity: '0', transform: 'translateY(18px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
+        // Prize-ceremony animations
+        'champion-rise':   {
+          '0%':   { opacity: '0', transform: 'translateY(60px) scale(0.7)' },
+          '60%':  { opacity: '1', transform: 'translateY(-8px) scale(1.04)' },
+          '100%': { opacity: '1', transform: 'translateY(0)    scale(1)' },
+        },
+        'confetti-fall': {
+          '0%':   { opacity: '0', transform: 'translate3d(0, -10vh, 0) rotate(0deg)' },
+          '10%':  { opacity: '1' },
+          '100%': { opacity: '1', transform: 'translate3d(var(--confetti-x, 0), 110vh, 0) rotate(720deg)' },
+        },
+        'leaderboard-row': {
+          from: { opacity: '0', transform: 'translateX(-12px)' },
+          to:   { opacity: '1', transform: 'translateX(0)' },
+        },
+        'medal-shimmer': {
+          '0%, 100%': { filter: 'brightness(1)' },
+          '50%':      { filter: 'brightness(1.25)' },
+        },
       },
       animation: {
         'spin-slow':      'spin-slow 16s linear infinite',
@@ -83,6 +102,10 @@ const config: Config = {
         'reveal-up':      'reveal-up 0.7s cubic-bezier(0.2, 0.7, 0.1, 1) both',
         'sweep-x':        'sweep-x 1.4s cubic-bezier(0.7, 0, 0.3, 1) forwards',
         'slide-in':       'slide-in 0.7s cubic-bezier(0.2, 0.7, 0.1, 1) both',
+        'champion-rise':  'champion-rise 1.2s cubic-bezier(0.2, 1.4, 0.4, 1) both',
+        'confetti-fall':  'confetti-fall var(--confetti-dur, 3.5s) ease-in var(--confetti-delay, 0s) infinite',
+        'leaderboard-row':'leaderboard-row 0.5s ease-out both',
+        'medal-shimmer':  'medal-shimmer 2.2s ease-in-out infinite',
       },
       backgroundImage: {
         'gradient-brand':    'linear-gradient(135deg, #6366F1, #A78BFA, #22D3EE)',
