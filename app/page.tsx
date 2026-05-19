@@ -7,7 +7,7 @@ import { ClientOnly } from '@/components/ClientOnly';
 import { ToastProvider } from '@/components/Toast';
 import { readOwnTeam, type Team } from '@/lib/teams';
 import {
-  useFinalResults,
+  usePublicReveal,
   useGallery,
   type CeremonyStage,
   type FinalRanking,
@@ -42,18 +42,11 @@ function ParticipantShell() {
   return <div className="grid min-h-screen w-screen place-items-center bg-bg text-mute font-mono text-[12px]">···</div>;
 }
 
-// What ranks are visible at each stage. 'leaderboard' = all.
-function visibleRanksFor(stage: CeremonyStage): 'all' | Set<number> {
-  if (stage === 'idle')        return new Set();
-  if (stage === 'third')       return new Set([3]);
-  if (stage === 'second')      return new Set([2, 3]);
-  if (stage === 'first')       return new Set([1, 2, 3]);
-  if (stage === 'leaderboard') return 'all';
-  return new Set();
-}
-
 function ParticipantLive() {
-  const [results] = useFinalResults();
+  // Participants read the stage-filtered publicReveal. The master
+  // finalResults is hidden by Postgres RLS - even DevTools can't dig it
+  // out from this client. Nothing is in memory until it's revealed.
+  const results = usePublicReveal();
   const [own, setOwn] = useState<Team | null>(null);
   const gallery = useGallery();
 
@@ -62,28 +55,20 @@ function ParticipantLive() {
   }, []);
 
   const stage: CeremonyStage = results?.stage ?? 'idle';
-  const visible = visibleRanksFor(stage);
 
-  // Filter the rankings the participant is allowed to see right now.
-  const revealedEntries: FinalRanking[] =
-    visible === 'all'
-      ? results?.rankings ?? []
-      : (results?.rankings ?? []).filter((r) => visible.has(r.rank) && !r.disqualified);
+  // publicReveal already contains ONLY the entries the audience is
+  // allowed to see right now, so we can just use the array directly.
+  const revealedEntries: FinalRanking[] = results?.rankings ?? [];
 
-  // Their own entry, only if their rank is in the visible set.
-  const ownEntry: FinalRanking | undefined = (() => {
-    if (!own || !results) return undefined;
-    const candidate = results.rankings.find(
-      (r) => r.teamId === own.id || r.teamName.toLowerCase() === own.name.toLowerCase(),
-    );
-    if (!candidate) return undefined;
-    if (visible === 'all') return candidate;
-    if (candidate.disqualified) {
-      // DQ result only visible on the final leaderboard stage.
-      return undefined;
-    }
-    return visible.has(candidate.rank) ? candidate : undefined;
-  })();
+  // Their own entry - present only if it's in publicReveal (i.e. their
+  // rank has actually been revealed). Cross-check by teamId first
+  // (registered teams), then by case-insensitive name match.
+  const ownEntry: FinalRanking | undefined =
+    own
+      ? revealedEntries.find(
+          (r) => r.teamId === own.id || r.teamName.toLowerCase() === own.name.toLowerCase(),
+        )
+      : undefined;
 
   return (
     <main className="mx-auto max-w-[820px] px-5 pb-24 pt-10">
@@ -146,7 +131,7 @@ function ParticipantLive() {
             Moments captured at the <span className="font-serif italic font-light text-accent">booth.</span>
           </h2>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {gallery.slice(0, 12).map((p) => (
+            {gallery.map((p) => (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 key={p.id}
@@ -156,6 +141,9 @@ function ParticipantLive() {
                 loading="lazy"
               />
             ))}
+          </div>
+          <div className="mt-3 text-center font-mono text-[10px] uppercase tracking-[0.22em] text-mute">
+            {gallery.length} {gallery.length === 1 ? 'photo' : 'photos'} from the booth
           </div>
         </section>
       )}

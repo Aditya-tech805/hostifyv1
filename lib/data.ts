@@ -34,7 +34,8 @@ const PATHS = {
   messages:      'messages',       // messages/{slot} → ScreenMessage (faculty/hod/studentCoord — projector carousel)
   seniors:       'seniors',         // seniors/{id} → Senior (LinkedIn-connect list)
   presentations: 'presentations',   // presentations/{teamId} → Presentation (PPT/PDF metadata)
-  finalResults:  'finalResults',    // FinalResults — post-event prize ceremony state
+  finalResults:  'finalResults',    // FinalResults — coord-only master copy of the ceremony state
+  publicReveal:  'publicReveal',    // FinalResults — stage-filtered subset readable by everyone
 } as const;
 
 // ─── Teams ───────────────────────────────────────────────────────────────────
@@ -789,28 +790,68 @@ export interface FinalResults {
   revealedAt?: Partial<Record<CeremonyStage, number>>;
 }
 
+/**
+ * Coord-only master copy of the ceremony state. The kv RLS gates SELECT
+ * on this path so anyone without an `app_role: coordinator` JWT gets back
+ * no rows. The coordinator console uses this hook to drive the table.
+ */
 export function useFinalResults(): [FinalResults | null, (v: FinalResults | null) => void] {
   const [value, set] = useSyncedValue<FinalResults | null>(PATHS.finalResults, null);
   return [value, set];
 }
 
+/**
+ * Read what's currently been revealed to the audience. Projector +
+ * participant pages MUST use this, never useFinalResults - publicReveal
+ * is an explicitly-filtered slice and is the only path readable by
+ * non-coordinators. The kv RLS hides finalResults from anon clients.
+ */
+export function usePublicReveal(): FinalResults | null {
+  const [value] = useSyncedValue<FinalResults | null>(PATHS.publicReveal, null);
+  return value;
+}
+
+/**
+ * Given the master results, compute the slice that the audience is
+ * allowed to see. Empty rankings for the idle stage; only the top-N
+ * non-DQ rows for the reveal stages; full list for the leaderboard.
+ */
+function computePublicReveal(master: FinalResults): FinalResults {
+  const { stage, rankings, revealedAt } = master;
+  let visible: FinalRanking[];
+  if (stage === 'idle') {
+    visible = [];
+  } else if (stage === 'third') {
+    visible = rankings.filter((r) => r.rank === 3 && !r.disqualified);
+  } else if (stage === 'second') {
+    visible = rankings.filter((r) => (r.rank === 2 || r.rank === 3) && !r.disqualified);
+  } else if (stage === 'first') {
+    visible = rankings.filter((r) => r.rank >= 1 && r.rank <= 3 && !r.disqualified);
+  } else {
+    // leaderboard
+    visible = rankings;
+  }
+  return { stage, rankings: visible, revealedAt };
+}
+
 export function setFinalResults(v: FinalResults | null): void {
+  // Master write goes to the coord-only path.
   void writeSynced(PATHS.finalResults, v);
+  // Public mirror is recomputed every time. When v is null we wipe the
+  // mirror too so the audience falls back to idle / nothing.
+  if (v == null) {
+    void writeSynced(PATHS.publicReveal, null);
+  } else {
+    void writeSynced(PATHS.publicReveal, computePublicReveal(v));
+  }
 }
 
 /** Convenience: flip just the ceremony stage without rewriting the rankings. */
 export function setCeremonyStage(current: FinalResults | null, stage: CeremonyStage): void {
-  if (!current) {
-    // No rankings entered yet - allow stage to be set anyway so the
-    // projector can show idle / a placeholder before data exists.
-    setFinalResults({ rankings: [], stage, revealedAt: { [stage]: Date.now() } });
-    return;
-  }
-  setFinalResults({
-    ...current,
-    stage,
-    revealedAt: { ...(current.revealedAt ?? {}), [stage]: Date.now() },
-  });
+  const next: FinalResults = current
+    ? { ...current, stage, revealedAt: { ...(current.revealedAt ?? {}), [stage]: Date.now() } }
+    : { rankings: [], stage, revealedAt: { [stage]: Date.now() } };
+  setFinalResults(next);
 }
 
 /** Pull the top-3 entries in display order ([third, second, first]). */

@@ -6,7 +6,7 @@ import { ClientOnly } from '@/components/ClientOnly';
 import { pad } from '@/lib/schedule';
 import {
   useGallery,
-  useFinalResults,
+  usePublicReveal,
   topThree,
   type FinalRanking,
   type FinalResults,
@@ -39,7 +39,11 @@ function ScreenShell() {
 
 function ScreenLive() {
   const [now, setNow] = useState(() => new Date());
-  const [results] = useFinalResults();
+  // Projector reads the stage-filtered publicReveal, NOT the coord-only
+  // master finalResults. If you're tempted to switch this back: don't.
+  // Doing so would re-expose hidden ranks to anyone watching the projector
+  // before the coordinator triggered the reveal.
+  const results = usePublicReveal();
   const gallery = useGallery();
 
   useEffect(() => {
@@ -108,8 +112,10 @@ function IdleSlideshow({ photos }: { photos: Photo[] }) {
 
   return (
     <div className="relative h-full w-full">
-      {/* Background slideshow — each photo cross-fades. Heavy blur + dark
-          overlay so foreground text stays readable against any image. */}
+      {/* Background slideshow — each photo cross-fades behind a VERY heavy
+          blur + dark overlay so the foreground title is what reads. The
+          photos function as ambient brand-coloured wash rather than
+          recognisable images. */}
       {photos.length > 0 && photos.map((p, i) => {
         const active = i === idx % photos.length;
         return (
@@ -121,13 +127,19 @@ function IdleSlideshow({ photos }: { photos: Photo[] }) {
               backgroundImage: `url(${p.url})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              filter: 'blur(28px) saturate(1.1) brightness(0.55)',
-              transform: 'scale(1.08)',
+              // Heavier blur + much lower brightness so the photo reads
+              // as ambient colour rather than a recognisable image.
+              filter: 'blur(72px) saturate(1.2) brightness(0.32)',
+              // Bigger scale hides the blur-induced edge fade-out.
+              transform: 'scale(1.18)',
             }}
           />
         );
       })}
-      <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-bg/40 via-bg/60 to-bg" />
+      {/* Two-layer dark wash on top: vertical gradient + flat veil. Pushes
+          the photos firmly into the background. */}
+      <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-bg/70 via-bg/80 to-bg" />
+      <div aria-hidden className="absolute inset-0 bg-bg/40 backdrop-blur-md" />
 
       {/* Foreground copy */}
       <div className="relative flex h-full flex-col items-center justify-center text-center">
@@ -143,11 +155,6 @@ function IdleSlideshow({ photos }: { photos: Photo[] }) {
         <p className="mx-auto max-w-[1100px] text-[clamp(17px,2vw,26px)] leading-snug text-ink-2">
           Twenty-four teams. Six hours of grit. <b>The panel has spoken.</b> Settle in - we&rsquo;re about to call the top three.
         </p>
-        {photos.length > 0 && (
-          <div className="mt-10 font-mono text-[clamp(11px,1.2vw,14px)] uppercase tracking-[0.24em] text-mute">
-            {photos.length} moments from the day &middot; {(idx % photos.length) + 1} of {photos.length}
-          </div>
-        )}
       </div>
     </div>
   );
