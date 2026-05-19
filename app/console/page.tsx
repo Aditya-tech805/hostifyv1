@@ -106,7 +106,7 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
 // ─── Stage control (big reveal buttons) ─────────────────────────────────────
 
 const STAGE_OPTIONS: { id: CeremonyStage; label: string; desc: string; tint: string }[] = [
-  { id: 'idle',        label: '↺ Idle',                 desc: 'Photo slideshow + ceremony pre-roll',         tint: '#94A3B8' },
+  { id: 'idle',        label: '🛑 Hide everything',     desc: 'Pulls all reveals off the projector AND every participant phone. Use to reset between rehearsals.', tint: '#94A3B8' },
   { id: 'third',       label: '🥉 Reveal 3rd place',    desc: 'Slam in the bronze winner.',                  tint: '#F87171' },
   { id: 'second',      label: '🥈 Reveal 2nd place',    desc: 'Same beat, bigger drama.',                    tint: '#A78BFA' },
   { id: 'first',       label: '🥇 Reveal 1st place',    desc: 'Confetti + gold celebration.',                tint: '#FBBF24' },
@@ -114,8 +114,10 @@ const STAGE_OPTIONS: { id: CeremonyStage; label: string; desc: string; tint: str
 ];
 
 function StageControl({ results }: { results: FinalResults | null }) {
+  const { push: toast } = useToast();
   const stage = results?.stage ?? 'idle';
   const current = STAGE_OPTIONS.find((s) => s.id === stage)!;
+  const isHidden = stage === 'idle';
 
   return (
     <section className="mb-6 rounded-2xl border border-line bg-surface p-5">
@@ -125,8 +127,8 @@ function StageControl({ results }: { results: FinalResults | null }) {
             Stage control
           </h2>
           <p className="mt-1 text-[12.5px] leading-relaxed text-ink-2">
-            Click a stage to switch what the projector shows. <b>Order:</b> Idle &rarr; 3rd &rarr; 2nd &rarr; 1st &rarr; Leaderboard.
-            You can re-click a stage to replay its entrance animation.
+            Click a stage to switch what the projector + every phone shows. <b>Order:</b> Hidden &rarr; 3rd &rarr; 2nd &rarr; 1st &rarr; Leaderboard.
+            Participants see only what&rsquo;s currently revealed - nothing is leaked before its stage.
           </p>
         </div>
         <div className="shrink-0 text-right">
@@ -136,6 +138,22 @@ function StageControl({ results }: { results: FinalResults | null }) {
           </div>
         </div>
       </div>
+
+      {/* PROMINENT panic button at the top - always visible so the coord
+          can blank every screen instantly without scanning the stage grid. */}
+      <button
+        onClick={() => setCeremonyStage(results, 'idle')}
+        disabled={isHidden}
+        className={`mb-3 flex w-full items-center justify-center gap-2 rounded-xl border px-5 py-3.5 font-display text-[14.5px] font-semibold transition-all ${
+          isHidden
+            ? 'cursor-not-allowed border-line bg-surface-2 text-mute'
+            : 'border-danger/50 bg-danger/[0.08] text-danger hover:-translate-y-px hover:border-danger hover:bg-danger/[0.14]'
+        }`}
+      >
+        {isHidden
+          ? '✓ Everything hidden from participants · safe state'
+          : '🛑 Hide everything immediately · wipes the projector + every phone'}
+      </button>
 
       <div className="grid grid-cols-1 gap-2.5 md:grid-cols-5">
         {STAGE_OPTIONS.map((opt) => {
@@ -160,6 +178,21 @@ function StageControl({ results }: { results: FinalResults | null }) {
             </button>
           );
         })}
+      </div>
+
+      {/* Heavier nuke - actually wipes the rankings data from kv. Only use
+          this after the ceremony when nothing should be recoverable. */}
+      <div className="mt-4 border-t border-line pt-4">
+        <button
+          onClick={() => {
+            if (!confirm('Wipe ALL rankings data?\n\nThis deletes every team rank + score from the database. The projector and every phone will fall back to idle. Use this only after the ceremony - it cannot be undone.')) return;
+            setFinalResults(null);
+            toast('All rankings cleared. Stage back to idle.');
+          }}
+          className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-mute hover:text-danger"
+        >
+          ⚠ Wipe all rankings data (post-ceremony cleanup, irreversible)
+        </button>
       </div>
     </section>
   );

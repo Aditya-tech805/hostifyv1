@@ -9,18 +9,24 @@ import { readOwnTeam, type Team } from '@/lib/teams';
 import {
   useFinalResults,
   useGallery,
+  type CeremonyStage,
   type FinalRanking,
 } from '@/lib/data';
 
 /**
- * Participant entry point - post-event Prize Ceremony version.
+ * Participant entry point - Prize Ceremony version.
  *
- * Replaces the original register-and-play landing with a thank-you panel
- * that mirrors the ceremony state on the projector:
- *   - while the ceremony hasn't revealed anything yet: thanks + gallery
- *   - once the team's rank is revealed: a personalised "you finished N"
- *     card with marks + position in the leaderboard
- *   - once the full leaderboard is on screen: a scrollable mirror of it
+ * IMPORTANT: this view *strictly* mirrors the projector's reveal stage.
+ * If the coordinator hasn't clicked "Reveal 3rd" yet, no participant on
+ * their phone sees any rank, score, or even hint of the result. As each
+ * stage is revealed on the projector, the corresponding entries appear
+ * here too.
+ *
+ * The data still lives in a public kv table - so a DevTools-savvy user
+ * could in theory inspect it. The UI gating below covers the casual
+ * case (every other participant in the room). If we need cryptographic
+ * secrecy, the rankings need to move behind a coord-only API endpoint
+ * with stage-gated filtering. (Not done here.)
  */
 export default function ParticipantPage() {
   return (
@@ -36,6 +42,16 @@ function ParticipantShell() {
   return <div className="grid min-h-screen w-screen place-items-center bg-bg text-mute font-mono text-[12px]">···</div>;
 }
 
+// What ranks are visible at each stage. 'leaderboard' = all.
+function visibleRanksFor(stage: CeremonyStage): 'all' | Set<number> {
+  if (stage === 'idle')        return new Set();
+  if (stage === 'third')       return new Set([3]);
+  if (stage === 'second')      return new Set([2, 3]);
+  if (stage === 'first')       return new Set([1, 2, 3]);
+  if (stage === 'leaderboard') return 'all';
+  return new Set();
+}
+
 function ParticipantLive() {
   const [results] = useFinalResults();
   const [own, setOwn] = useState<Team | null>(null);
@@ -45,10 +61,29 @@ function ParticipantLive() {
     setOwn(readOwnTeam());
   }, []);
 
-  const ownEntry: FinalRanking | undefined =
-    own && results
-      ? results.rankings.find((r) => (r.teamId === own.id) || r.teamName.toLowerCase() === own.name.toLowerCase())
-      : undefined;
+  const stage: CeremonyStage = results?.stage ?? 'idle';
+  const visible = visibleRanksFor(stage);
+
+  // Filter the rankings the participant is allowed to see right now.
+  const revealedEntries: FinalRanking[] =
+    visible === 'all'
+      ? results?.rankings ?? []
+      : (results?.rankings ?? []).filter((r) => visible.has(r.rank) && !r.disqualified);
+
+  // Their own entry, only if their rank is in the visible set.
+  const ownEntry: FinalRanking | undefined = (() => {
+    if (!own || !results) return undefined;
+    const candidate = results.rankings.find(
+      (r) => r.teamId === own.id || r.teamName.toLowerCase() === own.name.toLowerCase(),
+    );
+    if (!candidate) return undefined;
+    if (visible === 'all') return candidate;
+    if (candidate.disqualified) {
+      // DQ result only visible on the final leaderboard stage.
+      return undefined;
+    }
+    return visible.has(candidate.rank) ? candidate : undefined;
+  })();
 
   return (
     <main className="mx-auto max-w-[820px] px-5 pb-24 pt-10">
@@ -77,23 +112,27 @@ function ParticipantLive() {
         </h1>
         <p className="mt-4 text-[15px] leading-relaxed text-ink-2">
           Twenty-four teams. Six hours. One panel. Every team that showed up shipped something worth being proud of.
-          The big screen has the full results - we&rsquo;re running through the top three live, then the full standings.
         </p>
       </section>
 
-      {ownEntry && <YourResultCard entry={ownEntry} team={own} />}
+      {/* Stage-aware status banner. Always present so participants know
+          where in the ceremony they are without showing anything they
+          haven't earned the right to see yet. */}
+      <StageBanner stage={stage} />
 
-      {!ownEntry && own && (
-        <section className="mb-10 rounded-2xl border border-dashed border-line-2 bg-surface p-6 text-center">
-          <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.22em] text-mute">Your team</div>
-          <div className="font-display text-[20px] font-bold tracking-tight text-ink">{own.name}</div>
-          <p className="mt-3 text-[13.5px] leading-relaxed text-ink-2">
-            Result not posted yet. Watch the projector or check back in a moment.
-          </p>
-        </section>
+      {/* Personal result card - only renders if the participant's rank
+          falls within the currently-revealed set. */}
+      {ownEntry && <YourResultCard entry={ownEntry} team={own} stage={stage} />}
+
+      {/* Revealed entries so far - the running podium as the ceremony
+          progresses. NOT shown during idle. NOT the full leaderboard
+          until stage === 'leaderboard'. */}
+      {stage !== 'idle' && stage !== 'leaderboard' && revealedEntries.length > 0 && (
+        <RevealedSoFar entries={revealedEntries} />
       )}
 
-      {results && results.rankings.length > 0 && (
+      {/* Full leaderboard only at the final stage. */}
+      {stage === 'leaderboard' && results && results.rankings.length > 0 && (
         <FullLeaderboard rankings={results.rankings} ownTeamId={own?.id} />
       )}
 
@@ -128,7 +167,77 @@ function ParticipantLive() {
   );
 }
 
-function YourResultCard({ entry, team }: { entry: FinalRanking; team: Team | null }) {
+// ─── Stage banner (always visible, gates nothing else away) ─────────────────
+
+function StageBanner({ stage }: { stage: CeremonyStage }) {
+  const meta = (() => {
+    switch (stage) {
+      case 'idle':
+        return {
+          title: 'Results are still under wraps.',
+          body: 'The panel’s scoring is final. The reveal happens on the projector. Keep your eyes on the big screen — nothing here will spoil it.',
+          tint: '#94A3B8',
+          eyebrow: 'Awaiting the ceremony',
+        };
+      case 'third':
+        return {
+          title: 'Third place is revealed.',
+          body: 'Look at the projector for the reveal animation. Second is coming up next.',
+          tint: '#F87171',
+          eyebrow: '🥉 3rd place • live now',
+        };
+      case 'second':
+        return {
+          title: 'Second place is revealed.',
+          body: 'Third and second are now on the board. First place is about to be called.',
+          tint: '#A78BFA',
+          eyebrow: '🥈 2nd place • live now',
+        };
+      case 'first':
+        return {
+          title: 'We have a champion.',
+          body: 'First place is on the projector right now. Stick around for the full standings.',
+          tint: '#FBBF24',
+          eyebrow: '🥇 1st place • live now',
+        };
+      case 'leaderboard':
+        return {
+          title: 'Full standings are out.',
+          body: 'All twenty-four teams below. Scroll your row, take a screenshot, share the day.',
+          tint: '#22D3EE',
+          eyebrow: 'Final leaderboard',
+        };
+    }
+  })();
+
+  return (
+    <section
+      className="mb-8 overflow-hidden rounded-2xl border p-5"
+      style={{
+        background: `linear-gradient(135deg, ${meta.tint}14, transparent 70%)`,
+        borderColor: meta.tint + '40',
+      }}
+    >
+      <div className="font-mono text-[10.5px] uppercase tracking-[0.22em]" style={{ color: meta.tint }}>
+        {meta.eyebrow}
+      </div>
+      <h2 className="mt-1.5 font-display text-[clamp(20px,3vw,26px)] font-bold tracking-tight text-ink">
+        {meta.title}
+      </h2>
+      <p className="mt-2 text-[13.5px] leading-relaxed text-ink-2">{meta.body}</p>
+    </section>
+  );
+}
+
+// ─── Your result (only when your rank is in the revealed set) ───────────────
+
+function YourResultCard({
+  entry, team, stage,
+}: {
+  entry: FinalRanking;
+  team: Team | null;
+  stage: CeremonyStage;
+}) {
   const isTopThree = !entry.disqualified && entry.rank >= 1 && entry.rank <= 3;
   const medal = entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : '';
   const tint = entry.color ?? team?.color ?? '#A78BFA';
@@ -141,7 +250,7 @@ function YourResultCard({ entry, team }: { entry: FinalRanking; team: Team | nul
       }}
     >
       <div className="mb-2 font-mono text-[10.5px] uppercase tracking-[0.22em] text-mute">
-        Your result
+        Your result &middot; just revealed
       </div>
       <div className="flex items-baseline gap-3">
         <div
@@ -155,7 +264,9 @@ function YourResultCard({ entry, team }: { entry: FinalRanking; team: Team | nul
       <div className="mt-2 font-display text-[clamp(22px,3vw,30px)] font-bold tracking-tight text-ink">
         {entry.teamName}
       </div>
-      {!entry.disqualified && (
+      {!entry.disqualified && stage === 'leaderboard' && (
+        // Marks only revealed alongside the final leaderboard so the
+        // podium moments keep their drama on the projector.
         <div className="mt-3 inline-flex items-baseline gap-2 rounded-xl border border-line bg-bg/40 px-4 py-2 backdrop-blur-sm">
           <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-mute">Marks</span>
           <span className="font-display text-[20px] font-bold tabular-nums text-ink">{entry.marks.toFixed(2)}</span>
@@ -163,17 +274,53 @@ function YourResultCard({ entry, team }: { entry: FinalRanking; team: Team | nul
       )}
       {isTopThree && (
         <p className="mt-4 text-[14px] leading-relaxed text-ink-2">
-          <b>Congratulations.</b> You&rsquo;re on the podium. The projector reveal happens at the ceremony - keep your eyes on the big screen.
-        </p>
-      )}
-      {entry.disqualified && (
-        <p className="mt-4 text-[13.5px] leading-relaxed text-mute">
-          Marked DQ by the panel. If this is unexpected, find the coordinator after the ceremony.
+          <b>Congratulations.</b> You&rsquo;re on the podium &mdash; the projector is showing the reveal animation right now.
         </p>
       )}
     </section>
   );
 }
+
+// ─── Revealed-so-far list (top 1-3 progressively, never spoils) ─────────────
+
+function RevealedSoFar({ entries }: { entries: FinalRanking[] }) {
+  // Display in reverse rank order so the most recent reveal is on top
+  // (3 first if only 3, then 2 above when 2 reveals, then 1 above 2 above 3).
+  const ordered = [...entries].sort((a, b) => a.rank - b.rank);
+  return (
+    <section className="mb-10">
+      <div className="mb-3 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.32em] text-mute">
+        <span className="h-px w-8 bg-line-2" />
+        Revealed so far
+      </div>
+      <div className="space-y-2">
+        {ordered.map((r) => {
+          const tint = r.color ?? (r.rank === 1 ? '#FBBF24' : r.rank === 2 ? '#A78BFA' : '#F87171');
+          const medal = r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : '🥉';
+          return (
+            <div
+              key={`${r.teamName}-${r.rank}`}
+              className="flex items-center gap-3 rounded-xl border border-line-2 bg-surface px-4 py-3 shadow-soft"
+              style={{ borderColor: tint + '60' }}
+            >
+              <div className="text-[clamp(28px,5vw,36px)]">{medal}</div>
+              <div className="min-w-0 flex-1">
+                <div className="font-mono text-[10px] uppercase tracking-[0.22em]" style={{ color: tint }}>
+                  Rank #{r.rank}
+                </div>
+                <div className="truncate font-display text-[clamp(17px,2vw,22px)] font-bold tracking-tight text-ink">
+                  {r.teamName}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+// ─── Full leaderboard (stage='leaderboard' only) ────────────────────────────
 
 function FullLeaderboard({ rankings, ownTeamId }: { rankings: FinalRanking[]; ownTeamId?: string }) {
   const sorted = [...rankings].sort((a, b) => {
