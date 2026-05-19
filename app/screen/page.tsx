@@ -112,10 +112,8 @@ function IdleSlideshow({ photos }: { photos: Photo[] }) {
 
   return (
     <div className="relative h-full w-full">
-      {/* Background slideshow — each photo cross-fades behind a VERY heavy
-          blur + dark overlay so the foreground title is what reads. The
-          photos function as ambient brand-coloured wash rather than
-          recognisable images. */}
+      {/* Background slideshow — each photo cross-fades with a light blur
+          so the day still reads while the title sits cleanly on top. */}
       {photos.length > 0 && photos.map((p, i) => {
         const active = i === idx % photos.length;
         return (
@@ -127,19 +125,17 @@ function IdleSlideshow({ photos }: { photos: Photo[] }) {
               backgroundImage: `url(${p.url})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              // Heavier blur + much lower brightness so the photo reads
-              // as ambient colour rather than a recognisable image.
-              filter: 'blur(72px) saturate(1.2) brightness(0.32)',
-              // Bigger scale hides the blur-induced edge fade-out.
-              transform: 'scale(1.18)',
+              // Light blur: photos still recognisable, just softened.
+              filter: 'blur(14px) saturate(1.1) brightness(0.65)',
+              // Slight scale to hide blur-induced edge fade.
+              transform: 'scale(1.06)',
             }}
           />
         );
       })}
-      {/* Two-layer dark wash on top: vertical gradient + flat veil. Pushes
-          the photos firmly into the background. */}
-      <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-bg/70 via-bg/80 to-bg" />
-      <div aria-hidden className="absolute inset-0 bg-bg/40 backdrop-blur-md" />
+      {/* Gentle vertical gradient — just enough contrast to keep the title
+          readable. No backdrop-blur veil this time. */}
+      <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-bg/30 via-bg/45 to-bg/70" />
 
       {/* Foreground copy */}
       <div className="relative flex h-full flex-col items-center justify-center text-center">
