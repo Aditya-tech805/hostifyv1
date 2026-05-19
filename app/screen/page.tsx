@@ -125,8 +125,8 @@ function IdleSlideshow({ photos }: { photos: Photo[] }) {
               backgroundImage: `url(${p.url})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              // Light blur: photos still recognisable, just softened.
-              filter: 'blur(14px) saturate(1.1) brightness(0.65)',
+              // Light blur: photos almost crisp, just a touch softened.
+              filter: 'blur(6px) saturate(1.1) brightness(0.7)',
               // Slight scale to hide blur-induced edge fade.
               transform: 'scale(1.06)',
             }}
