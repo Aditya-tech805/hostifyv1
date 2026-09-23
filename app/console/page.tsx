@@ -113,13 +113,10 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
   const setPhaseOverride = (id: PhaseId) => {
     if (!confirm(`Override phase to "${SCHEDULE.find((p) => p.id === id)?.label}"? This stays locked until you clear it.`)) return;
     setOverride(id);
-    // Also keep the local-only key in sync so getPhaseState in lib/hooks reads it
-    writeString(STORAGE_KEYS.phaseOverride, id);
     toast(`Phase overridden → ${id.toUpperCase()}`);
   };
   const clearOverride = () => {
     setOverride(null);
-    removeKey(STORAGE_KEYS.phaseOverride);
     toast('Override cleared. Auto-advance resumed.');
   };
 
@@ -296,7 +293,7 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
               disabled={!inP2}
               className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-4 text-[15px] font-semibold text-white shadow-glow transition-all hover:-translate-y-px hover:bg-primary-2 hover:shadow-glow-lg disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-mute disabled:shadow-none"
             >
-              {inP2 ? '▶ Spin the wheel' : 'Available in Phase 2 (Idea Development)'}
+              {inP2 ? '▶ Spin the wheel' : `Available in ${SCHEDULE.find((p) => p.id === 'phase2')?.label}`}
             </button>
           )}
           {spotlight && spotlightTeams.length > 0 && (

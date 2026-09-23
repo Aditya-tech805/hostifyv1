@@ -331,7 +331,8 @@ function PhaseSlide({ now, state }: { now: Date; state: ReturnType<typeof useEve
           {cfg.line}{' '}
           {next && <b>{next.label.split(' · ').pop()} at {to12h(next.start)}.</b>}
         </Subtitle>
-        {next && <Countdown label={`${next.short.toLowerCase().replace(/^./, (c) => c.toUpperCase())} in`}>{formatHHMMSS(ms)}</Countdown>}
+        {/* An override before event day makes the clock countdown meaningless; hide it. */}
+        {next && ms >= 0 && ms < 86_400_000 && <Countdown label={`${next.short.toLowerCase().replace(/^./, (c) => c.toUpperCase())} in`}>{formatHHMMSS(ms)}</Countdown>}
       </>
     );
   }

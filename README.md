@@ -6,6 +6,22 @@
 
 Built with **Next.js 14 (App Router) · TypeScript · Tailwind CSS · Supabase (Postgres + Realtime + Storage)**. Frontend and backend live in this one repository and deploy as one app.
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FAditya-tech805%2Fhostifyv1&env=COORD_PIN,JUDGE_PIN,SUPABASE_JWT_SECRET,NEXT_PUBLIC_EVENT_DATE&envDescription=PINs%20for%20the%20organiser%20and%20judges%2C%20a%20long%20random%20JWT%20secret%2C%20and%20the%20event%20date%20(use%20%22today%22%20for%20an%20always-live%20demo).&project-name=hostify)
+
+| Projector: awards reveal | Projector: live phase |
+|---|---|
+| ![Winner reveal on the projector](docs/screenshots/projector-winner.png) | ![Live phase on the projector](docs/screenshots/projector-live.png) |
+| **Organiser console** | **Event landing page** |
+| ![Organiser console](docs/screenshots/console.png) | ![Landing page](docs/screenshots/landing.png) |
+
+<p align="center">
+  <img src="docs/screenshots/phone-dashboard.png" width="240" alt="Team dashboard on a phone" />
+  &nbsp;
+  <img src="docs/screenshots/phone-results.png" width="240" alt="Awards results on a phone" />
+  &nbsp;
+  <img src="docs/screenshots/projector-leaderboard.png" width="420" alt="Final leaderboard on the projector" />
+</p>
+
 ---
 
 ## What it does
@@ -144,7 +160,9 @@ The suite covers the logic where a bug would do the most damage: the awards reve
 
 ## Deploy
 
-Import the repo into [Vercel](https://vercel.com), add the environment variables (mark the server-only ones as *Sensitive*) and deploy. Environment variable changes need a redeploy to take effect.
+Click **Deploy with Vercel** at the top of this README, or import the repo at [vercel.com/new](https://vercel.com/new), then set the environment variables (mark the server-only ones as *Sensitive*). Changes to environment variables need a redeploy to take effect.
+
+**For a quick public demo**, skip the Supabase variables and set `NEXT_PUBLIC_EVENT_DATE=today`. Every visitor then gets their own single-device copy of the event, so the console can be shared openly without anyone affecting anyone else. Add a Supabase project later to turn on cross-device sync.
 
 ```bash
 npm run build && npm start   # production build locally

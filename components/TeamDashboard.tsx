@@ -20,11 +20,12 @@ interface TeamDashboardProps {
 export function TeamDashboard({ team, onEdit }: TeamDashboardProps) {
   return (
     <>
-      {/* Coloured team banner — bright surface with team-colour gradient backdrop */}
+      {/* Coloured team banner — team colour deepening towards the page background,
+          so white text stays readable for every palette colour */}
       <div
         className="relative overflow-hidden rounded-[28px] p-8 shadow-soft-lg"
         style={{
-          background: `linear-gradient(135deg, ${team.color} 0%, color-mix(in srgb, ${team.color} 80%, #ffffff) 60%, #ffffff 100%)`,
+          background: `linear-gradient(135deg, color-mix(in srgb, ${team.color} 70%, #0A0B14) 0%, color-mix(in srgb, ${team.color} 28%, #0A0B14) 100%)`,
         }}
       >
         <div
@@ -35,16 +36,16 @@ export function TeamDashboard({ team, onEdit }: TeamDashboardProps) {
           }}
         />
         <div className="relative">
-          <div className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-white/85 mix-blend-difference">
+          <div className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-white/85">
             Welcome, team
           </div>
-          <h2 className="mt-1 font-display text-3xl font-bold leading-tight tracking-tight text-white mix-blend-difference">
+          <h2 className="mt-1 font-display text-3xl font-bold leading-tight tracking-tight text-white">
             {team.name}
           </h2>
-          <div className="mt-3.5 text-[13px] text-white/90 mix-blend-difference">
+          <div className="mt-3.5 text-[13px] text-white/90">
             {team.members.length} {team.members.length === 1 ? 'member' : 'members'} · {team.members.join(', ')}
           </div>
-          <div className="mt-4 border-t border-white/30 pt-4 text-[14.5px] leading-relaxed text-white mix-blend-difference">
+          <div className="mt-4 border-t border-white/30 pt-4 text-[14.5px] leading-relaxed text-white">
             &ldquo;{team.idea}&rdquo;
           </div>
         </div>

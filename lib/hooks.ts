@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getPhaseState, type PhaseState, type PhaseId } from './schedule';
-import { STORAGE_KEYS, readString } from './storage';
+import { getPhaseState, type PhaseState } from './schedule';
+import { usePhaseOverride } from './data';
 
 /**
  * Live event clock + phase state. Re-renders every second.
- * Honours the coordinator phase override stored in localStorage.
+ * Honours the coordinator phase override, synced to every device.
  *
  * `mounted` indicates the client has hydrated and `now` reflects real time.
  * Before mount we return a deterministic sentinel timestamp so SSR and the
@@ -27,10 +27,7 @@ export function useEventPhase(intervalMs: number = 1000): { now: Date; state: Ph
     return () => window.clearInterval(id);
   }, [intervalMs]);
 
-  // Read override fresh on every tick so override changes propagate.
-  const override = (typeof window !== 'undefined'
-    ? (readString(STORAGE_KEYS.phaseOverride) as PhaseId | null)
-    : null);
+  const [override] = usePhaseOverride();
   const state = getPhaseState(now, override);
   return { now, state, mounted };
 }

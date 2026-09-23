@@ -5,7 +5,6 @@ import { storageKey } from '@/config/event';
 export const STORAGE_KEYS = {
   team:           storageKey('team'),
   mockTeams:      storageKey('mock-teams'),
-  phaseOverride:  storageKey('phase-override'),
   coordAuth:      storageKey('coord-auth'),
   judgeAuth:      storageKey('judge-auth'),
   judgeName:      storageKey('judge-name'),
