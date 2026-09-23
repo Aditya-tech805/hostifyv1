@@ -12,13 +12,14 @@
 // uniqueness check - event WiFi NATs everyone behind one IP, so an
 // IP-based limit would prevent legitimate votes.
 
+import { EVENT } from '@/config/event';
 import { NextResponse } from 'next/server';
 import { createHash, randomUUID } from 'crypto';
 import { signAppJwt } from '@/lib/jwt';
 
 export const runtime = 'nodejs';
 
-const COOKIE_NAME = 'i26_v';
+const COOKIE_NAME = `${EVENT.storagePrefix}_v`;
 const COOKIE_MAX_AGE = 24 * 3600; // 24 hours
 
 const CHOICES = new Set(['wow', 'cool', 'fine']);

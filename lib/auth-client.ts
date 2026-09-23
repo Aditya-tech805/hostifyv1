@@ -8,6 +8,7 @@
 // so RLS policies can authorize the write based on `auth.jwt() ->> 'app_role'`.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { storageKey } from '@/config/event';
 import type { AppRole } from './jwt';
 
 export interface AppToken {
@@ -19,7 +20,7 @@ export interface AppToken {
   team_id?: string;
 }
 
-const KEY = 'innovatrix26.app-token';
+const KEY = storageKey('app-token');
 
 export function readAppToken(): AppToken | null {
   if (typeof window === 'undefined') return null;

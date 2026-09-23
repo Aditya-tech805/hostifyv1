@@ -1,0 +1,250 @@
+'use client';
+
+import { numberWord } from '@/config/event';
+import type { Team } from '@/lib/teams';
+import type { CeremonyStage, FinalRanking, FinalResults } from '@/lib/data';
+
+/**
+ * Awards ceremony — participant view.
+ *
+ * Strictly mirrors the projector: it renders only what is in publicReveal,
+ * which the coordinator's console recomputes on every stage change. Nothing
+ * is shown while the ceremony is idle, and marks only appear alongside the
+ * full leaderboard so the podium keeps its drama on the big screen.
+ */
+export function ParticipantAwards({ results, own }: { results: FinalResults | null; own: Team | null }) {
+  const stage: CeremonyStage = results?.stage ?? 'idle';
+  if (stage === 'idle') return null;
+
+  const revealedEntries: FinalRanking[] = results?.rankings ?? [];
+  // Match by team id first (registered teams), then by case-insensitive name.
+  const ownEntry = own
+    ? revealedEntries.find(
+        (r) => r.teamId === own.id || r.teamName.toLowerCase() === own.name.toLowerCase(),
+      )
+    : undefined;
+
+  return (
+    <div className="mb-8">
+      <StageBanner stage={stage} />
+      {ownEntry && <YourResultCard entry={ownEntry} team={own} stage={stage} />}
+      {stage !== 'leaderboard' && revealedEntries.length > 0 && (
+        <RevealedSoFar entries={revealedEntries} />
+      )}
+      {stage === 'leaderboard' && revealedEntries.length > 0 && (
+        <FullLeaderboard rankings={revealedEntries} ownTeamId={own?.id} />
+      )}
+    </div>
+  );
+}
+
+// ─── Stage banner (always visible, gates nothing else away) ─────────────────
+
+function StageBanner({ stage }: { stage: CeremonyStage }) {
+  const meta = (() => {
+    switch (stage) {
+      case 'idle':
+        return {
+          title: 'Results are still under wraps.',
+          body: 'The panel’s scoring is final. The reveal happens on the projector. Keep your eyes on the big screen — nothing here will spoil it.',
+          tint: '#94A3B8',
+          eyebrow: 'Awaiting the ceremony',
+        };
+      case 'third':
+        return {
+          title: 'Third place is revealed.',
+          body: 'Look at the projector for the reveal animation. Second is coming up next.',
+          tint: '#F87171',
+          eyebrow: '🥉 3rd place • live now',
+        };
+      case 'second':
+        return {
+          title: 'Second place is revealed.',
+          body: 'Third and second are now on the board. First place is about to be called.',
+          tint: '#A78BFA',
+          eyebrow: '🥈 2nd place • live now',
+        };
+      case 'first':
+        return {
+          title: 'We have a champion.',
+          body: 'First place is on the projector right now. Stick around for the full standings.',
+          tint: '#FBBF24',
+          eyebrow: '🥇 1st place • live now',
+        };
+      case 'leaderboard':
+        return {
+          title: 'Full standings are out.',
+          body: 'Every team is on the board below. Find your row, take a screenshot, share the day.',
+          tint: '#22D3EE',
+          eyebrow: 'Final leaderboard',
+        };
+    }
+  })();
+
+  return (
+    <section
+      className="mb-8 overflow-hidden rounded-2xl border p-5"
+      style={{
+        background: `linear-gradient(135deg, ${meta.tint}14, transparent 70%)`,
+        borderColor: meta.tint + '40',
+      }}
+    >
+      <div className="font-mono text-[10.5px] uppercase tracking-[0.22em]" style={{ color: meta.tint }}>
+        {meta.eyebrow}
+      </div>
+      <h2 className="mt-1.5 font-display text-[clamp(20px,3vw,26px)] font-bold tracking-tight text-ink">
+        {meta.title}
+      </h2>
+      <p className="mt-2 text-[13.5px] leading-relaxed text-ink-2">{meta.body}</p>
+    </section>
+  );
+}
+
+// ─── Your result (only when your rank is in the revealed set) ───────────────
+
+function YourResultCard({
+  entry, team, stage,
+}: {
+  entry: FinalRanking;
+  team: Team | null;
+  stage: CeremonyStage;
+}) {
+  const isTopThree = !entry.disqualified && entry.rank >= 1 && entry.rank <= 3;
+  const medal = entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : '';
+  const tint = entry.color ?? team?.color ?? '#A78BFA';
+
+  return (
+    <section
+      className="mb-10 overflow-hidden rounded-[28px] border border-line-2 p-7 shadow-soft-lg"
+      style={{
+        background: `linear-gradient(140deg, ${tint}20, ${tint}05 60%, transparent 100%)`,
+      }}
+    >
+      <div className="mb-2 font-mono text-[10.5px] uppercase tracking-[0.22em] text-mute">
+        Your result &middot; just revealed
+      </div>
+      <div className="flex items-baseline gap-3">
+        <div
+          className="font-display text-[clamp(52px,8vw,84px)] font-extrabold leading-none tabular-nums"
+          style={{ color: tint }}
+        >
+          {entry.disqualified ? 'DQ' : `#${entry.rank}`}
+        </div>
+        {medal && <div className="text-[clamp(32px,5vw,48px)]">{medal}</div>}
+      </div>
+      <div className="mt-2 font-display text-[clamp(22px,3vw,30px)] font-bold tracking-tight text-ink">
+        {entry.teamName}
+      </div>
+      {!entry.disqualified && stage === 'leaderboard' && (
+        // Marks only revealed alongside the final leaderboard so the
+        // podium moments keep their drama on the projector.
+        <div className="mt-3 inline-flex items-baseline gap-2 rounded-xl border border-line bg-bg/40 px-4 py-2 backdrop-blur-sm">
+          <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-mute">Marks</span>
+          <span className="font-display text-[20px] font-bold tabular-nums text-ink">{entry.marks.toFixed(2)}</span>
+        </div>
+      )}
+      {isTopThree && (
+        <p className="mt-4 text-[14px] leading-relaxed text-ink-2">
+          <b>Congratulations.</b> You&rsquo;re on the podium &mdash; the projector is showing the reveal animation right now.
+        </p>
+      )}
+    </section>
+  );
+}
+
+// ─── Revealed-so-far list (top 1-3 progressively, never spoils) ─────────────
+
+function RevealedSoFar({ entries }: { entries: FinalRanking[] }) {
+  // Display in reverse rank order so the most recent reveal is on top
+  // (3 first if only 3, then 2 above when 2 reveals, then 1 above 2 above 3).
+  const ordered = [...entries].sort((a, b) => a.rank - b.rank);
+  return (
+    <section className="mb-10">
+      <div className="mb-3 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.32em] text-mute">
+        <span className="h-px w-8 bg-line-2" />
+        Revealed so far
+      </div>
+      <div className="space-y-2">
+        {ordered.map((r) => {
+          const tint = r.color ?? (r.rank === 1 ? '#FBBF24' : r.rank === 2 ? '#A78BFA' : '#F87171');
+          const medal = r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : '🥉';
+          return (
+            <div
+              key={`${r.teamName}-${r.rank}`}
+              className="flex items-center gap-3 rounded-xl border border-line-2 bg-surface px-4 py-3 shadow-soft"
+              style={{ borderColor: tint + '60' }}
+            >
+              <div className="text-[clamp(28px,5vw,36px)]">{medal}</div>
+              <div className="min-w-0 flex-1">
+                <div className="font-mono text-[10px] uppercase tracking-[0.22em]" style={{ color: tint }}>
+                  Rank #{r.rank}
+                </div>
+                <div className="truncate font-display text-[clamp(17px,2vw,22px)] font-bold tracking-tight text-ink">
+                  {r.teamName}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+// ─── Full leaderboard (stage='leaderboard' only) ────────────────────────────
+
+function FullLeaderboard({ rankings, ownTeamId }: { rankings: FinalRanking[]; ownTeamId?: string }) {
+  const sorted = [...rankings].sort((a, b) => {
+    if (a.disqualified && !b.disqualified) return 1;
+    if (!a.disqualified && b.disqualified) return -1;
+    if (a.disqualified && b.disqualified) return (a.teamNumber ?? 999) - (b.teamNumber ?? 999);
+    return a.rank - b.rank;
+  });
+  return (
+    <section className="mt-4">
+      <div className="mb-3 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.32em] text-mute">
+        <span className="h-px w-8 bg-line-2" />
+        Final standings
+      </div>
+      <h2 className="mb-6 font-display text-[clamp(24px,3vw,36px)] font-bold leading-tight tracking-tight text-ink">
+        All <span className="font-serif italic font-light text-accent">{numberWord(sorted.length)}.</span>
+      </h2>
+      <div className="space-y-1.5">
+        {sorted.map((r, i) => {
+          const isMine = ownTeamId && r.teamId === ownTeamId;
+          const tint = r.color ?? (r.rank === 1 ? '#FBBF24' : r.rank === 2 ? '#A78BFA' : r.rank === 3 ? '#F87171' : 'rgba(245,243,238,0.18)');
+          return (
+            <div
+              key={`${r.teamName}-${i}`}
+              className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 ${
+                r.disqualified
+                  ? 'border-line bg-surface/40 opacity-60'
+                  : isMine
+                    ? 'border-accent/60 bg-accent/[0.06]'
+                    : 'border-line bg-surface'
+              }`}
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-bg font-display text-[14px] font-extrabold tabular-nums">
+                {r.disqualified ? <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-mute">DQ</span> : <span style={{ color: r.rank <= 3 ? tint : undefined }}>{r.rank}</span>}
+              </div>
+              <div className="h-10 w-1 shrink-0 rounded" style={{ background: tint }} />
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-display text-[14px] font-semibold leading-tight tracking-tight text-ink">
+                  {r.teamName} {isMine && <span className="ml-1 font-mono text-[10px] uppercase tracking-[0.16em] text-accent">(you)</span>}
+                </div>
+                {r.teamNumber && (
+                  <div className="font-mono text-[9.5px] uppercase tracking-[0.14em] text-mute">
+                    Team #{String(r.teamNumber).padStart(2, '0')}
+                  </div>
+                )}
+              </div>
+              <div className="shrink-0 font-display text-[14px] font-bold tabular-nums text-ink">
+                {r.marks.toFixed(2)}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}

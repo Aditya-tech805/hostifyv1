@@ -1,125 +1,158 @@
-# INNOVATRIX '26
+# Hostify
 
-A live innovation experience for twenty-four teams · **18 May 2026 · 9:30 AM – 4:15 PM IST** · one URL on every phone.
+[![CI](https://github.com/Aditya-tech805/hostifyv1/actions/workflows/ci.yml/badge.svg)](https://github.com/Aditya-tech805/hostifyv1/actions/workflows/ci.yml)
 
-Built with **Next.js 14 · TypeScript · Tailwind CSS**. Deploys static to Vercel.
+**A real-time platform for running live events from one link.** Participants join on their phones, organisers run the room from a console, judges score on their own devices, and a projector view mirrors everything live. Registration, activities, judging and the awards reveal all run through one app.
 
-## Routes
+Built with **Next.js 14 (App Router) · TypeScript · Tailwind CSS · Supabase (Postgres + Realtime + Storage)**. Frontend and backend live in this one repository and deploy as one app.
 
-| Route | Audience | Purpose |
+---
+
+## What it does
+
+| Stage of the event | What Hostify provides |
+|---|---|
+| **Before** | Event landing page with a live countdown, schedule timeline, speaker notes and judges panel. Team registration with server-side validation. Printable QR poster for the entrance. |
+| **Live** | Phase-aware schedule (activities unlock and lock automatically), team dashboard, networking bingo, photo booth with branded frames and a shared gallery, team wall, connect list, live word-cloud polls, timed idea sprints, mentor pings, spotlight wheel, pause-the-room. |
+| **Judging** | Presenter queue, per-judge scoring on configurable criteria, rate-limited audience voting with dedup, presentation timer, team slide uploads. |
+| **Awards** | Staged podium reveal (3rd → 2nd → 1st → full leaderboard) driven from the console. The projector and every phone update together, and hidden results are never sent to clients before their reveal. |
+
+### Roles and routes
+
+| Route | Who | Purpose |
 |---|---|---|
-| `/` | Participants | Register team, dashboard, activity hub |
-| `/activities/idea-cards` | Participants (Phase 2) | Random pitch-sharpening prompts |
-| `/activities/bingo` | Participants (Phase 2) | 4x4 networking missions |
-| `/activities/pitch-lab` | Participants (Phase 2) | 5-step pitch coaching |
-| `/console` | Coordinator (PIN from `COORD_PIN` env var) | Phase override, spotlight, team list |
-| `/judges` | Judges (PIN from `JUDGE_PIN` env var) | Score 24 teams on 5 criteria |
-| `/mentor` | Mentors (same PIN as judges) | Send pings to teams during Phase 2 |
-| `/screen` | Projector | Full-viewport phase-aware display (press F for fullscreen) |
+| `/` | Participants | Landing + registration, then the team dashboard and awards results |
+| `/activities/*` | Participants | `bingo`, `booth`, `team-wall`, `connect`, `vote` |
+| `/console` | Organiser (PIN) | Run the event: phase override, spotlight, queue, polls, sprints, timer, awards, reset |
+| `/judges` | Judges (PIN) | Score each team across the judging criteria |
+| `/mentor` | Mentors (judge PIN) | Send pings to teams |
+| `/screen` | Projector | Full-screen live display (press **F** for fullscreen, ← → to step slides) |
+| `/qr` | Entrance desk | Printable QR code pointing at the event URL |
 
-## Stack
+---
 
-- Next.js 14 (App Router) · TypeScript · Tailwind CSS 3.4
-- Google Fonts via `next/font`: Space Grotesk · Inter · JetBrains Mono
-- **Supabase Realtime** for cross-device state sync (free tier: 500 concurrent connections)
-- LocalStorage fallback when Supabase env vars are missing — the app stays usable in single-device mode
-- Deploys to Vercel as static files; the only "backend" is Supabase BaaS (no server you maintain)
+## Architecture
 
-## Run locally
+```
+┌──────────────────────────── one repository, one deploy ────────────────────────────┐
+│                                                                                     │
+│  FRONTEND  (app/, components/)            BACKEND  (app/api/, lib/jwt.ts,           │
+│  React client pages per role                        supabase/migrations/)           │
+│   participant · console · judges ·         Next.js route handlers (Node runtime)    │
+│   mentor · projector                        POST /api/auth/coordinator              │
+│        │                                    POST /api/auth/judge (+ /check-pin)      │
+│        │ reads + realtime subscribe         POST /api/team/register                 │
+│        │ (anon key, RLS-checked)            POST /api/team/update                   │
+│        ▼                                    POST /api/vote                          │
+│  lib/sync.ts  ◄──── Supabase Realtime ────►     │  validates input, verifies PINs,  │
+│        │                                        │  signs role-scoped JWTs           │
+│        │ writes with role JWT                   ▼                                   │
+│        └──────────────────────────────►  Supabase Postgres                          │
+│                                            kv table + Row-Level Security            │
+│                                            vote_log (append-only, dedup)            │
+│                                            Storage: gallery · avatars · slides      │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Frontend.** Each role is a client page under `app/`. Shared UI is in `components/`, including `components/awards/` for the ceremony module. State is read through typed hooks in `lib/data.ts` (`useAllTeams()`, `usePoll()`, `usePublicReveal()` and so on), which sit on a small sync layer.
+
+**Sync layer (`lib/sync.ts`).** A path-keyed store (`teams/<id>`, `poll`, `publicReveal`, …) backed by one Postgres `kv` table and pushed to every device over Supabase Realtime. With no Supabase keys configured it falls back to `localStorage` with cross-tab `storage` events, so the whole app runs on a single machine with zero setup.
+
+**Backend.**
+- `app/api/*` route handlers are the only place secrets are used. They check organiser and judge PINs with constant-time comparison, validate and sanitise team input (`lib/team-validate.ts`), and issue **HS256 JWTs** (12-hour TTL) signed with the Supabase JWT secret (`lib/jwt.ts`). The tokens carry an `app_role` claim (`coordinator`, `judge` or `team`) plus `team_id` or `judge_name`.
+- `supabase/migrations/` holds the schema and security rules. The Postgres function `app_can_write_kv(path)` authorises every write by role: organisers can write anything, judges only their own scores and pings, teams only their own records. Audience votes go through `/api/vote`, which deduplicates on an HttpOnly-cookie fingerprint with a unique index on `vote_log`. The master awards results are hidden from non-organisers by RLS; clients only ever read the stage-filtered `publicReveal` copy.
+
+### Project structure
+
+```
+app/                      Pages (frontend) and API routes (backend)
+  api/                    auth · team register/update · vote
+  activities/             bingo · booth · connect · team-wall · vote
+  console/ judges/ mentor/ screen/ qr/
+components/               Shared UI; components/awards/ = ceremony module
+config/event.ts           ← the one file an organiser edits to host their event
+lib/                      sync layer, data hooks, schedule, JWT, validation
+supabase/migrations/      SQL schema + RLS, run in numeric order
+tests/                    Vitest unit tests for the server and domain logic
+```
+
+---
+
+## Getting started
 
 ```bash
 npm install
-npm run dev
+cp .env.example .env.local   # fill in values, see below
+npm run dev                  # http://localhost:3000
 ```
 
-Open http://localhost:3000
+With the Supabase variables left empty, the app runs in single-device mode (`localStorage`), which is enough to click through every screen. For the PIN-protected pages, set `COORD_PIN`, `JUDGE_PIN` and any long random `SUPABASE_JWT_SECRET`.
 
-## Build & deploy
+### Supabase setup (multi-device realtime)
+
+1. Create a free project at [supabase.com](https://supabase.com).
+2. In **SQL Editor**, run each file in [`supabase/migrations/`](./supabase/migrations) **in numeric order** (`001` → `008`).
+3. From **Settings → API**, copy the project URL, the `anon` key and the JWT secret into `.env.local`.
+4. Restart `npm run dev`. Open two browsers, register a team in one and watch it appear in the other.
+
+### Environment variables
+
+| Variable | Scope | Purpose |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | public | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | public | Anon key. Every write is still authorised by RLS |
+| `SUPABASE_JWT_SECRET` | **server only** | Signs role JWTs that RLS trusts |
+| `COORD_PIN` / `JUDGE_PIN` | **server only** | 4–8 digit PINs for the organiser and judges |
+| `NEXT_PUBLIC_EVENT_DATE` | optional | Override the event date, or `today` for an always-live demo |
+| `NEXT_PUBLIC_SITE_URL` | optional | Canonical URL for Open Graph metadata |
+
+Never prefix the server-only variables with `NEXT_PUBLIC_`, and never commit `.env.local`.
+
+---
+
+## Hosting your own event
+
+Everything event-specific lives in [`config/event.ts`](./config/event.ts):
+
+- **Identity:** wordmark, edition, full name, tagline, organiser
+- **When:** date, timezone, expected team count
+- **Schedule:** five phases with times, labels, descriptions and colours. Activities unlock according to the phase.
+- **Content:** landing-page welcome notes and the labels for the projector's message slots
+- **Namespacing:** `storagePrefix` keeps two events on one domain from sharing browser state
+
+Judging criteria and bingo missions are in [`lib/activities.ts`](./lib/activities.ts). The colour palette is in [`tailwind.config.ts`](./tailwind.config.ts).
+
+The judges panel, connect list, projector messages and awards rankings are managed live from `/console` and need no code changes.
+
+### Running the day
+
+1. **Before doors open:** `/console` → *Reset event data* for a clean start. Put `/screen` on the projector and `/qr` at the entrance.
+2. **Rehearsal:** turn on *Preview mode* to unlock every activity, or use *Phase override* to jump to any phase. Turn both off afterwards.
+3. **Judging:** tap a team in *Up Next* to put them on the projector, open audience voting and focus the judges.
+4. **Awards:** paste final rankings into *Awards* (CSV or TSV), then step through *Reveal 3rd → 2nd → 1st → Leaderboard*. *Hide everything* clears every screen instantly.
+
+---
+
+## Tests
 
 ```bash
-npm run build      # produces .next/
-npm start          # serves the prod build locally
+npm test            # Vitest, runs in ~1s
+npm run typecheck
 ```
 
-Vercel: import the repo, hit deploy. Zero config needed.
+The suite covers the logic where a bug would do the most damage: the awards reveal filter (nothing leaks before its stage), JWT signing and tamper/expiry rejection, team input sanitisation (invisible and bidi characters, length caps, colour allowlist), and the phase clock. GitHub Actions runs the type check, tests and a production build on every push and pull request.
 
-## Dev: seed mock teams
+## Deploy
 
-To populate the team list (for testing console and judges before real registrations):
+Import the repo into [Vercel](https://vercel.com), add the environment variables (mark the server-only ones as *Sensitive*) and deploy. Environment variable changes need a redeploy to take effect.
 
-```js
-localStorage.setItem('innovatrix26.mock-teams', JSON.stringify([
-  { id: 'mock-1', name: 'Apex',    color: '#7c3aed', members: ['Riya','Aman'],         idea: 'Real-time sign-language to text via webcam', registeredAt: Date.now() },
-  { id: 'mock-2', name: 'Aether',  color: '#84cc16', members: ['Pri','Vik','Sneha'],   idea: 'Hyperlocal weather alerts for farmers via SMS', registeredAt: Date.now() },
-  { id: 'mock-3', name: 'Nimbus',  color: '#f97316', members: ['Diya'],                idea: 'Mood-aware playlists from your sleep data', registeredAt: Date.now() },
-  { id: 'mock-4', name: 'Ravine',  color: '#0ea5e9', members: ['Rohan','Tanvi'],       idea: 'Anonymous community reporting for road hazards', registeredAt: Date.now() },
-  { id: 'mock-5', name: 'Polaris', color: '#f43f5e', members: ['Karan','Maya'],        idea: 'AI tutor that adapts to your subject anxiety', registeredAt: Date.now() },
-])); location.reload();
+```bash
+npm run build && npm start   # production build locally
 ```
 
-## Supabase setup (10 minutes, for cross-device sync)
+## Security notes
 
-The app works without Supabase — it falls back to localStorage and runs single-device. Once you do this setup, every phone + projector syncs in real time.
-
-1. Go to [supabase.com](https://supabase.com) → **Start your project** → sign up (free, no card)
-2. Create a project named `innovatrix-26` → pick a region close to you (Mumbai if you're in India) → set a database password (you won't need it after setup)
-3. Wait ~1 minute for the project to provision
-4. In the left sidebar: **SQL Editor** → **New query** → paste the contents of [`supabase-setup.sql`](./supabase-setup.sql) → **Run**. Should see "Success. No rows returned."
-5. **Settings → API** → copy `Project URL` and `anon public` key
-6. In your repo, copy `.env.example` → `.env.local` and paste:
-   ```
-   NEXT_PUBLIC_SUPABASE_URL=https://<project-id>.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=<long-anon-key>
-   ```
-7. Restart `npm run dev`. Open two browser windows — register a team in one, see it appear instantly in the other. Done.
-
-RLS is tightened by the `supabase-phase2-rls.sql`, `supabase-phase3-rls.sql`, and `supabase-phase4-*.sql` migrations - run those in order after setup. See [memory: security model](.claude) for the layered JWT / RLS architecture.
-
-## Security setup
-
-The app verifies PINs server-side and signs JWTs with the Supabase JWT secret. Three server-only env vars are required:
-
-```
-SUPABASE_JWT_SECRET=<long base64 string from Supabase Dashboard -> Settings -> API -> JWT Settings>
-COORD_PIN=<your 4-8 digit coordinator PIN>
-JUDGE_PIN=<your 4-8 digit judge PIN (mentors share this)>
-```
-
-**Never** prefix these with `NEXT_PUBLIC_` and **never** commit `.env.local`.
-
-## Test the activities right now
-
-The phase-aware unlocks gate everything until 10:45 AM on May 18. To preview activities before then:
-
-1. Open [/console](http://localhost:3000/console), enter your coordinator PIN
-2. Tap **Phase 2** under "Phase override" (confirm dialog)
-3. Open [/](http://localhost:3000/) in another tab — activity cards now show `LIVE`
-4. When done, return to console → "Clear override" to resume auto-clock
-
-## Brand
-
-| Role | Colour |
-|---|---|
-| Background | `#0a0a0f` near-black |
-| Surface | `#16161e` |
-| Primary | `#7c3aed` electric violet |
-| Accent | `#84cc16` lime |
-| Spark | `#f97316` coral |
-| Ink | `#f5f3ee` warm cream |
-
-## Status
-
-- [x] Next.js + TypeScript + Tailwind scaffold
-- [x] Brand foundation (fonts, palette, asterisk-burst mark)
-- [x] Phase 1 registration · team dashboard · live clock
-- [x] Coordinator console + server PIN auth + phase override + spotlight picker
-- [x] Judges console + per-judge scores (auto-save sliders + notes)
-- [x] Mentor console + ping system
-- [x] Big screen (projector) with rotating carousel + persistent QR
-- [x] Phase 2 activities: Idea Card Roulette · Pitch Lab · Networking Bingo · Photo Booth · Team Wall
-- [x] Phase 3 audience vote / final reveal
-- [x] Supabase Realtime cross-device sync
-- [x] Server-issued JWTs + per-path RLS authorisation (4 phases shipped)
-- [x] Rate-limited /api/vote with cookie-based device fingerprint
-
-`legacy/` contains the prior single-file HTML prototype.
+- PINs and the JWT secret never reach the browser bundle. They are only read inside `app/api/*`.
+- All writes are authorised in Postgres by RLS, not just in the UI.
+- Awards results are protected at the database level: the master copy isn't readable without an organiser token.
+- Known trade-offs, accepted for a one-day event: no per-row rate limit on the `kv` table, and vote dedup is per-cookie, so a determined user who clears cookies can vote again. Both are traceable and slow to exploit.

@@ -55,10 +55,6 @@ const config: Config = {
         shake:             { '0%, 100%': { transform: 'translateX(0)' }, '20%, 60%': { transform: 'translateX(-6px)' }, '40%, 80%': { transform: 'translateX(6px)' } },
         'pop-in':          { from: { opacity: '0', transform: 'scale(0.85)' }, to: { opacity: '1', transform: 'scale(1)' } },
         'fade-in':         { from: { opacity: '0' }, to: { opacity: '1' } },
-        // x-cycle keyframe + animation removed: previously rotated the X in
-        // INNOVATRIX +/- 8 degrees, which at tight tracking caused the X
-        // to overlap the preceding I and read as INNOVATRX. The hero is
-        // now one continuous wordmark with a gradient-shift animation.
         'pulse-soft':      { '0%, 100%': { opacity: '1', transform: 'scale(1)' }, '50%': { opacity: '0.5', transform: 'scale(0.8)' } },
         bounce:            { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-8px)' } },
         'float-slow':      { '0%, 100%': { transform: 'translate(0, 0)' }, '50%': { transform: 'translate(20px, -30px)' } },
@@ -67,7 +63,7 @@ const config: Config = {
         'reveal-up':       { from: { opacity: '0', transform: 'translateY(24px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
         'sweep-x':         { from: { transform: 'translateX(-105%)' }, to: { transform: 'translateX(105%)' } },
         'slide-in':        { from: { opacity: '0', transform: 'translateY(18px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
-        // Prize-ceremony animations
+        // Awards-ceremony animations
         'champion-rise':   {
           '0%':   { opacity: '0', transform: 'translateY(60px) scale(0.7)' },
           '60%':  { opacity: '1', transform: 'translateY(-8px) scale(1.04)' },

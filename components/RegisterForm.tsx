@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { TEAM_COLORS, type Team } from '@/lib/teams';
 import { useToast } from './Toast';
+import { EVENT } from '@/config/event';
 
 interface RegisterFormProps {
   initial?: Team;
@@ -46,7 +47,7 @@ export function RegisterForm({ initial, onSubmit }: RegisterFormProps) {
       registeredAt: initial?.registeredAt ?? Date.now(),
     };
     onSubmit(team);
-    toast('Locked in. Welcome to INNOVATRIX.');
+    toast(`Locked in. Welcome to ${EVENT.name}.`);
   };
 
   return (

@@ -1,5 +1,5 @@
 -- ─────────────────────────────────────────────────────────────────────────────
--- INNOVATRIX 26 · Phase 2 RLS lockdown
+-- Hostify · Phase 2 RLS lockdown
 --
 -- Run this AFTER Phase 1 (server-side JWT auth) is deployed and tested.
 -- Paste this into the Supabase SQL Editor → Run.

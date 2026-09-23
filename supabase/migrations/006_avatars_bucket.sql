@@ -1,5 +1,5 @@
 -- ============================================================================
--- INNOVATRIX 26 - Avatars bucket (judges + seniors profile photos)
+-- Hostify - Avatars bucket (judges + seniors profile photos)
 --
 -- Run this in Supabase SQL Editor. Coordinator uploads judge / senior
 -- photos from /console; participants and the projector display them

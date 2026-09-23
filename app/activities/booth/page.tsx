@@ -19,8 +19,16 @@ import { ToastProvider, useToast } from '@/components/Toast';
 import { useGallery, uploadGalleryPhoto, deleteGalleryPhoto, type Photo } from '@/lib/data';
 import { readOwnTeam, type Team } from '@/lib/teams';
 import { readString, STORAGE_KEYS } from '@/lib/storage';
+import { EVENT, EVENT_DATE_LONG, EVENT_DATE_SHORT, EVENT_DATE_DOTTED, WRAP_TIME } from '@/config/event';
 
 const OUTPUT_SIZE = 1080;
+
+// Frame copy derived from the event config.
+const FRAME_NAME = EVENT.name.toUpperCase();
+const FRAME_DATE = EVENT_DATE_LONG.toUpperCase();
+const FRAME_MONTH_YEAR = EVENT_DATE_LONG.split(' ').slice(1).join(' ');
+// Cover "issue number": digits from the edition chip, else the 2-digit year.
+const ISSUE_NO = EVENT.edition.replace(/\D/g, '') || EVENT_DATE_DOTTED.slice(-2);
 
 // ─── Page shell ──────────────────────────────────────────────────────────────
 
@@ -139,20 +147,20 @@ const drawMarquee: FrameTemplate['drawOverlay'] = (ctx, size, team, fonts) => {
   ctx.fillStyle = grad;
   ctx.fillRect(0, size - barHeight, size, barHeight);
 
-  // INNOVATRIX wordmark
+  // Event name wordmark
   const padX = Math.round(size * 0.045);
   ctx.fillStyle = '#FFFFFF';
   const titleSize = Math.round(size * 0.052);
   ctx.font = `bold ${titleSize}px ${fonts.display}`;
   ctx.textBaseline = 'top';
   ctx.textAlign = 'left';
-  ctx.fillText(`INNOVATRIX '26`, padX, size - barHeight + Math.round(barHeight * 0.18));
+  ctx.fillText(FRAME_NAME, padX, size - barHeight + Math.round(barHeight * 0.18));
 
   // Team / date sub-line
   const subSize = Math.round(size * 0.026);
   ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
   ctx.font = `${subSize}px ${fonts.mono}`;
-  ctx.fillText(`TEAM ${team.name.toUpperCase()} · 18 MAY 2026`, padX, size - barHeight + Math.round(barHeight * 0.62));
+  ctx.fillText(`TEAM ${team.name.toUpperCase()} · ${FRAME_DATE}`, padX, size - barHeight + Math.round(barHeight * 0.62));
 
   // Top-right team-color asterisk badge
   const badgeR = Math.round(size * 0.048);
@@ -188,7 +196,7 @@ const drawPolaroid: FrameTemplate['drawOverlay'] = (ctx, size, team, fonts) => {
   const subSize = Math.round(size * 0.022);
   ctx.fillStyle = '#64748B';
   ctx.font = `${subSize}px ${fonts.mono}`;
-  ctx.fillText(`INNOVATRIX '26  ·  18 MAY 2026`, size / 2, nameY + Math.round(nameSize * 1.35));
+  ctx.fillText(`${FRAME_NAME}  ·  ${FRAME_DATE}`, size / 2, nameY + Math.round(nameSize * 1.35));
 };
 
 // ─── Template 3: Pass (backstage event laminate) ─────────────────────────────
@@ -243,10 +251,10 @@ const drawPass: FrameTemplate['drawOverlay'] = (ctx, size, team, fonts) => {
   const subY = botY + Math.round(botH * 0.62);
   ctx.fillText(`ROW A`, padX, subY);
   ctx.fillText(`SEAT ${String(team.members.length).padStart(2, '0')}`, padX + Math.round(size * 0.14), subY);
-  ctx.fillText(`18.05.26`, padX + Math.round(size * 0.30), subY);
+  ctx.fillText(EVENT_DATE_DOTTED, padX + Math.round(size * 0.30), subY);
   // VOID line
   ctx.fillStyle = '#F87171';
-  ctx.fillText(`VOID AFTER 16:00 IST`, padX, subY + Math.round(subSize * 1.55));
+  ctx.fillText(`VOID AFTER ${WRAP_TIME} ${EVENT.tzLabel}`.toUpperCase(), padX, subY + Math.round(subSize * 1.55));
 
   // Right side: barcode-style vertical lines
   const barcodeX = size - padX - Math.round(size * 0.22);
@@ -305,19 +313,24 @@ const drawCover: FrameTemplate['drawOverlay'] = (ctx, size, team, fonts) => {
   ctx.fillStyle = botGrad;
   ctx.fillRect(0, size * 0.55, size, size * 0.45);
 
-  // Big INNOVATRIX wordmark at top — extreme tracking
+  // Big wordmark at top — extreme tracking. Shrinks to fit long wordmarks.
   ctx.fillStyle = '#F5F3EE';
-  const titleSize = Math.round(size * 0.11);
+  let titleSize = Math.round(size * 0.11);
   ctx.font = `900 ${titleSize}px ${fonts.display}`;
+  const titleW = ctx.measureText(EVENT.wordmark).width;
+  if (titleW > size - padX * 2) {
+    titleSize = Math.floor(titleSize * (size - padX * 2) / titleW);
+    ctx.font = `900 ${titleSize}px ${fonts.display}`;
+  }
   ctx.textBaseline = 'top';
   ctx.textAlign = 'left';
-  ctx.fillText('INNOVATRIX', padX, padX);
+  ctx.fillText(EVENT.wordmark, padX, padX);
 
   // Issue line — mono accent
   const issueSize = Math.round(size * 0.022);
   ctx.font = `${issueSize}px ${fonts.mono}`;
   ctx.fillStyle = '#22D3EE';
-  ctx.fillText(`ISSUE №26  ·  MAY 2026  ·  INDIA  ·  ₹ THE PRICE OF AN IDEA`, padX, padX + Math.round(titleSize * 1.05));
+  ctx.fillText(`ISSUE №${ISSUE_NO}  ·  ${FRAME_MONTH_YEAR.toUpperCase()}  ·  ${EVENT.kind.toUpperCase()}`, padX, padX + Math.round(titleSize * 1.05));
 
   // Cover-line — bottom left team callout + idea snippet
   const lineY = size - padX - Math.round(size * 0.18);
@@ -407,11 +420,11 @@ const drawNeon: FrameTemplate['drawOverlay'] = (ctx, size, team, fonts) => {
     ctx.stroke();
   });
 
-  // Bottom centered badge: ✱ INNOVATRIX '26 / TEAM X
+  // Bottom centered badge: ✱ EVENT NAME / TEAM X
   const badgeY = size - Math.round(size * 0.085);
   const badgeH = Math.round(size * 0.05);
   ctx.fillStyle = 'rgba(10, 11, 20, 0.85)';
-  const badgeText = `✱ INNOVATRIX '26  /  ${team.name.toUpperCase()}`;
+  const badgeText = `✱ ${FRAME_NAME}  /  ${team.name.toUpperCase()}`;
   ctx.font = `bold ${Math.round(size * 0.022)}px ${fonts.mono}`;
   const metrics = ctx.measureText(badgeText);
   const badgePadX = Math.round(size * 0.025);
@@ -440,7 +453,7 @@ const drawMinimal: FrameTemplate['drawOverlay'] = (ctx, size, team, fonts) => {
   ctx.font = `bold ${Math.round(size * 0.018)}px ${fonts.mono}`;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
-  const text = `✱  INNOVATRIX '26  ·  ${team.name.toUpperCase()}  ·  18.05.26`;
+  const text = `✱  ${FRAME_NAME}  ·  ${team.name.toUpperCase()}  ·  ${EVENT_DATE_DOTTED}`;
   // Subtle dark backing for legibility against any photo
   const metrics = ctx.measureText(text);
   const bgPad = Math.round(size * 0.012);
@@ -484,10 +497,10 @@ function MarqueePreview({ team }: { team: Team }) {
         style={{ background: 'linear-gradient(90deg, #6366F1 0%, #A78BFA 55%, #22D3EE 100%)' }}
       >
         <div className="font-display text-[clamp(13px,3vw,17px)] font-bold leading-none tracking-tight">
-          INNOVATRIX &apos;26
+          {FRAME_NAME}
         </div>
         <div className="mt-1 font-mono text-[clamp(8px,1.8vw,10.5px)] uppercase tracking-[0.16em] opacity-90">
-          Team {team.name} · 18 May
+          Team {team.name} · {EVENT_DATE_SHORT}
         </div>
       </div>
     </>
@@ -512,7 +525,7 @@ function PolaroidPreview({ team }: { team: Team }) {
           {team.name}
         </div>
         <div className="mt-1.5 font-mono text-[clamp(7px,1.6vw,10px)] uppercase tracking-[0.22em] text-slate-500">
-          INNOVATRIX &apos;26  ·  18 MAY 2026
+          {FRAME_NAME}  ·  {FRAME_DATE}
         </div>
       </div>
     </div>
@@ -541,10 +554,10 @@ function PassPreview({ team }: { team: Team }) {
         <div className="mt-[2%] flex gap-3 font-mono text-[clamp(6px,1.4vw,9px)] uppercase tracking-[0.18em] text-mute">
           <span>Row A</span>
           <span>Seat {String(team.members.length).padStart(2, '0')}</span>
-          <span>18.05.26</span>
+          <span>{EVENT_DATE_DOTTED}</span>
         </div>
         <div className="mt-[1%] font-mono text-[clamp(6px,1.4vw,9px)] uppercase tracking-[0.18em] text-danger">
-          Void after 16:00 IST
+          Void after {WRAP_TIME} {EVENT.tzLabel}
         </div>
       </div>
     </>
@@ -558,10 +571,10 @@ function CoverPreview({ team }: { team: Team }) {
       <div className="absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-t from-bg/80 to-transparent" />
       <div className="absolute left-[5%] right-[5%] top-[5%]">
         <div className="font-display text-[clamp(18px,7vw,46px)] font-extrabold leading-none tracking-tight text-ink">
-          INNOVATRIX
+          {EVENT.wordmark}
         </div>
         <div className="mt-1 font-mono text-[clamp(6px,1.5vw,10px)] uppercase tracking-[0.22em] text-accent">
-          Issue №26 · May 2026 · India
+          Issue №{ISSUE_NO} · {FRAME_MONTH_YEAR} · {EVENT.kind}
         </div>
       </div>
       <div className="absolute left-[5%] right-[5%] bottom-[5%]">
@@ -610,7 +623,7 @@ function NeonPreview({ team }: { team: Team }) {
           className="rounded-full bg-bg/85 px-3 py-1 font-mono text-[clamp(7px,1.6vw,10.5px)] font-bold uppercase tracking-[0.16em] text-ink"
           style={{ boxShadow: `0 0 0 1.5px ${team.color}` }}
         >
-          ✱ Innovatrix &apos;26 / {team.name}
+          ✱ {EVENT.name} / {team.name}
         </div>
       </div>
     </>
@@ -621,7 +634,7 @@ function MinimalPreview({ team }: { team: Team }) {
   return (
     <>
       <div className="absolute left-[4%] top-[4%] rounded bg-bg/55 px-2 py-[2px] font-mono text-[clamp(6px,1.4vw,9px)] font-bold uppercase tracking-[0.16em] text-ink">
-        ✱  INNOVATRIX &apos;26  ·  {team.name.toUpperCase()}  ·  18.05.26
+        ✱  {FRAME_NAME}  ·  {team.name.toUpperCase()}  ·  {EVENT_DATE_DOTTED}
       </div>
       <div
         className="absolute bottom-[4%] right-[4%] h-[2.4%] w-[2.4%] rounded-full ring-1 ring-ink/70"
@@ -664,7 +677,7 @@ function PassThumb({ team }: { team: Team }) {
 function CoverThumb({ team }: { team: Team }) {
   return (
     <div className="absolute inset-0 bg-gradient-to-br from-slate-500 to-slate-800">
-      <div className="absolute left-1 top-1 text-[5px] font-extrabold text-ink">INNOVATRIX</div>
+      <div className="absolute left-1 top-1 text-[5px] font-extrabold text-ink">{EVENT.wordmark}</div>
       <div className="absolute left-1 bottom-1 right-1">
         <div className="text-[5px] font-bold uppercase text-ink">{team.name}</div>
       </div>
@@ -899,7 +912,7 @@ function Booth({ team }: { team: Team }) {
         .replace(/-{2,}/g, '-')
         .replace(/^-+|-+$/g, '')
         || 'team';
-    a.download = `innovatrix-${safeName}-${templateId}-${Date.now()}.jpg`;
+    a.download = `${EVENT.storagePrefix}-${safeName}-${templateId}-${Date.now()}.jpg`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

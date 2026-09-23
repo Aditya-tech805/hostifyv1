@@ -22,6 +22,7 @@
 
 import { useEffect, useState } from 'react';
 import { readOwnTeam } from '@/lib/teams';
+import { STORAGE_KEYS } from '@/lib/storage';
 import { MentorPingsBanner } from './MentorPingsBanner';
 import { SprintResponder } from './SprintResponder';
 import { PollResponder } from './PollResponder';
@@ -36,7 +37,7 @@ export function ParticipantSync() {
     // Cross-tab: refresh teamId when localStorage changes (e.g., another tab
     // registered or cleared the team).
     const onStorage = (e: StorageEvent) => {
-      if (e.key === 'innovatrix26.team') setTeamId(readOwnTeam()?.id ?? null);
+      if (e.key === STORAGE_KEYS.team) setTeamId(readOwnTeam()?.id ?? null);
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);

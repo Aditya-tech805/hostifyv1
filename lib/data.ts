@@ -6,11 +6,15 @@
 // The sync layer underneath is Supabase realtime (or localStorage fallback).
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { storageKey } from '@/config/event';
 import { useMemo } from 'react';
 import { useSyncedValue, useSyncedMap, writeSynced, subscribeSynced } from './sync';
 import { getSupabase, SUPABASE_ENABLED } from './supabase';
 import type { Team } from './teams';
 import type { PhaseId } from './schedule';
+import { computePublicReveal, withStage, type CeremonyStage, type FinalResults } from './awards';
+
+export { topThree, type CeremonyStage, type FinalRanking, type FinalResults } from './awards';
 
 // ─── Paths (single source of truth) ──────────────────────────────────────────
 const PATHS = {
@@ -720,7 +724,7 @@ export function removeSenior(seniorId: string): void {
   void writeSynced(`${PATHS.seniors}/${seniorId}`, null);
 }
 
-// ─── Screen carousel messages (faculty / HOD / student coordinator) ─────────
+// ─── Screen carousel messages (three slots; labels in config/event.ts) ─────
 /**
  * Messages shown on the projector's idle carousel. Coordinator types them
  * from /console; the screen route reads them via useMessage(slot).
@@ -749,46 +753,10 @@ export function writeMessage(slot: MessageSlot, msg: ScreenMessage): void {
   void writeSynced(`${PATHS.messages}/${slot}`, msg);
 }
 
-// ─── Final results (post-event prize ceremony) ──────────────────────────────
-/**
- * Captured rankings + ceremony reveal state for the Prize Distribution
- * Ceremony. The coordinator enters the ranked 24 teams (and any DQs) once
- * from /console, then drives the projector through staged reveals:
- *
- *   idle -> third -> second -> first -> leaderboard
- *
- * Each reveal stage is a separate kv write so every device (projector,
- * coordinator's phone, participants' phones) updates instantly via the
- * realtime channel.
- */
-export type CeremonyStage = 'idle' | 'third' | 'second' | 'first' | 'leaderboard';
-
-export interface FinalRanking {
-  /** Numeric rank (1, 2, 3, ...). A 3-way tie can have three entries at
-   *  rank 19 with the next entry at 22, etc. Disqualified teams use rank
-   *  -1 and have disqualified=true so the ceremony renders them grayed
-   *  out at the bottom of the leaderboard. */
-  rank: number;
-  /** Team number on the printed roster (1-24). Optional - mostly cosmetic. */
-  teamNumber?: number;
-  /** Team display name shown on the projector. */
-  teamName: string;
-  /** Total marks awarded by the panel. */
-  marks: number;
-  /** Optional team_id if we matched this entry to a record in the teams kv. */
-  teamId?: string;
-  /** Optional brand colour for the team stripe. Falls back to a palette. */
-  color?: string;
-  disqualified?: boolean;
-}
-
-export interface FinalResults {
-  rankings: FinalRanking[];
-  stage: CeremonyStage;
-  /** When each reveal was triggered. Lets us drive entrance animations
-   *  off a fresh timestamp instead of guessing on first render. */
-  revealedAt?: Partial<Record<CeremonyStage, number>>;
-}
+// ─── Final results (awards ceremony) ────────────────────────────────────────
+// Staged reveal: idle -> third -> second -> first -> leaderboard. Each stage
+// is one kv write, so every device updates together over realtime. The data
+// model and the audience-filtering logic live in lib/awards.ts.
 
 /**
  * Coord-only master copy of the ceremony state. The kv RLS gates SELECT
@@ -811,29 +779,6 @@ export function usePublicReveal(): FinalResults | null {
   return value;
 }
 
-/**
- * Given the master results, compute the slice that the audience is
- * allowed to see. Empty rankings for the idle stage; only the top-N
- * non-DQ rows for the reveal stages; full list for the leaderboard.
- */
-function computePublicReveal(master: FinalResults): FinalResults {
-  const { stage, rankings, revealedAt } = master;
-  let visible: FinalRanking[];
-  if (stage === 'idle') {
-    visible = [];
-  } else if (stage === 'third') {
-    visible = rankings.filter((r) => r.rank === 3 && !r.disqualified);
-  } else if (stage === 'second') {
-    visible = rankings.filter((r) => (r.rank === 2 || r.rank === 3) && !r.disqualified);
-  } else if (stage === 'first') {
-    visible = rankings.filter((r) => r.rank >= 1 && r.rank <= 3 && !r.disqualified);
-  } else {
-    // leaderboard
-    visible = rankings;
-  }
-  return { stage, rankings: visible, revealedAt };
-}
-
 export function setFinalResults(v: FinalResults | null): void {
   // Master write goes to the coord-only path.
   void writeSynced(PATHS.finalResults, v);
@@ -848,17 +793,7 @@ export function setFinalResults(v: FinalResults | null): void {
 
 /** Convenience: flip just the ceremony stage without rewriting the rankings. */
 export function setCeremonyStage(current: FinalResults | null, stage: CeremonyStage): void {
-  const next: FinalResults = current
-    ? { ...current, stage, revealedAt: { ...(current.revealedAt ?? {}), [stage]: Date.now() } }
-    : { rankings: [], stage, revealedAt: { [stage]: Date.now() } };
-  setFinalResults(next);
-}
-
-/** Pull the top-3 entries in display order ([third, second, first]). */
-export function topThree(results: FinalResults | null): { first?: FinalRanking; second?: FinalRanking; third?: FinalRanking } {
-  if (!results) return {};
-  const byRank = (r: number) => results.rankings.find((x) => x.rank === r && !x.disqualified);
-  return { first: byRank(1), second: byRank(2), third: byRank(3) };
+  setFinalResults(withStage(current, stage));
 }
 
 // ─── Reset all event data (coordinator-only nuke) ────────────────────────────
@@ -888,12 +823,12 @@ export async function resetAllEventData(): Promise<{ kvRows: number; photos: num
     const { count } = await supabase.from('kv').delete({ count: 'exact' }).neq('path', '__never__');
     kvRows = count ?? 0;
   } else {
-    // localStorage fallback — remove every key under innovatrix26.sync.*
+    // localStorage fallback — remove every key under <prefix>.sync.*
     if (typeof window !== 'undefined') {
       const toRemove: string[] = [];
       for (let i = 0; i < window.localStorage.length; i++) {
         const k = window.localStorage.key(i);
-        if (k?.startsWith('innovatrix26.sync.')) toRemove.push(k);
+        if (k?.startsWith(storageKey('sync.'))) toRemove.push(k);
       }
       toRemove.forEach((k) => window.localStorage.removeItem(k));
       kvRows = toRemove.length;

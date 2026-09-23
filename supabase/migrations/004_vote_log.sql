@@ -1,5 +1,5 @@
 -- ============================================================================
--- INNOVATRIX 26 - Phase 4 part 1 - vote_log table
+-- Hostify - Phase 4 part 1 - vote_log table
 --
 -- Run this BEFORE deploying Phase 4 code. Creates the table the /api/vote
 -- route writes to. Safe to run on a live system - it adds a new table

@@ -1,3 +1,4 @@
+import { EVENT, PLATFORM, EVENT_DATE_LONG, DOORS_TIME, WRAP_TIME, capitalize, numberWord, to12h } from '@/config/event';
 import type { Metadata, Viewport } from 'next';
 import { Inter, Space_Grotesk, JetBrains_Mono, Fraunces } from 'next/font/google';
 import './globals.css';
@@ -43,12 +44,13 @@ const siteUrl =
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "INNOVATRIX '26 · Innovation Showcase",
+  title: `${EVENT.name} · ${EVENT.kind}`,
   description:
-    'A live innovation experience for twenty-four teams. 18 May 2026 · 10 AM – 4 PM IST.',
+    `A live ${EVENT.kind.toLowerCase()} for ${numberWord(EVENT.expectedTeams)} teams. ${EVENT_DATE_LONG} · ${to12h(DOORS_TIME)} – ${to12h(WRAP_TIME)} ${EVENT.tzLabel}. Powered by ${PLATFORM.name}.`,
+  applicationName: PLATFORM.name,
   openGraph: {
-    title: "INNOVATRIX '26",
-    description: 'Twenty-four teams. Six hours. Innovation, creativity, and the future you can build.',
+    title: EVENT.name,
+    description: `${capitalize(numberWord(EVENT.expectedTeams))} teams. ${EVENT.durationLabel}. ${EVENT.tagline}`,
     type: 'website',
   },
 };

@@ -16,7 +16,7 @@ interface BrandMarkProps {
 }
 
 /**
- * INNOVATRIX asterisk-burst mark — 8 rays radiating from a small centre dot.
+ * Hostify asterisk-burst mark — 8 rays radiating from a small centre dot.
  * Two variants: outline (default) and filled (with gradient backplate).
  */
 export function BrandMark({

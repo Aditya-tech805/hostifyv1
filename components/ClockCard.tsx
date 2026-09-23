@@ -3,6 +3,7 @@
 import { ClientOnly } from './ClientOnly';
 import { useEventPhase } from '@/lib/hooks';
 import { formatCountdown, pad } from '@/lib/schedule';
+import { EVENT, EVENT_DATE_SHORT, DOORS_TIME } from '@/config/event';
 
 interface ClockCardProps {
   /** Smaller variant used in the participant dashboard. */
@@ -51,7 +52,7 @@ function ClockBody() {
     value = (
       <>
         <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent font-semibold">{cd}</span>
-        <span className="text-ink-2"> · 18 May, 10:00</span>
+        <span className="text-ink-2"> · {EVENT_DATE_SHORT}, {DOORS_TIME}</span>
       </>
     );
   } else if ((state.status === 'live' || state.status === 'override') && state.phase) {
@@ -64,7 +65,7 @@ function ClockBody() {
     );
   } else if (state.status === 'post') {
     label = 'Thank you';
-    value = 'INNOVATRIX 26 has concluded.';
+    value = `${EVENT.name} has concluded.`;
   }
 
   return (

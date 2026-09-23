@@ -1,5 +1,5 @@
 -- ============================================================================
--- INNOVATRIX 26 - Phase 3 RLS update
+-- Hostify - Phase 3 RLS update
 --
 -- Run this AFTER Phase 3 code is deployed to Vercel and verified working.
 -- Paste into the Supabase SQL Editor -> Run.

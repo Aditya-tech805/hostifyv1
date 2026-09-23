@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { BrandMark } from '@/components/BrandMark';
 import { ClientOnly } from '@/components/ClientOnly';
+import { EVENT, EVENT_DATE_LONG, DOORS_TIME, WRAP_TIME, capitalize, numberWord, to12h } from '@/config/event';
 
 /**
  * Standalone QR code page — open this on a laptop, project / print it
@@ -36,10 +37,12 @@ function QRBody() {
 
       <div className="flex items-center gap-3 font-display text-2xl font-semibold tracking-tight text-ink print:hidden">
         <BrandMark size={28} />
-        <span>INNOVATRIX</span>
-        <span className="rounded-full border border-line px-2.5 py-1 font-mono text-[12px] tracking-[0.18em] text-mute">
-          &apos;26
-        </span>
+        <span>{EVENT.wordmark}</span>
+        {EVENT.edition && (
+          <span className="rounded-full border border-line px-2.5 py-1 font-mono text-[12px] tracking-[0.18em] text-mute">
+            {EVENT.edition}
+          </span>
+        )}
       </div>
 
       <h1 className="mt-8 text-center font-display text-4xl font-bold tracking-tight text-ink sm:text-5xl print:mt-12 print:text-black">
@@ -47,7 +50,7 @@ function QRBody() {
       </h1>
 
       <p className="mt-3 text-center text-mute print:text-gray-600">
-        Twenty-four teams · Six hours · 18 May 2026 · 9:30 AM – 4:15 PM
+        {capitalize(numberWord(EVENT.expectedTeams))} teams · {EVENT.durationLabel} · {EVENT_DATE_LONG} · {to12h(DOORS_TIME)} – {to12h(WRAP_TIME)}
       </p>
 
       <div className="mt-10 rounded-3xl bg-white p-8 shadow-2xl print:mt-8 print:shadow-none">

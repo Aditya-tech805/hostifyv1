@@ -17,6 +17,10 @@ import { useAllTeams, usePanel, type PanelMember } from '@/lib/data';
 import { SCHEDULE, formatCountdown, pad, type PhaseId, type Phase } from '@/lib/schedule';
 import { BINGO_MISSIONS } from '@/lib/activities';
 import type { Team } from '@/lib/teams';
+import {
+  PLATFORM, EVENT, EVENT_DATE_LONG, EVENT_DATE_SHORT, EVENT_DATE_DOTTED, EVENT_WEEKDAY,
+  DOORS_TIME, STAGE_TIME, WRAP_TIME, capitalize, numberWord, type Voice,
+} from '@/config/event';
 
 interface LandingProps {
   initial?: Team;
@@ -54,18 +58,15 @@ function Hero() {
           <ClientOnly fallback={<span className="opacity-60">···</span>}>
             <HeroStatusInline />
           </ClientOnly>
-          <span>Edition &apos;26</span>
+          {EVENT.edition && <span>Edition {EVENT.edition}</span>}
         </div>
 
-        {/* The mark — sits in the visual centre of the viewport.
-            Note: previously rendered "INNOVATR" + an animated <span>X</span>
-            which was *literally* missing the second I in source — the rotation
-            on the X also distracted attention from the missing letter. Now
-            spelt out in full, with the X kept as the brand-accent colour
-            using a slow horizontal gradient drift (no rotation, no overlap). */}
+        {/* The mark — sits in the visual centre of the viewport. The wordmark
+            is spelt out in full, with its last letter kept as the brand-accent
+            colour using a slow horizontal gradient drift (no rotation, no overlap). */}
         <div className="flex flex-1 items-center">
           <h1 className="w-full animate-reveal-up font-display font-extrabold leading-[0.82] tracking-[-0.05em] text-ink text-[clamp(44px,15.5vw,240px)]">
-            INNOVATRI<span className="bg-gradient-brand bg-[length:200%_100%] bg-clip-text text-transparent animate-gradient-shift">X</span>
+            {EVENT.wordmark.slice(0, -1)}<span className="bg-gradient-brand bg-[length:200%_100%] bg-clip-text text-transparent animate-gradient-shift">{EVENT.wordmark.slice(-1)}</span>
           </h1>
         </div>
 
@@ -73,17 +74,17 @@ function Hero() {
         <div className="animate-reveal-up" style={{ animationDelay: '160ms' }}>
           {/* Doors / Stage / Wrap — the most event-coded gesture we have */}
           <div className="grid grid-cols-3 items-end border-y border-line-2 py-4">
-            <TimeStamp label="Doors" value="09:30" />
-            <TimeStamp label="Stage" value="10:00" highlight />
-            <TimeStamp label="Wrap"  value="16:15" alignRight />
+            <TimeStamp label="Doors" value={DOORS_TIME} />
+            <TimeStamp label="Stage" value={STAGE_TIME} highlight />
+            <TimeStamp label="Wrap"  value={WRAP_TIME} alignRight />
           </div>
           <div className="mt-2 text-center font-mono text-[clamp(10px,1vw,12px)] uppercase tracking-[0.32em] text-mute tabular-nums">
-            Monday · 18 May 2026 · IST
+            {EVENT_WEEKDAY} · {EVENT_DATE_LONG} · {EVENT.tzLabel}
           </div>
 
           <div className="mt-10 grid items-end gap-8 md:mt-14 md:grid-cols-[1fr_auto]">
             <p className="font-display text-[clamp(30px,4.4vw,52px)] font-medium leading-[1.05] tracking-[-0.02em] text-ink">
-              Twenty-four teams. Six hours.{' '}
+              {`${capitalize(numberWord(EVENT.expectedTeams))} teams. ${EVENT.durationLabel}.`}{' '}
               <span className="font-serif italic font-light text-primary">One day.</span>
             </p>
 
@@ -172,7 +173,7 @@ function HeroStatusInline() {
 
 function TeamsMarquee() {
   const teams = useAllTeams();
-  const SLOTS = 24;
+  const SLOTS = EVENT.expectedTeams;
   const placeholderCount = Math.max(0, SLOTS - teams.length);
 
   // Render the row twice for a seamless wrap with `translateX(-50%)`.
@@ -232,43 +233,14 @@ function TeamsMarquee() {
 
 // ─── Phase spine ─────────────────────────────────────────────────────────────
 
-const PHASES_META: Record<PhaseId, { sub: string; tint: string; tintBg: string; activities: string[]; line: string }> = {
-  phase1: {
-    sub: 'Doors open. Welcome. Seat allotments.',
-    tint: '#4F46E5',
-    tintBg: 'rgba(79, 70, 229, 0.05)',
-    activities: ['Registration', 'Opening ceremony', 'Seat allotments'],
-    line: 'Twenty-four teams arrive, settle in, and meet the day.',
-  },
-  phase2: {
-    sub: 'Brainstorm. Prototype. Sharpen the pitch.',
-    tint: '#06B6D4',
-    tintBg: 'rgba(6, 182, 212, 0.05)',
-    activities: ['Networking bingo', 'Photo booth', 'Team wall', 'Connect on LinkedIn', 'Spotlight'],
-    line: 'Just over two hours of crafted chaos — prompts, missions, refreshments, and a spotlight moment from the stage.',
-  },
-  lunch: {
-    sub: 'Catch your breath. Eat warm food.',
-    tint: '#F59E0B',
-    tintBg: 'rgba(245, 158, 11, 0.05)',
-    activities: ['Reset', 'Recharge'],
-    line: 'The one hour of the day where nobody is keeping score.',
-  },
-  phase3: {
-    sub: 'Present. Get judged. Land it.',
-    tint: '#7C3AED',
-    tintBg: 'rgba(124, 58, 237, 0.05)',
-    activities: ['Team presentations', 'Judge scoring', 'Audience reactions'],
-    line: 'Five criteria, a full panel, one audience. Sometimes the audience out-votes everyone.',
-  },
-  wrap: {
-    sub: 'Vote of thanks. Awards. The long exhale.',
-    tint: '#EF4444',
-    tintBg: 'rgba(239, 68, 68, 0.05)',
-    activities: ['Faculty address', 'Awards ceremony', 'Group photo'],
-    line: 'One winner. Twenty-three teams that just spent a day getting sharper. Nobody loses that.',
-  },
-};
+// Timeline copy comes straight from the event config; tintBg is the phase tint
+// at ~5% alpha (hex `0D`) for the live-row wash.
+const PHASES_META = Object.fromEntries(
+  EVENT.schedule.map((p) => [
+    p.id,
+    { sub: p.sub, tint: p.tint, tintBg: `${p.tint}0D`, activities: p.highlights, line: p.line },
+  ]),
+) as Record<PhaseId, { sub: string; tint: string; tintBg: string; activities: string[]; line: string }>;
 
 function PhaseSpine() {
   return (
@@ -413,7 +385,7 @@ function ActivityShowcase() {
         />
         <ShowcaseCard title="Connect on LinkedIn" tag="All day" tint="#0A66C2"
           preview={<ConnectSample />}
-          description="Curated list of seniors and mentors in the room. Tap a card, open their LinkedIn, send the request before the day ends."
+          description="Curated list of mentors and guests in the room. Tap a card, open their LinkedIn, send the request before the day ends."
         />
         <ShowcaseCard title="Photo Booth" tag="All day" tint="#EF4444"
           preview={<BoothSample />}
@@ -457,12 +429,12 @@ function ConnectSample() {
   return (
     <div className="flex aspect-[16/9] flex-col gap-2 rounded-2xl bg-surface-2 p-4 ring-1 ring-line">
       <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.22em] text-mute">
-        4 seniors in the room
+        4 mentors in the room
       </div>
       {[
-        { name: 'Aanya Sharma', role: 'SDE II · Google', color: '#0A66C2' },
-        { name: 'Vikram Joshi', role: 'PM · Razorpay',   color: '#A78BFA' },
-        { name: 'Ria Patel',    role: 'Founder · YC W24', color: '#22D3EE' },
+        { name: 'Aanya Sharma', role: 'Engineer · Northwind', color: '#0A66C2' },
+        { name: 'Vikram Joshi', role: 'PM · Brightline',   color: '#A78BFA' },
+        { name: 'Ria Patel',    role: 'Founder · Lumen Labs', color: '#22D3EE' },
       ].map((s) => (
         <div key={s.name} className="flex items-center gap-2.5 rounded-md bg-bg/60 p-2">
           <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-bg" style={{ background: s.color }}>
@@ -535,10 +507,10 @@ function BoothSample() {
         </div>
         <div className="absolute inset-x-2 bottom-2 rounded bg-bg/90 p-1.5 backdrop-blur-sm ring-1 ring-line">
           <div className="font-display text-[10px] font-extrabold leading-none tracking-tight text-ink">
-            INNOVATRIX
+            {EVENT.wordmark}
           </div>
           <div className="mt-0.5 font-mono text-[7px] tracking-[0.22em] text-mute">
-            TEAM 03 · 18.05.26
+            TEAM 03 · {EVENT_DATE_DOTTED}
           </div>
         </div>
       </div>
@@ -546,41 +518,8 @@ function BoothSample() {
   );
 }
 
-// ─── Voices (messages from HOD, faculty coord, student coords) ─────────────
-
-interface Voice {
-  name: string;
-  role: string;
-  quote: string;
-  accent: string;
-}
-
-const MESSAGES: Voice[] = [
-  {
-    name: 'Dev Baloni',
-    role: 'Head of Department · Computer Science',
-    quote: "Innovation begins where curiosity refuses to settle. Today, twenty-four teams will prove that the future of computer science doesn’t wait for permission — it builds, it questions, it ships. I’m proud of every team here.",
-    accent: '#6366F1',
-  },
-  {
-    name: 'Mukesh Pandey',
-    role: 'Faculty Coordinator',
-    quote: "What you build today won’t be remembered for being perfect. It’ll be remembered for being yours. Take the prompts seriously; take yourselves a little less so. Have a brilliant day.",
-    accent: '#A78BFA',
-  },
-  {
-    name: 'Aditya Pathak',
-    role: 'Lead Student Coordinator',
-    quote: "This day started as a sketch in a notebook months ago. To see twenty-four teams walk in with ideas of their own is the only metric that matters. Go make something nobody’s seen before.",
-    accent: '#22D3EE',
-  },
-  {
-    name: 'Mayur Singh',
-    role: 'Lead Student Coordinator',
-    quote: "The hardest part of any event is the moment before doors open. The second hardest is watching everyone leave with their hands full. Here’s to the easy bit in between — have at it.",
-    accent: '#FBBF24',
-  },
-];
+// ─── Voices (welcome notes from the people running the event) ─────────────
+// Content lives in EVENT.voices (config/event.ts).
 
 function Voices() {
   return (
@@ -597,12 +536,12 @@ function Voices() {
             </h2>
           </div>
           <p className="font-display text-[clamp(17px,1.8vw,20px)] leading-[1.55] text-ink-2 md:pt-6">
-            From the people who built today — the department, the faculty, and the two students who carried it across the line.
+            From the people who built today — the hosts, the organisers, and everyone who carried it across the line.
           </p>
         </header>
 
         <div className="grid gap-5 md:grid-cols-2 md:gap-6">
-          {MESSAGES.map((m) => <MessageCard key={m.name} {...m} />)}
+          {EVENT.voices.map((m) => <MessageCard key={m.name} {...m} />)}
         </div>
       </div>
     </section>
@@ -749,6 +688,9 @@ function makeInitials(name: string): string {
 
 // ─── Register section ────────────────────────────────────────────────────────
 
+// Registrations lock when the main build block starts.
+const LOCK_TIME = EVENT.schedule.find((p) => p.id === 'phase2')?.start ?? STAGE_TIME;
+
 function RegisterSection({ initial, onSubmit }: LandingProps) {
   return (
     <section
@@ -779,7 +721,7 @@ function RegisterSection({ initial, onSubmit }: LandingProps) {
               </li>
               <li className="flex items-center gap-3">
                 <span className="h-px w-6 bg-line-2" />
-                <span>Locked at 10:45 sharp</span>
+                <span>Locked at {LOCK_TIME} sharp</span>
               </li>
             </ul>
           </div>
@@ -801,15 +743,18 @@ function LandingFooter() {
       <div className="mx-auto flex max-w-[1320px] flex-wrap items-center justify-between gap-6 px-6 py-12 font-mono text-[11px] uppercase tracking-[0.22em] text-mute">
         <div className="flex items-center gap-3">
           <BrandMark filled size={26} />
-          <span className="font-display font-semibold tracking-tight text-ink">Innovatrix &apos;26</span>
-          <span className="text-mute">· a student-coordinator production</span>
+          <span className="font-display font-semibold tracking-tight text-ink">{EVENT.name}</span>
+          <span className="text-mute">· {EVENT.organizer}</span>
         </div>
         <div className="flex items-center gap-4 text-ink-2">
-          <span>Doors at 10</span>
+          <span>Doors at {DOORS_TIME}</span>
           <span className="text-line-2">·</span>
-          <span>Wrap at 4</span>
+          <span>Wrap at {WRAP_TIME}</span>
           <span className="text-line-2">·</span>
-          <span className="font-serif italic font-light text-ink normal-case tracking-normal text-[13px]">see you on the 18th.</span>
+          <span className="font-serif italic font-light text-ink normal-case tracking-normal text-[13px]">see you on {EVENT_DATE_SHORT}.</span>
+        </div>
+        <div className="w-full text-center text-[9.5px] tracking-[0.28em] text-mute/70">
+          Powered by {PLATFORM.name}
         </div>
       </div>
     </footer>

@@ -1,5 +1,5 @@
 -- ─────────────────────────────────────────────────────────────────────────────
--- INNOVATRIX 26 · Supabase setup
+-- Hostify · Supabase setup
 -- Paste this whole file into the SQL Editor on your Supabase project and run.
 -- ─────────────────────────────────────────────────────────────────────────────
 
@@ -28,7 +28,7 @@ create policy "kv anon update" on public.kv for update to anon, authenticated us
 create policy "kv anon delete" on public.kv for delete to anon, authenticated using (true);
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 4. Storage bucket for the photo booth (participant selfies w/ INNOVATRIX frame)
+-- 4. Storage bucket for the photo booth (participant selfies w/ the event frame)
 -- ─────────────────────────────────────────────────────────────────────────────
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('gallery', 'gallery', true, 2097152, array['image/jpeg', 'image/png', 'image/webp'])

@@ -1,5 +1,5 @@
 -- ============================================================================
--- INNOVATRIX 26 - Lock down finalResults SELECT to coordinator only
+-- Hostify - Lock down finalResults SELECT to coordinator only
 --
 -- Run this in Supabase SQL Editor. It tightens the kv SELECT policy so
 -- the master rankings row (path='finalResults') is invisible to anyone

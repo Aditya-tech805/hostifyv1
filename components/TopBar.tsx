@@ -4,6 +4,7 @@ import { BrandMark } from './BrandMark';
 import { ClientOnly } from './ClientOnly';
 import { useEventPhase } from '@/lib/hooks';
 import { formatCountdown } from '@/lib/schedule';
+import { EVENT } from '@/config/event';
 
 interface TopBarProps {
   /** Optional role tag (e.g. "Console", "Judge · Rahul") shown next to brand. */
@@ -22,10 +23,12 @@ export function TopBar({ roleTag, right }: TopBarProps) {
       <div className="mx-auto flex max-w-[720px] items-center justify-between gap-3 px-5 py-3.5">
         <div className="flex items-center gap-2.5 font-display font-semibold tracking-tight text-ink">
           <BrandMark filled />
-          <span>INNOVATRIX</span>
-          <span className="rounded-full border border-line bg-surface px-2 py-[2px] font-mono text-[10.5px] tracking-[0.18em] text-mute">
-            &apos;26
-          </span>
+          <span>{EVENT.wordmark}</span>
+          {EVENT.edition && (
+            <span className="rounded-full border border-line bg-surface px-2 py-[2px] font-mono text-[10.5px] tracking-[0.18em] text-mute">
+              {EVENT.edition}
+            </span>
+          )}
           {roleTag && (
             <span
               className={`rounded-full border px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.2em] ${

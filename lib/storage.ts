@@ -1,16 +1,18 @@
-// LocalStorage keys — kept in one place so we can swap to Firebase cleanly later.
+// LocalStorage keys — kept in one place, namespaced by the event's storagePrefix.
+
+import { storageKey } from '@/config/event';
 
 export const STORAGE_KEYS = {
-  team:           'innovatrix26.team',
-  mockTeams:      'innovatrix26.mock-teams',
-  phaseOverride:  'innovatrix26.phase-override',
-  coordAuth:      'innovatrix26.coord-auth',
-  judgeAuth:      'innovatrix26.judge-auth',
-  judgeName:      'innovatrix26.judge-name',
-  judgeScores:    'innovatrix26.judge-scores',
-  ideaCards:      'innovatrix26.idea-cards',
-  pitchLab:       'innovatrix26.pitch-lab',
-  bingo:          'innovatrix26.bingo',
+  team:           storageKey('team'),
+  mockTeams:      storageKey('mock-teams'),
+  phaseOverride:  storageKey('phase-override'),
+  coordAuth:      storageKey('coord-auth'),
+  judgeAuth:      storageKey('judge-auth'),
+  judgeName:      storageKey('judge-name'),
+  judgeScores:    storageKey('judge-scores'),
+  ideaCards:      storageKey('idea-cards'),
+  pitchLab:       storageKey('pitch-lab'),
+  bingo:          storageKey('bingo'),
 } as const;
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

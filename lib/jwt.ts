@@ -50,7 +50,7 @@ export function signAppJwt(claims: AppClaims, ttlSeconds = 12 * 3600): { token: 
   const iat = Math.floor(Date.now() / 1000);
   const exp = iat + ttlSeconds;
   const payload = {
-    iss: 'innovatrix26',
+    iss: 'hostify',
     iat,
     exp,
     // Supabase reads this field to pick the Postgres role. We use the

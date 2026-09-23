@@ -1,5 +1,5 @@
 -- ============================================================================
--- INNOVATRIX 26 - Phase 4 part 2 - tighten audienceVotes/* writes
+-- Hostify - Phase 4 part 2 - tighten audienceVotes/* writes
 --
 -- Run this AFTER the Phase 4 code is deployed to Vercel AND verified
 -- (audience can cast a vote via the live site). This SQL closes the last

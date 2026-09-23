@@ -1,11 +1,12 @@
 'use client';
 
+import { storageKey } from '@/config/event';
 import { useEffect, useState } from 'react';
 import { usePoll, submitPollWord, usePollSubmissions } from '@/lib/data';
 import { readString, writeString } from '@/lib/storage';
 import { useToast } from './Toast';
 
-const DEVICE_ID_KEY = 'innovatrix26.device-id';
+const DEVICE_ID_KEY = storageKey('device-id');
 
 function getDeviceId(): string {
   if (typeof window === 'undefined') return 'server';

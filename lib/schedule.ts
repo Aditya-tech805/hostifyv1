@@ -1,41 +1,30 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Event schedule — anchored to May 18, 2026 IST. Single source of truth for
+// Event schedule — derived from config/event.ts. Single source of truth for
 // every page that needs phase / countdown awareness.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const EVENT_DATE = '2026-05-18';
-export const EVENT_TZ = '+05:30';
+import { EVENT, eventTime, type PhaseId } from '@/config/event';
 
-export type PhaseId = 'phase1' | 'phase2' | 'lunch' | 'phase3' | 'wrap';
+export type { PhaseId };
+
+export const EVENT_DATE = EVENT.date;
+export const EVENT_TZ = EVENT.tz;
 
 export interface Phase {
   id: PhaseId;
-  label: string;     // full label, e.g. "Phase 2 · Build & Interact"
+  label: string;     // full label, e.g. "Phase 2 · Build"
   short: string;     // e.g. "BUILD"
   start: number;     // epoch ms
   end: number;       // epoch ms
 }
 
-const at = (hhmm: string) => new Date(`${EVENT_DATE}T${hhmm}:00${EVENT_TZ}`).getTime();
-
-// Aligned to the official INNOVATRIX 2026 event itinerary (PDF):
-//   09:30 - 10:00  Registration & Check-in        \
-//   10:00 - 10:30  Opening Ceremony                ) Phase 1 - Welcome
-//   10:30 - 10:45  Seat Allotments                /
-//   10:45 - 12:00  Idea Development Session       \
-//   12:00 - 12:15  Refreshments                    ) Phase 2 - Ideate
-//   12:15 - 13:00  Continue Idea Development      /
-//   13:00 - 14:00  Lunch Break                    -> Lunch
-//   14:00 - 15:45  Judging & Evaluation           -> Phase 3 - Judging
-//   15:45 - 16:00  Vote of Thanks                 \
-//   16:00 - 16:15  Award Ceremony                  ) Wrap - Thanks & Awards
-export const SCHEDULE: Phase[] = [
-  { id: 'phase1', label: 'Phase 1 · Welcome',              short: 'WELCOME', start: at('09:30'), end: at('10:45') },
-  { id: 'phase2', label: 'Phase 2 · Idea Development',     short: 'IDEATE',  start: at('10:45'), end: at('13:00') },
-  { id: 'lunch',  label: 'Lunch · Reset & Recharge',       short: 'LUNCH',   start: at('13:00'), end: at('14:00') },
-  { id: 'phase3', label: 'Phase 3 · Judging & Evaluation', short: 'JUDGE',   start: at('14:00'), end: at('15:45') },
-  { id: 'wrap',   label: 'Wrap · Thanks & Awards',         short: 'AWARDS',  start: at('15:45'), end: at('16:15') },
-];
+export const SCHEDULE: Phase[] = EVENT.schedule.map((p) => ({
+  id: p.id,
+  label: p.label,
+  short: p.short,
+  start: eventTime(p.start),
+  end: eventTime(p.end),
+}));
 
 export const PHASE_MAP: Record<PhaseId, Phase> = Object.fromEntries(
   SCHEDULE.map((p) => [p.id, p]),

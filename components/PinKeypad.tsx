@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BrandMark } from './BrandMark';
+import { EVENT } from '@/config/event';
 
 interface PinKeypadProps {
   role: string;
@@ -121,7 +122,7 @@ export function PinKeypad({
       <div className="relative z-10 flex flex-col items-center">
         <div className="mb-3 flex items-center gap-2.5 font-display text-lg font-semibold text-ink">
           <BrandMark filled size={24} />
-          <span>INNOVATRIX</span>
+          <span>{EVENT.wordmark}</span>
         </div>
         <div className={`mb-9 rounded-full border px-3.5 py-1.5 font-mono text-[11px] uppercase tracking-[0.22em] ${rolePillClass}`}>
           {role}

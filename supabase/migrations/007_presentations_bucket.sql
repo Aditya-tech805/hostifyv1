@@ -1,5 +1,5 @@
 -- ============================================================================
--- INNOVATRIX 26 - Team presentations bucket (PPT / PPTX / PDF uploads)
+-- Hostify - Team presentations bucket (PPT / PPTX / PDF uploads)
 --
 -- Run this in Supabase SQL Editor. Creates the storage bucket teams will
 -- upload their presentations to, plus the RLS policies that scope writes

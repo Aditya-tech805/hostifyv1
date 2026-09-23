@@ -11,6 +11,7 @@
 // "phaseOverride" → a single scalar.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { storageKey } from '@/config/event';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { SUPABASE_ENABLED, KV_TABLE, getSupabase } from './supabase';
 
@@ -145,7 +146,7 @@ export function useSyncedMap<T>(prefix: string): Record<string, T> {
     }
 
     // ── Fallback: localStorage scan ──────────────────────────────────────────
-    const prefixKey = `innovatrix26.sync.${prefix}/`;
+    const prefixKey = storageKey(`sync.${prefix}/`);
     const scan = () => {
       const next: Record<string, T> = {};
       for (let i = 0; i < window.localStorage.length; i++) {
@@ -224,7 +225,7 @@ export function subscribeSynced<T>(path: string, onChange: (v: T | null) => void
 }
 
 function lsKey(path: string): string {
-  return `innovatrix26.sync.${path}`;
+  return storageKey(`sync.${path}`);
 }
 
 /** Short random suffix for Supabase channel names — avoids cache collisions. */
@@ -263,8 +264,8 @@ export function useBroadcast<T extends object>(
       const ce = e as CustomEvent<T>;
       handlerRef.current(ce.detail);
     };
-    window.addEventListener(`innovatrix26.bcast.${channelName}`, handler);
-    return () => window.removeEventListener(`innovatrix26.bcast.${channelName}`, handler);
+    window.addEventListener(storageKey(`bcast.${channelName}`), handler);
+    return () => window.removeEventListener(storageKey(`bcast.${channelName}`), handler);
   }, [channelName]);
 
   return (payload: T) => {
@@ -282,7 +283,7 @@ export function useBroadcast<T extends object>(
         }
       });
     } else {
-      window.dispatchEvent(new CustomEvent(`innovatrix26.bcast.${channelName}`, { detail: payload }));
+      window.dispatchEvent(new CustomEvent(storageKey(`bcast.${channelName}`), { detail: payload }));
     }
   };
 }

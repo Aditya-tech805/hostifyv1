@@ -1,7 +1,8 @@
 import { ImageResponse } from 'next/og';
+import { EVENT, EVENT_DATE_LONG, DOORS_TIME, WRAP_TIME, capitalize, numberWord, to12h } from '@/config/event';
 
 export const runtime = 'edge';
-export const alt = "INNOVATRIX '26 · Innovation Showcase";
+export const alt = `${EVENT.name} · ${EVENT.kind}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -21,8 +22,9 @@ export default async function OG() {
           alignItems: 'flex-start',
           justifyContent: 'center',
           padding: '80px',
-          background:
-            'radial-gradient(ellipse 60% 60% at 18% 25%, rgba(99, 102, 241, 0.45) 0%, transparent 60%), radial-gradient(ellipse 50% 50% at 82% 80%, rgba(34, 211, 238, 0.35) 0%, transparent 60%), radial-gradient(ellipse 40% 40% at 60% 10%, rgba(167, 139, 250, 0.30) 0%, transparent 60%), #0A0B14',
+          backgroundColor: '#0A0B14',
+          backgroundImage:
+            'radial-gradient(ellipse 60% 60% at 18% 25%, rgba(99, 102, 241, 0.45) 0%, transparent 60%), radial-gradient(ellipse 50% 50% at 82% 80%, rgba(34, 211, 238, 0.35) 0%, transparent 60%), radial-gradient(ellipse 40% 40% at 60% 10%, rgba(167, 139, 250, 0.30) 0%, transparent 60%)',
           fontFamily: 'sans-serif',
         }}
       >
@@ -43,7 +45,7 @@ export default async function OG() {
             fontWeight: 600,
           }}
         >
-          ✱  Innovation Showcase Experience
+          {EVENT.kind}
         </div>
 
         {/* Wordmark */}
@@ -57,14 +59,14 @@ export default async function OG() {
             display: 'flex',
           }}
         >
-          INNOVATRI
+          {EVENT.wordmark.slice(0, -1)}
           <span
             style={{
               background: 'linear-gradient(135deg, #6366F1, #A78BFA, #22D3EE)',
               backgroundClip: 'text',
               color: 'transparent',
             }}
-          >X</span>
+          >{EVENT.wordmark.slice(-1)}</span>
         </div>
 
         {/* Tagline */}
@@ -76,7 +78,7 @@ export default async function OG() {
             maxWidth: 920,
             lineHeight: 1.3,
           }}>
-          Twenty-four teams. Six hours. Powerful ideas and the future you can build.
+          {`${capitalize(numberWord(EVENT.expectedTeams))} teams. ${EVENT.durationLabel}. ${EVENT.tagline}`}
         </div>
 
         {/* Event details strip */}
@@ -93,9 +95,9 @@ export default async function OG() {
             fontWeight: 600,
           }}
         >
-          <span>18 May 2026</span>
+          <span>{EVENT_DATE_LONG}</span>
           <span style={{ color: '#22D3EE', margin: '0 18px' }}>·</span>
-          <span>10 AM – 4 PM IST</span>
+          <span>{`${to12h(DOORS_TIME)} – ${to12h(WRAP_TIME)} ${EVENT.tzLabel}`}</span>
         </div>
       </div>
     ),
