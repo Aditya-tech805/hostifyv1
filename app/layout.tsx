@@ -34,8 +34,10 @@ const serif = Fraunces({
 
 // Resolve the public base URL for OG images / canonical links. Vercel injects
 // these env vars on every deploy. Falls back to localhost in plain dev.
+// `||` rather than `??`: a variable added but left blank (e.g. copied from
+// .env.example) arrives as "" and would make `new URL()` throw at build time.
 const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ??
+  process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
   (process.env.VERCEL_PROJECT_PRODUCTION_URL
     ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
     : process.env.VERCEL_URL
