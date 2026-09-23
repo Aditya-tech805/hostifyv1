@@ -432,7 +432,7 @@ function Console({ onSignOut }: { onSignOut: () => void }) {
           <p className="mb-4 text-[13.5px] leading-relaxed text-ink-2">
             When <b>ON</b>, every activity unlocks on every device — Bingo, Team Wall, Connect, Photo Booth, Audience Vote, all of it — regardless of the current phase. Use this to play through every activity with your co-coordinators before event day.
             <br /><br />
-            <b className="text-spark">Turn OFF an hour before the event starts</b> so participants only see what's appropriate for the current phase.
+            <b className="text-spark">Turn OFF an hour before the event starts</b> so participants only see what&apos;s appropriate for the current phase.
           </p>
           <button
             onClick={() => setPreviewMode(!previewMode)}

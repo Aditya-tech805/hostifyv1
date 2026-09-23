@@ -49,6 +49,8 @@ export function QrTile({ value, size, fg = '#F5F3EE', bg = '#14151F', className 
   }
 
   return (
+    // A generated data: URL — next/image would add nothing here.
+    // eslint-disable-next-line @next/next/no-img-element
     <img
       src={dataUrl}
       width={size}

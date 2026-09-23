@@ -20,22 +20,22 @@ export function PresentationTimerOverlay() {
     return () => window.clearInterval(id);
   }, [timer]);
 
-  if (!timer) return null;
-
-  // Compute remaining
+  // Compute remaining. Everything below must run on every render, timer or
+  // not: the early return comes after the hooks so React sees a stable hook
+  // order when the coordinator starts or clears the timer.
   const now = Date.now();
-  let remainingMs: number;
-  if (timer.startedAt == null) {
-    remainingMs = timer.remainingMs; // paused
-  } else {
-    remainingMs = timer.remainingMs - (now - timer.startedAt);
+  let remainingMs = 0;
+  if (timer) {
+    remainingMs = timer.startedAt == null
+      ? timer.remainingMs // paused
+      : timer.remainingMs - (now - timer.startedAt);
   }
   if (remainingMs < 0) remainingMs = 0;
 
   const totalSec = Math.ceil(remainingMs / 1000);
   const m = Math.floor(totalSec / 60);
   const s = totalSec % 60;
-  const isPaused = timer.startedAt == null;
+  const isPaused = timer?.startedAt == null;
   const isOver = remainingMs <= 0;
   const danger = !isPaused && !isOver && remainingMs < 30_000;
 
@@ -62,6 +62,8 @@ export function PresentationTimerOverlay() {
       } catch { /* ignore — some browsers block audio without user gesture */ }
     }
   }, [timer, isPaused, isOver, remainingMs]);
+
+  if (!timer) return null;
 
   const tone = isOver ? 'text-spark' : danger ? 'text-spark' : 'text-accent';
 

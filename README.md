@@ -1,6 +1,7 @@
 # Hostify
 
 [![CI](https://github.com/Aditya-tech805/hostifyv1/actions/workflows/ci.yml/badge.svg)](https://github.com/Aditya-tech805/hostifyv1/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
 **A real-time platform for running live events from one link.** Participants join on their phones, organisers run the room from a console, judges score on their own devices, and a projector view mirrors everything live. Registration, activities, judging and the awards reveal all run through one app.
 
@@ -154,9 +155,10 @@ The judges panel, connect list, projector messages and awards rankings are manag
 ```bash
 npm test            # Vitest, runs in ~1s
 npm run typecheck
+npm run lint        # ESLint (next/core-web-vitals, incl. rules-of-hooks)
 ```
 
-The suite covers the logic where a bug would do the most damage: the awards reveal filter (nothing leaks before its stage), JWT signing and tamper/expiry rejection, team input sanitisation (invisible and bidi characters, length caps, colour allowlist), and the phase clock. GitHub Actions runs the type check, tests and a production build on every push and pull request.
+The suite covers the logic where a bug would do the most damage: the awards reveal filter (nothing leaks before its stage), JWT signing and tamper/expiry rejection, team input sanitisation (invisible and bidi characters, length caps, colour allowlist), and the phase clock. GitHub Actions runs the type check, lint, tests and a production build on every push and pull request.
 
 ## Deploy
 
@@ -174,3 +176,7 @@ npm run build && npm start   # production build locally
 - All writes are authorised in Postgres by RLS, not just in the UI.
 - Awards results are protected at the database level: the master copy isn't readable without an organiser token.
 - Known trade-offs, accepted for a one-day event: no per-row rate limit on the `kv` table, and vote dedup is per-cookie, so a determined user who clears cookies can vote again. Both are traceable and slow to exploit.
+
+## License
+
+[MIT](./LICENSE)

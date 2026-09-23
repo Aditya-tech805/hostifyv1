@@ -18,6 +18,7 @@ jobs:
 
       - run: npm ci
       - run: npm run typecheck
+      - run: npm run lint
       - run: npm test
       # Builds without Supabase keys: the app falls back to single-device mode.
       - run: npm run build
